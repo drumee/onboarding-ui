@@ -1,0 +1,162 @@
+@use "common.css";
+
+.drumee-router__main {
+  height: auto;
+}
+
+.analytics-app {
+  &__ui {
+    align-content: start;
+    justify-content: start;
+    align-items: flex-start;
+    height: 100vh;
+    width: 100vw;
+    background-color: var(--background-main);
+    font-family: var(--font-family);
+    overflow: auto;
+
+    &[data-device="mobile"] {
+      padding: 0px;
+    }
+  }
+
+  &__main {
+    justify-content: center;
+    align-items: center;
+    grid-template-columns: minmax(100px, 200px) 1fr;
+    grid-gap: 1rem;
+    height: 100%;
+    width: 100%;
+    padding: 20px;
+  }
+
+
+  &__content,
+  &__nav {
+    height: 100%;
+    width: 100%;
+    max-height: 100vh;
+    overflow: auto;
+  }
+
+  &__kpi {
+    justify-content: center;
+    align-items: center;
+    grid-template-columns: 1fr 1fr;
+    grid-gap: 1rem;
+    height: 100%;
+    width: 100%;
+    padding: 20px;
+
+    &[data-device="mobile"] {
+      padding: 0px;
+      overflow: auto;
+    }
+  }
+
+  &__users {
+    justify-content: center;
+    align-items: center;
+    grid-template-columns: 1fr 1fr;
+    grid-gap: 1rem;
+    height: 100%;
+    width: 100%;
+    padding: 20px;
+
+    &[data-device="mobile"] {
+      padding: 0px;
+      overflow: auto;
+    }
+  }
+
+  &__table {
+    padding: 20px;
+    border-radius: 10px;
+  }
+
+  &__list-container {
+    width: 100%;
+    height: 100%;
+  }
+
+  &__message-container {
+    width: 100%;
+    height: 100%;
+    justify-content: start;
+    align-items: start;
+    grid-gap: 0.5rem;
+  }
+
+  &__message-body {
+    width: 100%;
+
+    &[data-error="1"] {
+      border: 1px solid red;
+    }
+
+    textarea {
+      width: 100%;
+      border: 1px solid lightgray;
+      border-radius: 3px;
+    }
+  }
+
+  &__subject {
+    width: 100%;
+
+    input {
+      width: 100%;
+      border: 1px solid lightgray;
+      border-radius: 3px;
+    }
+  }
+
+  &__list-content {
+    width: 100%;
+    height: 100%;
+    max-height: 100%;
+    overflow: auto;
+    padding: 10px;
+    border: 1px solid lightgray;
+    border-radius: 3px;
+
+    &.recipients {
+      height: auto;
+    }
+
+    &[data-state="0"] {
+      display: none;
+    }
+  }
+
+  &__buttons-main,
+  &__buttons-container {
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+  }
+
+  &__button-item {
+    flex: 1;
+    border: solid 0.5px lightgray;
+    justify-content: center;
+    border-radius: 3px;
+    margin: 5px;
+    height: 35px;
+    max-width: 180px;
+    cursor: pointer;
+    align-content: center;
+    font-size: var(--font-size-medium);
+    background-color: var(--primary-selected-bg);
+    color: var(--primary-selected-fg);
+    align-content: center;
+    flex-wrap: wrap;
+    text-align: justify;
+
+    &:hover {
+      background-color: var(--primary-hover-bg);
+    }
+
+  }
+
+}

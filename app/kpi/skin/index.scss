@@ -1,0 +1,78 @@
+.widget-kpi {
+  &__ui {
+    &[data-device="mobile"] {
+      padding: 0px;
+    }
+
+    justify-content: center;
+    align-items: center;
+    grid-template-columns: 1fr 1fr;
+    grid-gap: 2rem;
+    height: 100%;
+    width: 100%;
+    padding: 20px;
+    align-content: center;
+    justify-items: center;
+    max-width: 500px;
+  }
+
+  &__main {
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    width: 100%;
+    flex-wrap: wrap;
+    overflow: auto;
+
+    &[data-device="mobile"] {
+      padding: 0px;
+    }
+  }
+
+  &__footer {
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+
+    &[data-device="mobile"] {
+      padding: 0px;
+    }
+  }
+
+  &__container {
+    .radio-buttons__ui {
+      max-width: 300px;
+    }
+  }
+
+  &__entry {
+    width: 60px;
+    border: var(--border) 0.5px solid;
+    height: 100%;
+    margin-right: 20px;
+  }
+
+  &__title {
+    justify-content: center;
+    width: 100%;
+    font-size: var(--font-size-big);
+    color: var(--normal-fg);
+    align-content: center;
+    flex-wrap: wrap;
+    text-align: justify;
+  }
+
+  &__canvas {
+    justify-content: center;
+    font-size: 18px;
+    width: 100%;
+    height: calc(100% - 80px);
+  }
+
+  &__container {
+    height: 100%;
+    width: 100%;
+  }
+
+
+}

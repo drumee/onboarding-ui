@@ -1,2 +1,1 @@
-# onboarding-ui
-On borading
+# analytics-ui

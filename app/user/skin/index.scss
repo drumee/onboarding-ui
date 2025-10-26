@@ -1,0 +1,53 @@
+.widget-user {
+  &__ui {
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    background-color: transparent;
+    font-family: Arial, sans-serif;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
+    cursor: pointer;
+
+    &[data-device="mobile"] {
+      padding: 0px;
+    }
+
+    justify-content: center;
+    width: 100%;
+    font-size: var(--font-size-medium);
+    color: var(--normal-fg);
+    text-align: justify;
+  }
+
+  &__main {
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    flex-wrap: wrap;
+    overflow: auto;
+    grid-template-columns: 1fr 1fr 30px;
+    grid-gap: 1rem;
+
+    &[data-device="mobile"] {
+      padding: 0px;
+    }
+
+    .user-profile__ui {
+      width: 30px;
+      height: 30px;
+      padding: 3px;
+    }
+
+    svg {
+      width: 25px;
+      height: 25px;
+    }
+  }
+
+  &__container {
+    height: 100%;
+    width: 100%;
+  }
+
+
+}

@@ -1,27 +1,12 @@
 
-const { radioButtons } = require('../widgets')
-const { state } = require('../utils')
+const { header, footer } = require('../toolkit')
 
 module.exports = function (ui, data) {
-  return Skeletons.Box.G({
-    className: `${ui.fig.family}__main`,
+  return Skeletons.Box.Y({
+    className: `${ui.fig.family}__nav`,
     kids: [
-      Skeletons.Box.Y({
-        className: `${ui.fig.family}__nav`,
-        kids: [radioButtons(ui, {
-          service: _a.radio,
-          flow: _a.y,
-          buttons: [
-            { state: state(ui, "dashboard"), label: "Dashboard", type: "dashboard" },
-            { state: state(ui, "users"), label: "Users", type: "users" },
-          ]
-        })]
-      }),
-      Skeletons.Box.Y({
-        className: `${ui.fig.family}__content`,
-        sys_pn: _a.content,
-        kids: [require('./kpi')(ui)]
-      }),
+      header(ui),
+      footer(ui),
     ]
   })
 }

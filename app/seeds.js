@@ -1,7 +1,7 @@
 module.exports = {
 	'onboarding': import('./main'),
 	'radio_buttons': import('./radio-buttons'),
-	'widget_kpi': import('./kpi'),
+	'menu_input': import('./widget/menu-input'),
 	'widget_chart': import('./chart'),
 	'widget_user': import('./user'),
 };

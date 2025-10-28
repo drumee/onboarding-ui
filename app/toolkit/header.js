@@ -10,10 +10,13 @@ export function header(ui, opt = {}) {
   let kids = [
     Skeletons.Box.X({
       className: `${fig}__logo-container`,
-      kids: [Skeletons.Button.Svg({
-        svgSource: "/assets/images/logo-drumee-full.svg",
-        className: `${fig}__logo-content`,
-      })]
+      kids: [
+        Skeletons.Button.Svg({
+          name: "logo-drumee-full",
+          type: "raw",
+          className: `${fig}__logo-content`,
+        })
+      ]
     }),
     Skeletons.Box.X({
       className: `${fig}__progress-bar`,

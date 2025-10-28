@@ -1,6 +1,6 @@
 
 
-class analytics_app extends LetcBox {
+class onboarding_app extends LetcBox {
 
   /**
    * 
@@ -11,9 +11,7 @@ class analytics_app extends LetcBox {
     this.declareHandlers();
     this.mset({
       flow: _a.y,
-      lang: Visitor.language(),
-      label: "Users history",
-      type: "dashboard"
+      lang: Visitor.language()
     })
   }
 
@@ -22,7 +20,7 @@ class analytics_app extends LetcBox {
    * 
    */
   async start() {
-    await this.fetchService(SERVICE.analytics.get_env, {}, { async: 1 });
+    await this.fetchService(SERVICE.onboarding.get_env, {}, { async: 1 });
     this.feed(require('./skeleton')(this))
     setTimeout(() => {
       this.bindEvent(_a.live);
@@ -93,7 +91,7 @@ class analytics_app extends LetcBox {
       if (!data.subject) data.subject = "Drumee News Letter";
 
       this.debug("AAAA:75", data, recipients)
-      this.postService(SERVICE.analytics.emailing, { ...data, recipients }).then((r) => {
+      this.postService(SERVICE.onboarding.emailing, { ...data, recipients }).then((r) => {
         Butler.say("Message sucessfuly sent")
         this.ensurePart("subject").then((p) => { p.setValue("") })
         this.ensurePart("message").then((p) => { p.setValue("") })
@@ -114,7 +112,7 @@ class analytics_app extends LetcBox {
       return;
     }
     if (this._isSending) return
-    this.postService(SERVICE.analytics.emailing, { recipients: "all" }).then((r) => {
+    this.postService(SERVICE.onboarding.emailing, { recipients: "all" }).then((r) => {
       Butler.say("Message sucessfuly sent")
       this.ensurePart("subject").then((p) => { p.setValue("") })
       this.ensurePart("message").then((p) => { p.setValue("") })
@@ -216,4 +214,4 @@ class analytics_app extends LetcBox {
   }
 }
 
-module.exports = analytics_app
+module.exports = onboarding_app

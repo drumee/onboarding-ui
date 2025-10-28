@@ -1,0 +1,127 @@
+/* ==================================================================== *
+* Widget style automatically generated on 2025-03-05T03:29:33.857Z
+* npm run add-widget -- --fig=<grpup.family> --dest=/path/to/the/widget
+* ==================================================================== */
+
+.menu-input {
+  &__ui {
+    background-color: inherit;
+    width: 100%;
+    cursor: pointer;
+    height: 100%;
+    border: 0.5px lightgrey solid;
+    color: var(--default-text-color);
+  }
+
+  &__main {
+    background-color: inherit;
+    width: 100%;
+  }
+
+  &__container {
+    width: 100%;
+    background-color: inherit;
+    justify-content: start;
+    align-items: start;
+    height: auto;
+    max-height: 500px;
+  }
+
+  &__items {
+    &-wrapper {
+      position: absolute;
+      width: 0;
+      height: 0;
+      overflow: visible;
+
+      &[data-axis="y"] {
+        bottom: 0;
+      }
+
+      &[data-axis="x"] {
+        right: 0;
+      }
+    }
+
+    &-content {
+      width: auto;
+      height: auto;
+      position: absolute;
+      padding: 10px;
+      background-color: var(--white);
+      box-shadow: var(--drumee-shadow-main);
+      border-radius: 3px;
+      max-height: 265px;
+
+      &[data-axis="x"] {
+        overflow-x: auto;
+        overflow-y: hidden;
+      }
+
+      &[data-axis="y"] {
+        overflow-x: hidden;
+        overflow-y: auto;
+      }
+
+    }
+  }
+
+
+  &__entry {
+    width: 100%;
+    min-height: 30px;
+    flex-wrap: wrap;
+    align-content: center;
+
+    &.main-entry {
+      margin: 5px;
+    }
+
+    & input {
+      width: calc(100% - 10px);
+      background: var(--default-block-background);
+      color: var(--default-text-color);
+      width: 100%;
+      height: 30px;
+      border-radius: 2px;
+    }
+
+    &-container {
+      width: 100%;
+      padding: 0 5px;
+      justify-content: center;
+      align-items: center;
+    }
+
+    &-icon {
+      width: 30px;
+      height: 30px;
+      padding: 5px;
+
+      svg {
+        padding: 3px;
+      }
+    }
+  }
+
+
+  &__item {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-content: center;
+    justify-content: start;
+    cursor: pointer;
+    white-space: nowrap;
+    // @include drumee.typo($color: var(--default-text-color), $weight: 400, $line: 22px, $size: 14px);
+
+    &:hover {
+      background-color: rgba(125, 230, 198, 0.267);
+    }
+
+    &[data-state="1"] {
+      color: var(--white);
+      background-color: var(--button-commit-bg);
+    }
+  }
+}

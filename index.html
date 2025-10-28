@@ -1,30 +1,90 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <meta charset=UTF-8>
-    <meta http-equiv="Content-Type" content="text/html">
-    <meta http-equiv="Content-Language" content="fr,en">
-    <meta name="description" content="Drumee License Server">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
-    <meta http-equiv="Cache-Control" content="no-cache" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
-    <link rel="icon" href="/-/static/images/logo/desk.jpg" type="image/png">
-    <link rel="stylesheet" href="/-/static/styles/loader.css" media="screen">
-    <script type="text/javascript" src="/-/svc/bootstrap.js"></script>
-    <script type="text/javascript" src="/app/app-<%= hash %>.js"></script>
-  </head>
-  <body style="background-color:#f6f6f6;" >
-    <div id="loader-spinner" class="spinner spinner-loader spinner__item spinner__ui spinner-loader__ui">
-      <div class="drumee-loading drumee-loading-wrapper"> 
-        <div class="loader-wrapper"> 
-          <div class="loader small"></div> 
-          <div class="loader small"></div> 
-          <div class="loader small"></div> 
-          <div class="loader small"></div> 
-          <div class="loader small"></div> 
-        </div> 
+
+<head>
+  <meta charset=UTF-8>
+  <meta http-equiv="Content-Type" content="text/html">
+  <meta http-equiv="Content-Language" content="fr,en">
+  <meta name="description" content="Drumee License Server">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
+  <meta http-equiv="Cache-Control" content="no-cache" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <style nonce>
+    @font-face {
+      font-family: 'Armin Grotesk';
+      font-style: normal;
+      font-weight: 200;
+      src: url(/-/fonts/armin-grotesk/armin-grotesk-ultra-light.otf) format('opentype');
+    }
+
+    @font-face {
+      font-family: 'Armin Grotesk';
+      font-style: italic;
+      font-weight: 200;
+      src: url(/-/fonts/armin-grotesk/armin-grotesk-ultra-light-italic) format('opentype');
+    }
+
+    @font-face {
+      font-family: 'Armin Grotesk';
+      font-style: normal;
+      font-weight: normal;
+      src: url(/-/fonts/armin-grotesk/armin-grotesk-normal.otf) format('opentype');
+    }
+
+    @font-face {
+      font-family: 'Armin Grotesk';
+      font-style: italic;
+      font-weight: normal;
+      src: url(/-/fonts/armin-grotesk/armin-grotesk-italic.otf) format('opentype');
+    }
+
+    @font-face {
+      font-family: 'Armin Grotesk';
+      font-style: SemiBold;
+      font-weight: 600;
+      src: url(/-/fonts/armin-grotesk/armin-grotesk-semi-bold.otf) format('opentype');
+    }
+
+    @font-face {
+      font-family: 'Armin Grotesk';
+      font-style: italic;
+      font-weight: 600;
+      src: url(/-/fonts/armin-grotesk/armin-grotesk-semi-bold-italic.otf) format('opentype');
+    }
+
+    @font-face {
+      font-family: 'Armin Grotesk';
+      font-style: normal;
+      font-weight: 800;
+      src: url(/-/fonts/armin-grotesk/armin-grotesk-ultra-bold.otf) format('opentype');
+    }
+
+    @font-face {
+      font-family: 'Armin Grotesk';
+      font-style: italic;
+      font-weight: 600;
+      src: url(/-/fonts/armin-grotesk/armin-grotesk-ultra-bold-italic.otf) format('opentype');
+    }
+  </style>
+
+  <link rel="icon" href="/-/static/images/logo/desk.jpg" type="image/png">
+  <link rel="stylesheet" href="/-/static/styles/loader.css" media="screen">
+  <script type="text/javascript" src="/-/svc/bootstrap.js"></script>
+  <script type="text/javascript" src="/app/app-<%= hash %>.js"></script>
+</head>
+
+<body style="background-color:#f6f6f6;">
+  <div id="loader-spinner" class="spinner spinner-loader spinner__item spinner__ui spinner-loader__ui">
+    <div class="drumee-loading drumee-loading-wrapper">
+      <div class="loader-wrapper">
+        <div class="loader small"></div>
+        <div class="loader small"></div>
+        <div class="loader small"></div>
+        <div class="loader small"></div>
+        <div class="loader small"></div>
       </div>
     </div>
-  </body>
-</html>
+  </div>
+</body>
 
+</html>

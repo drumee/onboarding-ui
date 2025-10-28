@@ -32,6 +32,10 @@ export function button(ui, opt) {
   }
   return Skeletons.Box.X({
     className: `${pfx}-main ${icon}`,
+    service: "next",
+    kidsOpt: {
+      active: 0,
+    },
     kids
   })
 }

@@ -4,8 +4,9 @@ const { locale } = require("../../locale")
  * @param {*} ui 
  * @returns 
  */
-export function header(ui, step = 0) {
+export function header(ui) {
   const fig = ui.fig.family;
+  let step = ui._step;
   const { title, tips } = locale();
   let kids = [
     Skeletons.Box.X({
@@ -36,6 +37,7 @@ export function header(ui, step = 0) {
       ]
     })
   ]
+
   let a = Skeletons.Box.Y({
     className: `${ui.fig.family}__header`,
     debug: __filename,

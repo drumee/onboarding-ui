@@ -7,7 +7,7 @@
  */
 export function button(ui, opt) {
   const pfx = `${ui.fig.family}__button`;
-  let { label, img } = opt;
+  let { label, img, service} = opt;
   let kids = []
   if (label) kids.push(
     Skeletons.Element({
@@ -30,9 +30,10 @@ export function button(ui, opt) {
       })
     )
   }
+  console.log("AAA:33", service)
   return Skeletons.Box.X({
     className: `${pfx}-main ${icon}`,
-    service: "next",
+    service,
     kidsOpt: {
       active: 0,
     },

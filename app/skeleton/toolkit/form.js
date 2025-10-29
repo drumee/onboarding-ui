@@ -1,3 +1,4 @@
+const { locale } = require("../../locale")
 
 /**
  * 
@@ -34,6 +35,7 @@ export function entry(ui, opt) {
     ]
   })
 }
+
 
 /**
  * 
@@ -77,5 +79,68 @@ export function user_form(ui, opt) {
         ]
       }),
     ]
+  })
+}
+
+/**
+ * 
+ * @param {*} ui 
+ * @param {*} opt 
+ * @returns 
+ */
+export function usage_form(ui, opt) {
+  const pfx = `${ui.fig.family}__usage-form`;
+  let service = _e.select;
+  return Skeletons.Box.G({
+    className: `${pfx}-main`,
+    kidsOpt: {
+      radio: ui._id,
+      service,
+      className: `${pfx}-button`
+    },
+    kids: [
+      Skeletons.Button.Label({
+        label: "Notion",
+        ico: "notion",
+      }),
+      Skeletons.Button.Label({
+        label: "Dropbox",
+        ico: "dropbox",
+      }),
+      Skeletons.Button.Label({
+        label: "Google Drive",
+        ico: "google-drive",
+      }),
+      Skeletons.Note({
+        content: "Other",
+        name: "other",
+      }),
+    ]
+  })
+}
+
+/**
+ * 
+ * @param {*} ui 
+ * @param {*} opt 
+ * @returns 
+ */
+export function purpose_form(ui, opt) {
+  const pfx = `${ui.fig.family}__purpose-form`;
+  const { purpose } = locale();
+
+  let service = _e.select;
+  let kids = [];
+  for (let p of purpose) {
+    kids.push(Skeletons.Note({content: p}))
+  }
+  return Skeletons.Box.G({
+    className: `${pfx}-main`,
+    kidsOpt: {
+      radio: ui._id,
+      service,
+      className: `${pfx}-button`
+    },
+    kids
   })
 }

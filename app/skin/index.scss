@@ -1,13 +1,8 @@
 @use "vars";
-@use "user-form";
+@use "form";
 
 .drumee-router__main {
   height: auto;
-}
-
-.onboarding {
-  --neutral-bg: #C3C6CC;
-  --default-fg: #110945;
 }
 
 .onboarding {
@@ -18,7 +13,6 @@
   vertical-align: middle;
   font-style: normal;
   font-weight: normal;
-
 }
 
 .onboarding-app {
@@ -28,7 +22,7 @@
     align-items: center;
     height: 100vh;
     width: 100vw;
-    background-color: var(--white);
+    background-color: var(--panel);
     overflow: auto;
 
     &[data-device="mobile"] {

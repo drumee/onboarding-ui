@@ -78,7 +78,7 @@ class onboarding_app extends LetcBox {
     switch (service) {
       case _a.next:
         this._step++;
-        if (this._step > 3) this._step = 3;
+        if (this._step > 4) this._step = 4;
         this.loadForm()
         break;
       case _a.back:

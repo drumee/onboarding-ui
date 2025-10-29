@@ -6,7 +6,7 @@
  * @returns 
  */
 export function button(ui, opt) {
-  let { label, img, service, className } = opt;
+  let { label, img, service, sys_pn, className } = opt;
   const pfx = className || `${ui.fig.family}__button`;
   let kids = []
   if (label) kids.push(
@@ -37,6 +37,9 @@ export function button(ui, opt) {
 
   return Skeletons.Box.X({
     className: `${pfx}-main ${icon}`,
+    partHandler: [ui],
+    uiHandler: [ui],
+    sys_pn,
     service,
     kidsOpt: {
       active: 0,

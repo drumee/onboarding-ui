@@ -14,6 +14,9 @@ module.exports = function (ui, opt = {}) {
     case 3:
       content = purpose_form(ui);
       break;
+    case 4:
+      content = { kind: 'ruler_slider', service: "set-privacy" };
+      break;
   }
   return Skeletons.Box.Y({
     className: `${ui.fig.family}__main`,

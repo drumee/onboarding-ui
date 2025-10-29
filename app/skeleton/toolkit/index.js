@@ -1,4 +1,4 @@
 export * from './button';
-export * from './entry';
+export * from './form';
 export * from './footer';
 export * from './header';

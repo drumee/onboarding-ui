@@ -1,11 +1,14 @@
 
-const { header, footer } = require('../toolkit')
+const { header, user_form, footer } = require('./toolkit')
 
-module.exports = function (ui, data) {
+module.exports = function (ui, opt = {}) {
+  const fig = ui.fig.family;
+  const { step = 0 } = opt;
   return Skeletons.Box.Y({
-    className: `${ui.fig.family}__nav`,
+    className: `${ui.fig.family}__main`,
     kids: [
-      header(ui),
+      header(ui, step),
+      user_form(ui),
       footer(ui),
     ]
   })

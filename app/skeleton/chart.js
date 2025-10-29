@@ -1,29 +1,40 @@
+const { entry } = require('./toolkit')
 
-const { colorFromName } = require('../utils')
-module.exports = function (ui, data) {
-  let labels = [];
-  let cumulative = [];
-  let instant = [];
-  for (let row of data) {
-    labels.push(row.period)
-    cumulative.push(row.cumulative)
-    instant.push(row.instant)
-  }
-  let datasets = [{
-    type: 'line',
-    label: "Total number of users",
-    color: colorFromName("Total number of users"),
-    data: cumulative
-  }, {
-    type: 'bar',
-    label: "New users ",
-    color: colorFromName("New users"),
-    data: instant
-  }]
-  return Skeletons.Box.X({
-    className: `${ui.fig.family}__reels-main`,
+module.exports = function user_form(ui, opt) {
+  const pfx = `${ui.fig.family}__user-form`;
+  return Skeletons.Box.G({
+    className: `${pfx}`,
     kids: [
-      { kind: "widget_chart", labels, datasets, label: ui.mget(_a.label) }
+      Skeletons.Box.X({
+        className: `${pfx} row`,
+        kids: [
+          entry(ui, { 
+            label:LOCALE.FIRSTNAME, 
+            name: _a.firstname, 
+            placeholder: "Alice" 
+          }),
+          entry(ui, { 
+            label:LOCALE.LASTNAME, 
+            name: _a.lastname, 
+            placeholder: "Borderland" 
+          })
+        ]
+      }),
+      Skeletons.Box.X({
+        className: `${pfx} row`,
+        kids: [
+          entry(ui, { 
+            label:LOCALE.EMAIL, 
+            name: _a.email, 
+            placeholder: "me@example.org" 
+          }),
+          entry(ui, { 
+            label:LOCALE.COUNTRY,
+            name: _a.country,
+            placeholder: "Borderland" 
+          })
+        ]
+      }),
     ]
   })
 }

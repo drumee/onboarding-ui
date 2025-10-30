@@ -47,7 +47,8 @@ export function entry(ui, opt) {
  */
 export function user_form(ui, opt) {
   const pfx = `${ui.fig.family}__user-form`;
-  let { firstname, lastname, email, country_code } = ui._data;
+  let data = ui._saved_data[ui._step] || {}
+  let { firstname, lastname, email, country_code } = data;
   return Skeletons.Box.G({
     className: `${pfx}-main`,
     kids: [
@@ -58,13 +59,13 @@ export function user_form(ui, opt) {
             label: LOCALE.FIRSTNAME,
             name: _a.firstname,
             placeholder: "Alice",
-            value:firstname
+            value: firstname
           }),
           entry(ui, {
             label: LOCALE.LASTNAME,
             name: _a.lastname,
             placeholder: "Borderland",
-            value:lastname,
+            value: lastname,
           })
         ]
       }),
@@ -74,7 +75,7 @@ export function user_form(ui, opt) {
           entry(ui, {
             label: LOCALE.EMAIL,
             name: _a.email,
-            value:email,
+            value: email,
             placeholder: "me@example.org"
           }),
           Skeletons.Box.G({
@@ -85,7 +86,7 @@ export function user_form(ui, opt) {
                 content: LOCALE.COUNTRY,
               }),
               menuInput(ui, {
-                items: ui.mget('countries'),
+                // items: ui.mget('countries'),
                 name: 'country_code',
                 service: "select-country",
                 refAttribute: 'locale_name',
@@ -108,35 +109,39 @@ export function user_form(ui, opt) {
  */
 export function usage_form(ui, opt) {
   const pfx = `${ui.fig.family}__usage-form`;
+  let tools = ui._saved_data[ui._step] || []
+
   let service = _e.select;
   return Skeletons.Box.G({
     className: `${pfx}-main`,
     kidsOpt: {
-      // radiotoggle: ui._id,
       service,
       className: `${pfx}-button`,
-      state: 0,
     },
     kids: [
       Skeletons.Button.Label({
         label: "Notion",
         name: "notion",
         ico: "notion",
+        state: tools.notion || 0
       }),
       Skeletons.Button.Label({
         label: "Dropbox",
         name: "dropbox",
         ico: "dropbox",
+        state: tools.dropbox || 0
       }),
       Skeletons.Button.Label({
         name: "google_drive",
         label: "Google Drive",
         ico: "google-drive",
+        state: tools.google_drive || 0
       }),
       Skeletons.Note({
         content: "Other",
         name: "other",
         formItem: "other",
+        state: tools.other || 0,
         reference: _a.state
       }),
     ]
@@ -152,23 +157,28 @@ export function usage_form(ui, opt) {
 export function purpose_form(ui, opt) {
   const pfx = `${ui.fig.family}__purpose-form`;
   const { purpose } = locale();
+  let plan = ui._saved_data[ui._step] || []
 
   let service = _e.select;
   let kids = [];
-  let plan = ['personal', 'team', 'storage', 'other'];
+  let keys = ['personal', 'team', 'storage', 'other'];
   let i = 0;
   for (let p of purpose) {
+    let state = plan[keys[i]] || 0
     kids.push(Skeletons.Note({
       content: p,
       reference: _a.state,
-      name: plan[i]
+      state,
+      name: keys[i],
+      dataset: {
+        state,
+      }
     }))
     i++;
   }
   return Skeletons.Box.G({
     className: `${pfx}-main`,
     kidsOpt: {
-      state: 0,
       service,
       className: `${pfx}-button`
     },

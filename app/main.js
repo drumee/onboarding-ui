@@ -1,5 +1,5 @@
 
-
+const SVC_OPT = { async: 1 };
 class onboarding_app extends LetcBox {
 
   /**
@@ -15,15 +15,38 @@ class onboarding_app extends LetcBox {
     })
     this._step = parseInt(localStorage.onboarding_step) || 0;
     this._data = {}
+    this._saved_data = []
   }
 
   /**
    * 
    */
   async start() {
-    let { data: countries } = await this.fetchService(SERVICE.onboarding.get_countries, {}, { async: 1 });
-    this.mset({ countries })
+    let { data } = await this.fetchService(
+      SERVICE.onboarding.get_response, {}, SVC_OPT
+    );
+
+    this.debug("AAA:167", data)
+    if (data) {
+      this._saved_data[0] = {
+        firstname: data.firstname,
+        lastname: data.lastname,
+        email: data.email,
+        country_code: data.country_code
+      }
+      if (data.tools) {
+        this._saved_data[1] = data.tools
+      }
+      if (data.plan) {
+        this._saved_data[2] = data.plan
+      }
+      this._saved_data[3] = { privacy: data.privacy }
+    }
+
     this.loadForm();
+    if (data) {
+      setTimeout(() => { this.checkForm() }, 1000)
+    }
   }
 
   /**
@@ -55,8 +78,8 @@ class onboarding_app extends LetcBox {
    */
   loadForm() {
     localStorage.onboarding_step = this._step;
-    this.debug("AAAA:58", this._step)
     this.feed(require('./skeleton')(this))
+    this.checkForm()
   }
 
   /**
@@ -77,6 +100,9 @@ class onboarding_app extends LetcBox {
    */
   checkForm() {
     let data = this.getData()
+    if (_.isEmpty(data)) {
+      data = this._saved_data[this._step]
+    }
     let completed = 1;
     switch (this._step) {
       case 0:
@@ -99,13 +125,14 @@ class onboarding_app extends LetcBox {
         break
       case 1:
         this._data.tools = []
-        for (let k of ['notion', 'dropbox', 'google-drive', 'other']) {
+        for (let k of ['notion', 'dropbox', 'google_drive', 'other']) {
           if (data[k]) {
             this._data.tools.push(k)
           }
         }
         if (this._data.tools.length) {
           this.setItemState(_a.next, 1)
+          this.mset({ tools: this._data.tools })
         } else {
           completed = 0;
         }
@@ -118,26 +145,72 @@ class onboarding_app extends LetcBox {
           }
         }
         if (this._data.plan.length) {
+          this.mset({ plan: this._data.plan })
           this.setItemState(_a.next, 1)
         } else {
           completed = 0;
         }
         break
       case 3:
-        this._data.plan = []
-        for (let k of ['personal', 'team', 'storage', 'other']) {
-          if (data[k]) {
-            this._data.plan.push(k)
-          }
-        }
-        if (this._data.plan.length) {
+        this._data.privacy = this.getData().privacy
+        if (this._data.privacy != null) {
           this.setItemState(_a.next, 1)
-        } else {
-          completed = 0;
+          completed = 1;
         }
         break
     }
     return completed;
+  }
+
+  /**
+   * 
+   */
+  saveData() {
+    let args = this.getData()
+    this.setItemState(_a.next, 0)
+    switch (this._step) {
+      case 0:
+        this.postService(
+          SERVICE.onboarding.save_user_info, args, SVC_OPT
+        ).then((data) => {
+          this._saved_data[this._step] = args;;
+          this._step++;
+          if (this._step > 3) this._step = 3;
+          this.loadForm()
+        });
+        break;
+      case 1:
+        this.postService(
+          SERVICE.onboarding.save_tools, { args }, SVC_OPT
+        ).then((data) => {
+          this.debug("AAA:183", data)
+          this._saved_data[this._step] = args;;
+          this._step++;
+          if (this._step > 3) this._step = 3;
+          this.loadForm()
+        });
+        break;
+      case 2:
+        this.postService(
+          SERVICE.onboarding.save_usage_plan, { args }, SVC_OPT
+        ).then((data) => {
+          this._saved_data[this._step] = args;;
+          this._step++;
+          if (this._step > 3) this._step = 3;
+          this.loadForm()
+        });
+        break;
+      case 3:
+        this.postService(
+          SERVICE.onboarding.save_privacy, args, SVC_OPT
+        ).then((data) => {
+          this._saved_data[this._step] = args;;
+          this._step++;
+          if (this._step > 3) this._step = 3;
+          this.feed(require('./skeleton/done')(this))
+        });
+        break;
+    }
   }
 
 
@@ -148,14 +221,10 @@ class onboarding_app extends LetcBox {
    */
   async onUiEvent(cmd, args = {}) {
     const service = args.service || cmd.get(_a.service);
-    this.debug("AAA:53", service, args, cmd, this)
     switch (service) {
       case _a.next:
         if (!this.checkForm()) return;
-        this._step++;
-        if (this._step > 3) this._step = 3;
-        this.debug("AAAA:158", this.checkForm())
-        this.loadForm()
+        this.saveData()
         break;
       case _a.back:
         this._step--;
@@ -173,7 +242,18 @@ class onboarding_app extends LetcBox {
         this.checkForm();
         break;
       case 'set-privacy':
+        this._saved_data[this._step] = this.getData()
         this.setItemState(_a.next, 1)
+        break;
+      case _e.close:
+        localStorage.onboarding_step = "0"
+        this.postService(
+          SERVICE.onboarding.reset, {}, SVC_OPT
+        ).then((data) => {
+          this._saved_data = {};;
+          this._step = 0;
+          this.feed(require('./skeleton')(this))
+        })
         break;
       default:
         RADIO_BROADCAST.trigger(_e.click);

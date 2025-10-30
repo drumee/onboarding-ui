@@ -13,7 +13,7 @@ export function header(ui) {
       className: `${fig}__logo-container`,
       kids: [
         Skeletons.Button.Svg({
-          name: "logo-drumee-full",
+          chartName: "logo-drumee-full",
           type: "raw",
           className: `${fig}__logo-content`,
         })
@@ -23,6 +23,7 @@ export function header(ui) {
     Skeletons.Box.X({
       className: `${fig}__progress-bar step-${step}`,
     }),
+
     Skeletons.Box.Y({
       className: `${fig}__text-container`,
       kids: [

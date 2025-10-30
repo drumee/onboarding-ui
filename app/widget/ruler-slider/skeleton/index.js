@@ -30,6 +30,10 @@ function skl_slider_bar(ui) {
       })
     )
   }
+  let txt = "Extremely important"
+  if (Visitor.device() == _a.mobile) {
+    txt = "A lot"
+  }
   const skeleton = Skeletons.Box.G({
     className: `${pfx}__main`,
     debug: __filename,
@@ -45,9 +49,8 @@ function skl_slider_bar(ui) {
       }),
       Skeletons.Note({
         className: `${pfx}__text`,
-        content: "Extremely important"
+        content: txt
       }),
-
     ]
   })
 

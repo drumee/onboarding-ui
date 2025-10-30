@@ -81,7 +81,7 @@ class ruler_slider extends LetcBox {
     r[this.mget(_a.name)] = this.mget(_a.value)
     return r
   }
-  
+
   /**
    * 
    * @param {*} child 
@@ -91,8 +91,19 @@ class ruler_slider extends LetcBox {
   onPartReady(child, pn, section) {
     switch (pn) {
       case _a.slider:
-        this.ensurePart("rulers").then((p) => {
+        this.ensurePart("rulers").then(async (p) => {
           this.setupInteract(child.el, p)
+          let mark = this.mget(_a.value);
+          if (mark && mark > 1) {
+            p.children.forEach((c) => {
+              if (c.mget('mark') == mark) {
+                let { left } = c.$el.position()
+                this.ensurePart(_a.slider).then((p) => {
+                  p.el.style.width = `${left + 30}px`
+                })
+              }
+            })
+          }
         })
         break;
     }

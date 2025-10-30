@@ -1,5 +1,6 @@
 @use "vars";
 @use "form";
+@use "done";
 
 .drumee-router__main {
   height: auto;
@@ -108,10 +109,6 @@
     &.step-3::before {
       width: 80%;
     }
-
-    // &.step-4::before {
-    //   width: 79%;
-    // }
   }
 
   &__button-main {
@@ -184,4 +181,5 @@
       }
     }
   }
+
 }

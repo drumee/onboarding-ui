@@ -47,3 +47,22 @@ export function button(ui, opt) {
     kids
   })
 }
+
+
+
+/**
+ * 
+ * @returns 
+ */
+export function menuInput(ui, opt = {}) {
+  const pfx = `${ui.fig.family}`;
+  let { className = "" } = opt;
+  return {
+    ...opt,
+    state: 0,
+    radio: ui._id,
+    kind: 'menu_input',
+    className: `${pfx}__entry-input ${className}`,
+    uiHandler: [ui]
+  }
+}

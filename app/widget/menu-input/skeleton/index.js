@@ -30,19 +30,19 @@ function entry(ui) {
     debug: __filename,
     kids: [
       Skeletons.Entry(args),
-      Skeletons.Button.Svg({
-        className: `${pfx}-icon`,
-        ico: 'unavailable',
-        service: _e.reset
+      Skeletons.Note({
+        className: `${pfx}-shower`, sys_pn: "shower", state: 0
       }),
       Skeletons.Button.Svg({
         className: `${pfx}-icon`,
-        ico: 'arrow-down',
+        ico: 'carret-down',
+        state: 0,
+        sys_pn: "carret",
+        icons: ['carret-down', 'carret-up',],
         service: 'show-menu'
       })
     ]
   })
-
 }
 
 /**
@@ -50,7 +50,6 @@ function entry(ui) {
  * @param {*} ui 
  * @returns 
  */
-
 function menu_input(ui) {
   let Container, Main, Items;
   if (ui.mget(_a.axis == _a.x)) {
@@ -83,6 +82,7 @@ function menu_input(ui) {
       }),
     ]
   });
+
   return Container({
     className: `${ui.fig.family}__main`,
     debug: __filename,

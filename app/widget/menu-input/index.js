@@ -1,3 +1,4 @@
+const emojiFlags = require('emoji-flags');
 
 class __menu_input extends LetcBox {
 
@@ -13,6 +14,9 @@ class __menu_input extends LetcBox {
     })
     this.kbdHandler = this.kbdHandler.bind(this);
     this.clickHandler = this.clickHandler.bind(this);
+    this.showMenu = this.showMenu.bind(this);
+    this.populateItems = this.populateItems.bind(this);
+    this.debug("AAA:19", emojiFlags)
   }
 
   /**
@@ -73,32 +77,18 @@ class __menu_input extends LetcBox {
    * @param {*} cmd
    */
   showMenu(cmd) {
+    let r = []
+    this.ensurePart("shower").then((p) => {
+      p.setState(0)
+    })
     this.ensurePart('items').then((p) => {
       if (!p.isEmpty()) {
         p.clear()
         return
       }
-      let name = this.mget(_a.name);
-      let refAttribute = this.mget('refAttribute');
-      let r = [];
-      let items = [];
-      if (_.isArray(this.mget(_a.items))) {
-        items = this.mget(_a.items);
-      }
+      let items = this.mget(_a.items);
       for (let item of items) {
-        let ref = item[refAttribute]
-        let el = Skeletons.Note({
-          ...item,
-          className: `${this.fig.family}__item ${name}`,
-          content: ref || item.label,
-          service: "item-selected",
-          uiHandler: [this],
-          formItem: name,
-          name,
-          state: 0
-        })
-        r.push(el);
-        if (r.length > 50) break;
+        r.push(this.getItem(item));
       }
       p.feed(r)
     })
@@ -143,29 +133,39 @@ class __menu_input extends LetcBox {
   /**
    * 
    */
+  getItem(item) {
+    let { emoji } = emojiFlags.countryCode(item.country_code);
+    let refAttribute = this.mget('refAttribute');
+    let ref = item[refAttribute]
+    return Skeletons.Note({
+      ...item,
+      className: `${this.fig.family}__item`,
+      content: `<span class="flag">${emoji}</span><span class="name">${ref}</span>`,
+      service: "item-selected",
+      uiHandler: [this],
+      state: 0
+    })
+
+  }
+
+
+  /**
+   * 
+   */
   populateItems(cmd) {
     let r = []
     if (!cmd || !cmd.getValue) return r;
-    let val = cmd.getValue();
+    let val = cmd.getValue() || '.*';
     let reg = new RegExp(val, 'i')
-
     let refAttribute = this.mget('refAttribute');
     this._selIndex = 0;
+    this.ensurePart("shower").then((p) => {
+      p.setState(0)
+    })
     for (let item of this.mget(_a.items)) {
       let ref = item[refAttribute]
       if (reg.test(ref) || reg.test(item.label)) {
-        let el = Skeletons.Note({
-          ...item,
-          className: `${this.fig.family}__item`,
-          content: ref || item.label,
-          service: "item-selected",
-          uiHandler: [this],
-          state: 0
-        })
-        r.push(el);
-        if (val) {
-          if (r.length > 10) break;
-        }
+        r.push(this.getItem(item));
       }
     }
     this.ensurePart('items').then((p) => {
@@ -178,34 +178,17 @@ class __menu_input extends LetcBox {
    * 
    */
   commitSelection(cmd) {
+    this.ensurePart("shower").then((p) => {
+      let content = cmd.mget(_a.content)
+      p.set({ content })
+      p.setState(1)
+    })
     this.ensurePart("entry").then((p) => {
-      let value = cmd.mget(_a.content) || cmd.mget(_a.label)
-      p.setValue(value);
-      const name = this.mget(_a.name);
-      p.mset(name, cmd.mget(name))
-      p.mset(_a.value, value)
-      let payload = {};
-      payload[name] = value;
-      let api = this.mget(_a.api);
-      //this.debug("AAA: 174", p, this, api, payload, value, this.mget(_a.value));
-      let args;
-      if (value !== this.mget(_a.value) && api && api.service) {
-        let service = api.service;
-        delete api.service;
-
-        args = { ...api, ...payload };
-        this.postService(service, { args }).then((data) => {
-          this.mset(_a.value, value);
-          //this.debug("AAA: 181", data, this.mget(_a.value));
-        })
-      }
-      if (this.mget(_a.service)) {
-        this.triggerHandlers({
-          service: this.mget(_a.service),
-          source: cmd
-        })
-      }
+      p.setValue("");
       this.clearItems();
+    })
+    this.ensurePart("carret").then((p) => {
+      p.setState(1);
     })
   }
 

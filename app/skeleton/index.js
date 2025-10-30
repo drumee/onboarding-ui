@@ -6,15 +6,12 @@ module.exports = function (ui, opt = {}) {
   let content = user_form(ui);
   switch (ui._step) {
     case 1:
-      content = user_form(ui);
-      break;
-    case 2:
       content = usage_form(ui);
       break;
-    case 3:
+    case 2:
       content = purpose_form(ui);
       break;
-    case 4:
+    case 3:
       content = { kind: 'ruler_slider', service: "set-privacy" };
       break;
   }

@@ -16,17 +16,15 @@ class onboarding_app extends LetcBox {
     this._step = 0;
   }
 
-
   /**
    * 
    */
   async start() {
-    await this.fetchService(SERVICE.onboarding.get_env, {}, { async: 1 });
-    setTimeout(() => {
-      this.bindEvent(_a.live);
-    }, 3000)
+    let { data: countries } = await this.fetchService(SERVICE.onboarding.get_countries, {}, { async: 1 });
+    this.debug("AAA:24", countries)
+    this.mset({ countries })
+    this.loadForm();
   }
-
 
   /**
    * 
@@ -55,7 +53,7 @@ class onboarding_app extends LetcBox {
   /**
    * 
    */
-  loadForm(){
+  loadForm() {
     this.feed(require('./skeleton')(this))
   }
 
@@ -63,9 +61,8 @@ class onboarding_app extends LetcBox {
    * Upon DOM refresh, after element actually insterted into DOM
    */
   onDomRefresh() {
-    this.loadForm()
+    this.start()
   }
-
 
   /**
    * User Interaction Evant Handler
@@ -78,7 +75,7 @@ class onboarding_app extends LetcBox {
     switch (service) {
       case _a.next:
         this._step++;
-        if (this._step > 4) this._step = 4;
+        if (this._step > 3) this._step = 3;
         this.loadForm()
         break;
       case _a.back:
@@ -86,7 +83,8 @@ class onboarding_app extends LetcBox {
         if (this._step < 0) this._step = 0;
         this.loadForm()
         break;
-
+      default:
+        RADIO_BROADCAST.trigger(_e.click)
     }
   }
 

@@ -1,5 +1,5 @@
 const { locale } = require("../../locale")
-
+const { menuInput } = require("./button")
 /**
  * 
  * @param {*} ui 
@@ -19,6 +19,8 @@ export function entry(ui, opt) {
     service,
     placeholder,
     uiHandler: [ui],
+    state:0,
+    radio:ui._id
   }
   if (sys_pn) {
     args.sys_pn = sys_pn;
@@ -71,10 +73,21 @@ export function user_form(ui, opt) {
             name: _a.email,
             placeholder: "me@example.org"
           }),
-          entry(ui, {
-            label: LOCALE.COUNTRY,
-            name: _a.country,
-            placeholder: "Borderland"
+          Skeletons.Box.G({
+            className: `${ui.fig.family}__entry-main`,
+            kids: [
+              Skeletons.Note({
+                className: `${ui.fig.family}__entry-label country`,
+                content: LOCALE.COUNTRY,
+              }),
+              menuInput(ui, {
+                items: ui.mget('countries'),
+                name: 'country',
+                refAttribute: 'locale_name',
+                placeholder: 'Select a country',
+                value: "",
+              }),
+            ]
           })
         ]
       }),
@@ -132,7 +145,7 @@ export function purpose_form(ui, opt) {
   let service = _e.select;
   let kids = [];
   for (let p of purpose) {
-    kids.push(Skeletons.Note({content: p}))
+    kids.push(Skeletons.Note({ content: p }))
   }
   return Skeletons.Box.G({
     className: `${pfx}-main`,

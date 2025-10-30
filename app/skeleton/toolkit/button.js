@@ -6,7 +6,7 @@
  * @returns 
  */
 export function button(ui, opt) {
-  let { label, img, service, sys_pn, className } = opt;
+  let { label, img, service, state, sys_pn, className } = opt;
   const pfx = className || `${ui.fig.family}__button`;
   let kids = []
   if (label) kids.push(
@@ -41,6 +41,7 @@ export function button(ui, opt) {
     uiHandler: [ui],
     sys_pn,
     service,
+    state,
     kidsOpt: {
       active: 0,
     },
@@ -61,6 +62,7 @@ export function menuInput(ui, opt = {}) {
     ...opt,
     state: 0,
     radio: ui._id,
+    name: 'country_code',
     kind: 'menu_input',
     className: `${pfx}__entry-input ${className}`,
     uiHandler: [ui]

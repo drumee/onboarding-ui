@@ -16,7 +16,15 @@ class __menu_input extends LetcBox {
     this.clickHandler = this.clickHandler.bind(this);
     this.showMenu = this.showMenu.bind(this);
     this.populateItems = this.populateItems.bind(this);
-    this.debug("AAA:19", emojiFlags)
+    let items = []
+    for (let k of _.keys(emojiFlags)) {
+      if (/[A-Z]{2,2}/.test(k)) {
+        let { name: locale_name, emoji } = emojiFlags.countryCode(k) || {}
+        items.push({ country_code: k, emoji, locale_name })
+      }
+    }
+    this.mset({ items })
+    // this.debug("AAA:19", items, this.mget('items'), emojiFlags)
   }
 
   /**
@@ -26,6 +34,26 @@ class __menu_input extends LetcBox {
     RADIO_KBD.off(_e.keyup, this.kbdHandler)
     RADIO_BROADCAST.off(_e.click, this.clickHandler)
     RADIO_CLICK.off(_e.keyup, this.clickHandler)
+  }
+
+  /**
+   * 
+   * @param {*} child 
+   * @param {*} pn 
+   * @param {*} section 
+   */
+  onPartReady(child, pn, section) {
+    switch (pn) {
+      case "shower":
+        let v = this.mget(_a.value)
+        if (!v) break;
+        child.el.dataset.state = "1";
+        child.mset({ state: 1 })
+        let { name, emoji } = emojiFlags.countryCode(v) || {}
+        let content = `<span class="flag">${emoji}</span><span class="name">${name}</span>`
+        child.set({ content })
+        break;
+    }
   }
 
   /**
@@ -134,13 +162,12 @@ class __menu_input extends LetcBox {
    * 
    */
   getItem(item) {
-    let { emoji } = emojiFlags.countryCode(item.country_code);
     let refAttribute = this.mget('refAttribute');
     let ref = item[refAttribute]
     return Skeletons.Note({
       ...item,
       className: `${this.fig.family}__item`,
-      content: `<span class="flag">${emoji}</span><span class="name">${ref}</span>`,
+      content: `<span class="flag">${item.emoji}</span><span class="name">${ref}</span>`,
       service: "item-selected",
       uiHandler: [this],
       state: 0
@@ -177,7 +204,19 @@ class __menu_input extends LetcBox {
   /**
    * 
    */
+  getData() {
+    let r = {
+      name: this.mget(_a.name),
+      value: this.mget(_a.value),
+    }
+    r[this.mget(_a.name)] = this.mget(_a.value)
+    return r
+  }
+  /**
+   * 
+   */
   commitSelection(cmd) {
+    this.debug("AAA:181", cmd)
     this.ensurePart("shower").then((p) => {
       let content = cmd.mget(_a.content)
       p.set({ content })
@@ -190,6 +229,8 @@ class __menu_input extends LetcBox {
     this.ensurePart("carret").then((p) => {
       p.setState(1);
     })
+    this.mset({ value: cmd.mget('country_code') })
+    this.triggerHandlers({ source: cmd })
   }
 
   /**

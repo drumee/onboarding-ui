@@ -12,7 +12,11 @@ module.exports = function (ui, opt = {}) {
       content = purpose_form(ui);
       break;
     case 3:
-      content = { kind: 'ruler_slider', service: "set-privacy" };
+      content = {
+        kind: 'ruler_slider',
+        name: 'privacy',
+        service: "set-privacy"
+      };
       break;
   }
   return Skeletons.Box.Y({

@@ -5,5 +5,11 @@
     "How do you plan to use Drumee?",
     "How much do you care about data privacy?"
   ],
-  "tips": "Try Drumee, the privacy-first productivity space where your data stays only yours. Sign up for our closed beta, we’ll let you know once you’re in! 🙌"
+  "tips": "Try Drumee, the privacy-first productivity space where your data stays only yours. Sign up for our closed beta, we’ll let you know once you’re in! 🙌",
+  "purpose": [
+    "Personal productivity",
+    "Team collaboration",
+    "File storage",
+    "Other"
+  ]
 }

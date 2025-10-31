@@ -38,26 +38,6 @@ class __menu_input extends LetcBox {
 
   /**
    * 
-   * @param {*} child 
-   * @param {*} pn 
-   * @param {*} section 
-   */
-  onPartReady(child, pn, section) {
-    switch (pn) {
-      case "shower":
-        let v = this.mget(_a.value)
-        if (!v) break;
-        child.el.dataset.state = "1";
-        child.mset({ state: 1 })
-        let { name, emoji } = emojiFlags.countryCode(v) || {}
-        let content = `<span class="flag">${emoji}</span><span class="name">${name}</span>`
-        child.set({ content })
-        break;
-    }
-  }
-
-  /**
-   * 
    * @param {*} key 
    */
   kbdHandler(key) {

@@ -1,5 +1,7 @@
 
 const SVC_OPT = { async: 1 };
+const TOOLS = ['notion', 'dropbox', 'google_drive', 'other'];
+const PLANS = ['personal', 'team', 'storage', 'other'];
 class onboarding_app extends LetcBox {
 
   /**
@@ -69,7 +71,7 @@ class onboarding_app extends LetcBox {
    * @param {*} res 
    */
   onServerComplain(err) {
-    this.warn("AAA:131", err)
+    this.warn("AAA:72", err)
     Butler.say(LOCALE.INTERNAL_ERROR)
   }
 
@@ -99,9 +101,9 @@ class onboarding_app extends LetcBox {
    * 
    */
   checkForm() {
-    let data = this.getData()
+    let data = this.getData() || {}
     if (_.isEmpty(data)) {
-      data = this._saved_data[this._step]
+      data = this._saved_data[this._step] || {}
     }
     let completed = 1;
     switch (this._step) {
@@ -114,7 +116,7 @@ class onboarding_app extends LetcBox {
           }
           this._data[k] = data[k]
         }
-        if (!data.email.isEmail()) {
+        if (!data.email || !data.email.isEmail()) {
           completed = 0;
         } else {
           this._data.email = data.email;
@@ -125,7 +127,7 @@ class onboarding_app extends LetcBox {
         break
       case 1:
         this._data.tools = []
-        for (let k of ['notion', 'dropbox', 'google_drive', 'other']) {
+        for (let k of TOOLS) {
           if (data[k]) {
             this._data.tools.push(k)
           }
@@ -139,7 +141,7 @@ class onboarding_app extends LetcBox {
         break
       case 2:
         this._data.plan = []
-        for (let k of ['personal', 'team', 'storage', 'other']) {
+        for (let k of PLANS) {
           if (data[k]) {
             this._data.plan.push(k)
           }
@@ -165,7 +167,7 @@ class onboarding_app extends LetcBox {
   /**
    * 
    */
-  saveData() {
+  commitForm() {
     let args = this.getData()
     this.setItemState(_a.next, 0)
     switch (this._step) {
@@ -203,11 +205,18 @@ class onboarding_app extends LetcBox {
       case 3:
         this.postService(
           SERVICE.onboarding.save_privacy, args, SVC_OPT
-        ).then((data) => {
+        ).then(() => {
           this._saved_data[this._step] = args;;
           this._step++;
           if (this._step > 3) this._step = 3;
           this.feed(require('./skeleton/done')(this))
+          localStorage.onboarding_step = "0"
+          this.postService(
+            SERVICE.onboarding.reset, {}, SVC_OPT
+          ).then((data) => {
+            this._saved_data = {};;
+            this._step = 0;
+          })
         });
         break;
     }
@@ -224,7 +233,7 @@ class onboarding_app extends LetcBox {
     switch (service) {
       case _a.next:
         if (!this.checkForm()) return;
-        this.saveData()
+        this.commitForm()
         break;
       case _a.back:
         this._step--;

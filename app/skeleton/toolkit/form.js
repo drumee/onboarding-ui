@@ -76,7 +76,7 @@ export function user_form(ui, opt) {
             label: LOCALE.EMAIL,
             name: _a.email,
             value: email,
-            placeholder: "me@example.org"
+            placeholder: "i@example.org"
           }),
           Skeletons.Box.G({
             className: `${ui.fig.family}__entry-main`,
@@ -86,7 +86,6 @@ export function user_form(ui, opt) {
                 content: LOCALE.COUNTRY,
               }),
               menuInput(ui, {
-                // items: ui.mget('countries'),
                 name: 'country_code',
                 service: "select-country",
                 refAttribute: 'locale_name',

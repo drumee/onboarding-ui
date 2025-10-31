@@ -2,6 +2,8 @@
 * Widget skeleton automatically generated on 2025-03-05T03:29:33.857Z
 * npm run add-widget -- --fig=<grpup.family> --dest=/path/to/the/widget
 * ==================================================================== */
+const emojiFlags = require('emoji-flags');
+
 /**
  * 
  * @param {*} ui 
@@ -25,13 +27,31 @@ function entry(ui) {
     sys_pn: "entry",
     partHandler: [ui]
   }
+
+  let v = ui.mget(_a.value)
+  let shower_state = 0;
+  let content = '';
+  if (v) {
+    let { name, emoji } = emojiFlags.countryCode(v) || {}
+    if (name && emoji) {
+      shower_state = 1;
+      content = `<span class="flag">${emoji}</span><span class="name">${name}</span>`
+    }
+  }
   return Skeletons.Box.X({
     className: `${pfx}-container`,
     debug: __filename,
     kids: [
       Skeletons.Entry(args),
       Skeletons.Note({
-        className: `${pfx}-shower`, sys_pn: "shower", state: 0
+        className: `${pfx}-shower`,
+        sys_pn: "shower",
+        state: shower_state,
+        partHandler: [ui],
+        content,
+        dataset: {
+          state: shower_state
+        }
       }),
       Skeletons.Button.Svg({
         className: `${pfx}-icon`,
@@ -51,6 +71,7 @@ function entry(ui) {
  * @returns 
  */
 function menu_input(ui) {
+  ui.debug("AAA:57")
   let Container, Main, Items;
   if (ui.mget(_a.axis == _a.x)) {
     Container = Skeletons.Box.X;

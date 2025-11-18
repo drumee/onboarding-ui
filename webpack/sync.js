@@ -7,6 +7,7 @@ const {
   readFileSync: fsReadFile
 } = require('fs');
 const { template } = require('lodash');
+const { UI_RUNTIME_HOST } = process.env;
 
 class DrumeeSyncer {
   constructor(opt) {
@@ -20,7 +21,7 @@ class DrumeeSyncer {
     ) => {
       const { entry_page, src_path, bundle_base } = this.options;
       console.log("Building with options:", this.options);
-      if(entry_page){
+      if (entry_page) {
         let tpl = join(src_path, entry_page);
         console.log("Building entry page:", src_path, tpl);
         if (existsSync(tpl)) {
@@ -31,7 +32,7 @@ class DrumeeSyncer {
           console.log("Writing entry page to", dest);
           let data = template(html)({ hash });
           fsWriteFile(dest, data)
-        }else{
+        } else {
           console.warn("Entry page template was not found", tpl);
         }
       }
@@ -49,18 +50,17 @@ class DrumeeSyncer {
    */
   get_hash(stats) {
     console.log(`BUILDING FROM HASH=${stats.hash}`, stats.compiler);
-    let {
-      statics,
-      src_path,
-      bundle_path,
-      bundle_base,
-      no_hash,
-      entry_page
-    } = this.options;
+    let { statics, entry_page, bundle_path, target, bundle_base, no_hash } = this.options;
     let file = resolve(bundle_path, "index.json");
     const { stdout } = exec("git log -1 --pretty=format:'%h'", { silent: true });
     let [commit] = stdout.split(':');
     let p = readFileSync(resolve(this.src_path, 'package.json'));
+    let entry;
+    if (no_hash) {
+      entry = `${target}.js`;
+    } else {
+      entry = `${target}-${stats.hash}.js`;
+    }
     let data = {
       hash: stats.hash,
       timestamp: new Date().getTime(),
@@ -68,7 +68,8 @@ class DrumeeSyncer {
       rev: commit,
       version: p.version,
       no_hash: no_hash || 0,
-      entry_page
+      entry_page,
+      entry
     }
     console.log(`Writing data into ${file} `, data);
     try {
@@ -79,6 +80,14 @@ class DrumeeSyncer {
           const dest = resolve(bundle_base, entity);
           console.log("SYNCING STATICS...", `${src} ${dest}`);
           exec(`rsync -razv ${src} ${dest}`);
+        }
+      }
+      if (UI_RUNTIME_HOST) {
+        let cmd = resolve(__dirname, "sync.sh");
+        if (existsSync(cmd)) {
+          exec(cmd);
+        } else {
+          console.error(`Sync command not found (${cmd})`)
         }
       }
     } catch (e) {

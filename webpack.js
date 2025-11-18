@@ -107,7 +107,8 @@ function normalize() {
     src_path: UI_SRC_PATH,
     target,
     mode,
-    entry_page: ENTRY_PAGE
+    sync_templates: 0
+    // entry_page: ENTRY_PAGE
     //statics: ["index.html"]
   };
   if (OUTPUT_FILENAME == "[name].js") {
@@ -119,8 +120,9 @@ function normalize() {
 
 module.exports = function () {
   const opt = normalize();
-  const app = join(UI_SRC_PATH, 'app', 'index.js');
-  let res = makeOptions({ app }, opt);
+  let args = {};
+  args[BUILD_TARGET] = join(UI_SRC_PATH, 'app')
+  let res = makeOptions(args, opt);
   if (res.optimization) {
     res.optimization.realContentHash = true
   } else {

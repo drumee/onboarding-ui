@@ -18,4 +18,13 @@ async function start(e) {
     })
   })
 }
-document.addEventListener('drumee:router:ready', start);
+
+if (document.readyState == 'complete') {
+  start()
+} else {
+  if (location.hash) {
+    document.addEventListener('drumee:plugins:ready', start);
+  } else {
+    document.addEventListener('drumee:router:ready', start);
+  }
+}

@@ -7,8 +7,7 @@ const { menuInput } = require("./button")
  * @returns 
  */
 export function entry(ui, opt) {
-  let { value, name, placeholder, label, sys_pn, service = _a.input, autocomplete } = opt;
-  autocomplete = autocomplete || name;
+  let { value, name, placeholder, label, sys_pn, service = _a.input } = opt;
   const pfx = `${ui.fig.family}__entry`;
   let args = {
     className: `${pfx}-input`,
@@ -20,7 +19,6 @@ export function entry(ui, opt) {
     service,
     placeholder,
     uiHandler: [ui],
-    autocomplete,
     state: 0,
     radio: ui._id
   }
@@ -40,6 +38,7 @@ export function entry(ui, opt) {
   })
 }
 
+
 /**
  * 
  * @param {*} ui 
@@ -58,7 +57,6 @@ export function user_form(ui, opt) {
         kids: [
           entry(ui, {
             label: LOCALE.FIRSTNAME,
-            autocomplete: "given-name",
             name: _a.firstname,
             placeholder: "Alice",
             value: firstname
@@ -78,7 +76,7 @@ export function user_form(ui, opt) {
             label: LOCALE.EMAIL,
             name: _a.email,
             value: email,
-            placeholder: "mi5@example.org"
+            placeholder: "i@example.org"
           }),
           Skeletons.Box.G({
             className: `${ui.fig.family}__entry-main`,
@@ -117,40 +115,33 @@ export function usage_form(ui, opt) {
     className: `${pfx}-main`,
     kidsOpt: {
       service,
-      toggle: 1,
       className: `${pfx}-button`,
-      uiHandler: [ui],
-      partHandler: [ui],
     },
     kids: [
       Skeletons.Button.Label({
         label: "Notion",
         name: "notion",
         ico: "notion",
-        state: tools.notion || 0,
-        initialState: tools.notion || 0,
+        state: tools.notion || 0
       }),
       Skeletons.Button.Label({
         label: "Dropbox",
         name: "dropbox",
         ico: "dropbox",
-        state: tools.dropbox || 0,
-        initialState: tools.dropbox || 0,
+        state: tools.dropbox || 0
       }),
       Skeletons.Button.Label({
         name: "google_drive",
         label: "Google Drive",
         ico: "google-drive",
-        state: tools.google_drive || 0,
-        initialState: tools.google_drive || 0,
+        state: tools.google_drive || 0
       }),
       Skeletons.Note({
         content: "Other",
         name: "other",
         formItem: "other",
         state: tools.other || 0,
-        reference: _a.state,
-        initialState: tools.other || 0,
+        reference: _a.state
       }),
     ]
   })
@@ -178,14 +169,15 @@ export function purpose_form(ui, opt) {
       reference: _a.state,
       state,
       name: keys[i],
+      dataset: {
+        state,
+      }
     }))
     i++;
   }
   return Skeletons.Box.G({
     className: `${pfx}-main`,
-    bubble: 0,
     kidsOpt: {
-      bubble: 0,
       service,
       className: `${pfx}-button`
     },

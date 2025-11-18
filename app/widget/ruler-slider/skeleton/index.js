@@ -26,8 +26,7 @@ function skl_slider_bar(ui) {
       Skeletons.Element({
         className: `${pfx}__tick`,
         service: _e.select,
-        mark: i,
-        dataset: { mark: i }
+        mark: i
       })
     )
   }

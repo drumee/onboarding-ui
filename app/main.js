@@ -2,7 +2,6 @@
 const SVC_OPT = { async: 1 };
 const TOOLS = ['notion', 'dropbox', 'google_drive', 'other'];
 const PLANS = ['personal', 'team', 'storage', 'other'];
-
 class onboarding_app extends LetcBox {
 
   /**
@@ -19,23 +18,21 @@ class onboarding_app extends LetcBox {
     this._step = parseInt(localStorage.onboarding_step) || 0;
     this._data = {}
     this._saved_data = []
-    this._timer;
   }
 
   /**
    * 
    */
   async start() {
-    let { data } = await this.fetchService(
+    let data = await this.fetchService(
       SERVICE.onboarding.get_response, {}, SVC_OPT
     );
 
-    this.debug("AAA:167", data)
     if (data) {
       this._saved_data[0] = {
-        firstname: data.firstname,
-        lastname: data.lastname,
-        email: data.email,
+        firstname: this.mget(_a.firstname) || data.firstname,
+        lastname: this.mget(_a.lastname) || data.lastname,
+        email: this.mget(_a.email) || data.email,
         country_code: data.country_code
       }
       if (data.tools) {
@@ -46,7 +43,7 @@ class onboarding_app extends LetcBox {
       }
       this._saved_data[3] = { privacy: data.privacy }
     }
-
+    this._xlink = data.xlink;
     this.loadForm();
     if (data) {
       setTimeout(() => { this.checkForm() }, 1000)
@@ -73,7 +70,7 @@ class onboarding_app extends LetcBox {
    * @param {*} res 
    */
   onServerComplain(err) {
-    this.warn("AAA:72", err)
+    this.warn("[onServerComplain][73]", err)
     Butler.say(LOCALE.INTERNAL_ERROR)
   }
 
@@ -90,9 +87,8 @@ class onboarding_app extends LetcBox {
    * 
    */
   setItemState(pn, s = 0) {
-    this.ensurePart(pn).then((p) => { setTimeout(() => { p.setState(s) }, 100) })
+    this.ensurePart(pn).then((p) => { p.setState(s) })
   }
-  
   /**
    * Upon DOM refresh, after element actually insterted into DOM
    */
@@ -112,7 +108,7 @@ class onboarding_app extends LetcBox {
     switch (this._step) {
       case 0:
         for (let k of [_a.firstname, _a.lastname, _a.email, 'country_code']) {
-          let value = data[k]
+          let value = data[k] || this._data[k]
           if (!value) {
             completed = 0;
             continue
@@ -124,43 +120,45 @@ class onboarding_app extends LetcBox {
         } else {
           this._data.email = data.email;
         }
+        if (completed) {
+          this.setItemState(_a.next, 1)
+        }
         break
       case 1:
-        this._data.tools = {}
+        this._data.tools = []
         for (let k of TOOLS) {
           if (data[k]) {
-            this._data.tools[k] = data[k]
+            this._data.tools.push(k)
           }
         }
-        this.mset({ tools: this._data.tools });
-        if (_.isEmpty(this._data.tools)) {
+        if (this._data.tools.length) {
+          this.setItemState(_a.next, 1)
+          this.mset({ tools: this._data.tools })
+        } else {
           completed = 0;
         }
         break
       case 2:
-        this._data.plan = {}
+        this._data.plan = []
         for (let k of PLANS) {
           if (data[k]) {
-            this._data.plan[k] = data[k]
+            this._data.plan.push(k)
           }
         }
-        this.mset({ plan: this._data.plan })
-        if (_.isEmpty(this._data.plan)) {
+        if (this._data.plan.length) {
+          this.mset({ plan: this._data.plan })
+          this.setItemState(_a.next, 1)
+        } else {
           completed = 0;
         }
         break
       case 3:
         this._data.privacy = this.getData().privacy
-        if (this._data.privacy == null) {
-          completed = 0;
+        if (this._data.privacy != null) {
+          this.setItemState(_a.next, 1)
+          completed = 1;
         }
         break
-    }
-    this.debug("AAA:158z", data, this._data, this._step, completed)
-    if (completed) {
-      this.setItemState(_a.next, 1)
-    } else {
-      this.setItemState(_a.next, 0)
     }
     return completed;
   }
@@ -171,13 +169,11 @@ class onboarding_app extends LetcBox {
   commitForm() {
     let args = this.getData()
     this.setItemState(_a.next, 0)
-    this.debug("AAA:173", args)
     switch (this._step) {
       case 0:
         this.postService(
           SERVICE.onboarding.save_user_info, args, SVC_OPT
         ).then((data) => {
-          this.debug("AAA:178", data)
           this._saved_data[this._step] = args;;
           this._step++;
           if (this._step > 3) this._step = 3;
@@ -213,13 +209,6 @@ class onboarding_app extends LetcBox {
           this._step++;
           if (this._step > 3) this._step = 3;
           this.feed(require('./skeleton/done')(this))
-          localStorage.onboarding_step = "0"
-          this.postService(
-            SERVICE.onboarding.reset, {}, SVC_OPT
-          ).then((data) => {
-            this._saved_data = {};;
-            this._step = 0;
-          })
         });
         break;
     }
@@ -233,11 +222,9 @@ class onboarding_app extends LetcBox {
    */
   async onUiEvent(cmd, args = {}) {
     const service = args.service || cmd.get(_a.service);
-    let sanity = this.checkForm()
-    this.debug("AAA:233", service, sanity, cmd.mget(_a.state));
     switch (service) {
       case _a.next:
-        if (!sanity) return;
+        if (!this.checkForm()) return;
         this.commitForm()
         break;
       case _a.back:
@@ -251,26 +238,31 @@ class onboarding_app extends LetcBox {
           this.checkForm();
         }
         break;
-      case "tick":
-        if (!cmd.mget(_a.state)) {
-          cmd.setState(1)
-        } else {
-          cmd.setState(0)
-        }
-        break;
-      case _e.select:
-        this.checkForm();
-        this._timer = setTimeout(() => { this._timer = null; }, 300)
-        break;
       case _a.input:
+      case _e.select:
         this.checkForm();
         break;
       case 'set-privacy':
         this._saved_data[this._step] = this.getData()
         this.setItemState(_a.next, 1)
         break;
+      case 'set-privacy':
+        this._saved_data[this._step] = this.getData()
+        this.setItemState(_a.next, 1)
+        break;
+      case 'follow-on-x':
+        window.open(this._xlink, "_blank");
+        break;
       case _e.close:
-        localStorage.onboarding_step = "0"
+        localStorage.onboarding_step = "0";
+        if (this.mget(_a.type) == 'app') {
+          this.postService(
+            SERVICE.onboarding.update_profile, { email: this.mget(_a.email) }, SVC_OPT
+          ).then((data) => {
+          })
+          this.triggerHandlers()
+          return;
+        }
         this.postService(
           SERVICE.onboarding.reset, {}, SVC_OPT
         ).then((data) => {
@@ -280,7 +272,7 @@ class onboarding_app extends LetcBox {
         })
         break;
       default:
-      // RADIO_BROADCAST.trigger(_e.click);
+        RADIO_BROADCAST.trigger(_e.click);
 
     }
   }
@@ -302,7 +294,7 @@ class onboarding_app extends LetcBox {
    */
   onWsMessage(service, data, options) {
     let { sender } = options;
-    this.debug("AAA:304 ", sender, service, data, options.service, options)
+    this.debug("AAA: ", sender, service, data, options.service, options)
   }
 }
 

@@ -21,7 +21,8 @@
     overflow: auto;
 
     &[data-device="mobile"] {
-      padding: 0px;
+      padding: 10px;
+      height: auto;
     }
   }
 

@@ -21,7 +21,7 @@ class ruler_slider extends LetcBox {
    * 
    */
   commitChange(cmd) {
-    let value = cmd.mget('mark')
+    let value = cmd.mget('mark') || 1;
     this.mset({ value })
     this.triggerHandlers({ importance: value })
   }
@@ -99,7 +99,7 @@ class ruler_slider extends LetcBox {
               if (c.mget('mark') == mark) {
                 let { left } = c.$el.position()
                 this.ensurePart(_a.slider).then((p) => {
-                  p.el.style.width = `${left + 30}px`
+                  p.el.style.width = `${left + 8 + c.$el.width() / 2}px`;
                 })
               }
             })
@@ -130,7 +130,7 @@ class ruler_slider extends LetcBox {
         this.commitChange(trigger);
         let { left } = trigger.$el.position()
         this.ensurePart(_a.slider).then((p) => {
-          p.el.style.width = `${left + 30}px`
+          p.el.style.width = `${left + 8 + trigger.$el.width() / 2}px`
         })
         break;
     }

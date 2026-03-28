@@ -5,13 +5,13 @@ module.exports = function (ui, opt = {}) {
   let data = ui._saved_data[ui._step] || {}
   let content = user_form(ui);
   switch (ui._step) {
-    case 1:
+    case 0:
       content = usage_form(ui);
       break;
-    case 2:
+    case 1:
       content = purpose_form(ui);
       break;
-    case 3:
+    case 2:
       content = {
         kind: 'ruler_slider',
         name: 'privacy',

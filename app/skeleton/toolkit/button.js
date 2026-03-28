@@ -56,8 +56,16 @@ export function button(ui, opt) {
  * @returns 
  */
 export function menuInput(ui, opt = {}) {
+  const emojiFlags = require('emoji-flags');
   const pfx = `${ui.fig.family}`;
   let { className = "" } = opt;
+  let items = []
+  for (let k of _.keys(emojiFlags)) {
+    if (/[A-Z]{2,2}/.test(k)) {
+      let { name: locale_name, emoji } = emojiFlags.countryCode(k) || {}
+      items.push({ country_code: k, value: k, emoji, label: locale_name, locale_name })
+    }
+  }
   return {
     ...opt,
     state: 0,

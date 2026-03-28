@@ -1,5 +1,6 @@
 const { locale } = require("../../locale")
 const { menuInput } = require("./button")
+const emojiFlags = require('emoji-flags');
 /**
  * 
  * @param {*} ui 
@@ -49,6 +50,13 @@ export function user_form(ui, opt) {
   const pfx = `${ui.fig.family}__user-form`;
   let data = ui._saved_data[ui._step] || {}
   let { firstname, lastname, email, country_code } = data;
+  let items = []
+  for (let k of _.keys(emojiFlags)) {
+    if (/[A-Z]{2,2}/.test(k)) {
+      let { name: locale_name, emoji } = emojiFlags.countryCode(k) || {}
+      items.push({ country_code: k, value: k, emoji, label: locale_name, locale_name })
+    }
+  }
   return Skeletons.Box.G({
     className: `${pfx}-main`,
     kids: [

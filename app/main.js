@@ -24,30 +24,30 @@ class onboarding_app extends LetcBox {
    * 
    */
   async start() {
-    let data = await this.fetchService(
-      SERVICE.onboarding.get_response, {}, SVC_OPT
-    );
+    // let data = await this.fetchService(
+    //   SERVICE.onboarding.get_response, {}, SVC_OPT
+    // );
 
-    if (data) {
-      this._saved_data[0] = {
-        firstname: this.mget(_a.firstname) || data.firstname,
-        lastname: this.mget(_a.lastname) || data.lastname,
-        email: this.mget(_a.email) || data.email,
-        country_code: data.country_code
-      }
-      if (data.tools) {
-        this._saved_data[1] = data.tools
-      }
-      if (data.plan) {
-        this._saved_data[2] = data.plan
-      }
-      this._saved_data[3] = { privacy: data.privacy }
-    }
-    this._xlink = data.xlink;
+    // if (data) {
+    //   this._saved_data[0] = {
+    //     firstname: this.mget(_a.firstname) || data.firstname,
+    //     lastname: this.mget(_a.lastname) || data.lastname,
+    //     email: this.mget(_a.email) || data.email,
+    //     country_code: data.country_code
+    //   }
+    //   if (data.tools) {
+    //     this._saved_data[1] = data.tools
+    //   }
+    //   if (data.plan) {
+    //     this._saved_data[2] = data.plan
+    //   }
+    //   this._saved_data[3] = { privacy: data.privacy }
+    // }
+    // this._xlink = data.xlink;
     this.loadForm();
-    if (data) {
-      setTimeout(() => { this.checkForm() }, 1000)
-    }
+    // if (data) {
+    //   setTimeout(() => { this.checkForm() }, 1000)
+    // }
   }
 
   /**

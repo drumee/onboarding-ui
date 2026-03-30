@@ -1,5 +1,8 @@
-module.exports = function user_form(ui, opt) {
+const { locale } = require("../locale")
+
+module.exports = function done_screen(ui, opt) {
   const pfx = `${ui.fig.family}__done`;
+  const { done } = locale();
   const content = [
     Skeletons.Box.X({
       className: `${pfx}-container`,
@@ -15,29 +18,36 @@ module.exports = function user_form(ui, opt) {
       kids: [
         Skeletons.Element({
           className: `${pfx}-big-text`,
-          content: `You’re all done`
+          content: done.title
         }),
         Skeletons.Element({
-          className: `${pfx}-call-to-action`,
-          content: `<span>Follow us on</span>
-          <a href="${ui._xlink}" class="highlight">X╱Twitter</a>
-          <span>for the latest Drumee updates and vibes.</span>`
+          className: `${pfx}-subtitle`,
+          content: done.subtitle
+        }),
+        Skeletons.Element({
+          className: `${pfx}-description`,
+          content: done.description
         })
       ]
     }),
     Skeletons.Box.X({
-      className: `${pfx}-container`,
+      className: `${pfx}-actions`,
       kids: [
         Skeletons.Element({
-          className: `${pfx}-button neutral`,
-          content: LOCALE.CLOSE,
-          service: _e.close
-        }),
+          className: `${pfx}-button primary`,
+          content: done.enter_workspace,
+          service: 'enter-workspace'
+        })
+      ]
+    }),
+    Skeletons.Box.Y({
+      className: `${pfx}-footer-links`,
+      kids: [
         Skeletons.Element({
-          className: `${pfx}-button active`,
-          content: `Follow Drumee`,
-          service: 'follow-on-x'
-          // href: 'https://x.com/DrumeeOS'
+          className: `${pfx}-link`,
+          content: `<span>${done.follow_text_before}</span>
+          <a href="${ui._xlink}" class="highlight">X╱Twitter</a>
+          <span>${done.follow_text_after}</span>`
         })
       ]
     }),

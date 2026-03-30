@@ -1,194 +1,245 @@
 const { locale } = require("../../locale")
-const { menuInput } = require("./button")
-const emojiFlags = require('emoji-flags');
+
 /**
- * 
- * @param {*} ui 
- * @param {*} opt 
- * @returns 
+ * Step 1: Sign In form - username/email + password
+ * Based on signin module: SERVICE.yp.signin with { vars: { username, password } }
  */
-export function entry(ui, opt) {
-  let { value, name, placeholder, label, sys_pn, service = _a.input } = opt;
-  const pfx = `${ui.fig.family}__entry`;
-  let args = {
-    className: `${pfx}-input`,
-    name,
-    value,
-    formItem: name,
-    innerClass: name,
-    mode: _a.interactive,
-    service,
-    placeholder,
-    uiHandler: [ui],
-    state: 0,
-    radio: ui._id
-  }
-  if (sys_pn) {
-    args.sys_pn = sys_pn;
-    args.partHandler = [ui];
-  }
-  return Skeletons.Box.G({
+export function sign_in_form(ui, opt) {
+  const pfx = `${ui.fig.family}__sign-in`;
+  const loc = locale();
+  let data = ui._saved_data[ui._step] || {}
+
+  return Skeletons.Box.Y({
     className: `${pfx}-main`,
     kids: [
-      Skeletons.Note({
-        className: `${pfx}-label ${name}`,
-        content: label,
+      Skeletons.Entry({
+        className: `${pfx}-input`,
+        name: _a.username,
+        sys_pn: _a.username,
+        value: data.username || ui.mget(_a.username) || '',
+        formItem: _a.username,
+        innerClass: _a.username,
+        mode: _a.interactive,
+        service: _a.input,
+        placeholder: loc.email_placeholder,
+        uiHandler: [ui],
+        state: 0,
+        radio: ui._id
       }),
-      Skeletons.Entry(args)
+      Skeletons.Entry({
+        className: `${pfx}-input`,
+        name: _a.password,
+        sys_pn: _a.password,
+        value: '',
+        formItem: _a.password,
+        innerClass: _a.password,
+        mode: _a.interactive,
+        service: _a.input,
+        placeholder: loc.password_placeholder,
+        uiHandler: [ui],
+        state: 0,
+        radio: ui._id,
+        type: _a.password
+      }),
+      Skeletons.Note({
+        className: `${pfx}-message`,
+        content: "",
+        sys_pn: _a.message
+      })
     ]
   })
 }
 
+/**
+ * Step 2: Team Type selection - Personal / Startup / Enterprise
+ * Only 1 option can be selected at a time (radio behavior)
+ */
+export function team_type_form(ui, opt) {
+  const pfx = `${ui.fig.family}__team-type`;
+  const loc = locale();
+  let data = ui._saved_data[ui._step] || {}
+  let selected = data.team_type || ui._data.team_type || '';
+
+  let kids = [];
+  for (let tt of loc.team_types) {
+    let isSelected = selected === tt.key;
+    kids.push(
+      Skeletons.Note({
+        className: `${pfx}-card`,
+        content: `<div class="${pfx}-icon">${tt.icon}</div><div class="${pfx}-label">${tt.label}</div><div class="${pfx}-desc">${tt.desc}</div>`,
+        name: tt.key,
+        sys_pn: `team-type-${tt.key}`,
+        service: 'select-team-type',
+        uiHandler: [ui],
+        state: isSelected ? 1 : 0,
+        dataset: {
+          state: isSelected ? 1 : 0,
+          value: tt.key,
+        }
+      })
+    )
+  }
+
+  return Skeletons.Box.X({
+    className: `${pfx}-main`,
+    sys_pn: 'team-type-container',
+    partHandler: [ui],
+    kids
+  })
+}
 
 /**
- * 
- * @param {*} ui 
- * @param {*} opt 
- * @returns 
+ * Step 3: Invite Team - email input + share link
  */
-export function user_form(ui, opt) {
-  const pfx = `${ui.fig.family}__user-form`;
-  let data = ui._saved_data[ui._step] || {}
-  let { firstname, lastname, email, country_code } = data;
-  let items = []
-  for (let k of _.keys(emojiFlags)) {
-    if (/[A-Z]{2,2}/.test(k)) {
-      let { name: locale_name, emoji } = emojiFlags.countryCode(k) || {}
-      items.push({ country_code: k, value: k, emoji, label: locale_name, locale_name })
-    }
-  }
-  return Skeletons.Box.G({
+export function invite_team_form(ui, opt) {
+  const pfx = `${ui.fig.family}__invite`;
+  const loc = locale();
+  let shareLink = ui._shareLink || 'acme-agency.drumee.com/invite/xyz';
+
+  return Skeletons.Box.Y({
     className: `${pfx}-main`,
     kids: [
-      Skeletons.Box.G({
-        className: `${pfx}-row`,
+      Skeletons.Box.X({
+        className: `${pfx}-input-row`,
         kids: [
-          entry(ui, {
-            label: LOCALE.FIRSTNAME,
-            name: _a.firstname,
-            placeholder: "Alice",
-            value: firstname
+          Skeletons.Entry({
+            className: `${pfx}-input`,
+            name: 'invite_email',
+            value: '',
+            formItem: 'invite_email',
+            innerClass: 'invite_email',
+            mode: _a.interactive,
+            service: _a.input,
+            placeholder: loc.invite_placeholder,
+            uiHandler: [ui],
+            state: 0,
+            radio: ui._id
           }),
-          entry(ui, {
-            label: LOCALE.LASTNAME,
-            name: _a.lastname,
-            placeholder: "Borderland",
-            value: lastname,
+          Skeletons.Element({
+            className: `${pfx}-add-btn`,
+            content: loc.add,
+            service: 'add-invite'
           })
         ]
       }),
-      Skeletons.Box.G({
-        className: `${pfx}-row`,
+      Skeletons.Element({
+        className: `${pfx}-share-link`,
+        content: `${loc.share_link_prefix} <strong>${shareLink}</strong>`,
+      })
+    ]
+  })
+}
+
+/**
+ * Step 4: Welcome to Drumee - folder color guide
+ */
+export function welcome_form(ui, opt) {
+  const pfx = `${ui.fig.family}__welcome`;
+  const loc = locale();
+
+  let colorKids = [];
+  for (let fc of loc.folder_colors) {
+    colorKids.push(
+      Skeletons.Element({
+        className: `${pfx}-folder-item ${fc.color}`,
+        content: `<div class="${pfx}-folder-header"><span class="${pfx}-folder-emoji">${fc.emoji}</span> <span class="${pfx}-folder-name ${fc.color}">${fc.name}</span></div><div class="${pfx}-folder-desc">${fc.desc}</div>`,
+      })
+    )
+  }
+
+  return Skeletons.Box.Y({
+    className: `${pfx}-main`,
+    kids: colorKids
+  })
+}
+
+/**
+ * Step 5: See Drumee in action - demo folder view with animated chat
+ */
+export function see_action_form(ui, opt) {
+  const pfx = `${ui.fig.family}__action`;
+  const loc = locale();
+  const demo = loc.demo_folder;
+
+  const allMessages = [
+    { type: 'bot', text: "👋 Hi! I'm your Drumee guide. This is a real folder — let me show you around." },
+    { type: 'bot', text: "📁 On the left, you can see files inside this folder. Each file lives here, scoped to this folder only." },
+    { type: 'bot', text: "💬 Over here on the right is the Chat panel. Every folder has its own chat — conversations are always in context with the files." },
+    { type: 'user', text: "Cool, so chat is linked to this folder?" },
+    { type: 'bot', text: "Exactly! Try typing in the chat input below — it's scoped to this folder only, not global." },
+    { type: 'bot', text: "🔒 Now hover over a folder on the desk to see its sharing mode. Purple = private, Red = restricted, Pink = link share." },
+    { type: 'bot', text: "✅ That's it! You're ready to use Drumee. Click 'Enter workspace' to begin." }
+  ];
+
+  let msgHtml = '';
+  allMessages.forEach((msg, i) => {
+    const delay = (i + 1) * 1.8;
+    if (msg.type === 'bot') {
+      msgHtml += `<div class="${pfx}-chat-msg ${pfx}-anim" style="animation-delay:${delay}s"><span class="${pfx}-chat-avatar">d</span><div class="${pfx}-chat-bubble">${msg.text}</div></div>`;
+    } else {
+      msgHtml += `<div class="${pfx}-user-msg ${pfx}-anim" style="animation-delay:${delay}s"><div class="${pfx}-user-bubble">${msg.text}</div></div>`;
+    }
+  });
+
+  return Skeletons.Box.Y({
+    className: `${pfx}-main`,
+    kids: [
+      Skeletons.Box.X({
+        className: `${pfx}-folder-header`,
         kids: [
-          entry(ui, {
-            label: LOCALE.EMAIL,
-            name: _a.email,
-            value: email,
-            placeholder: "i@example.org"
+          Skeletons.Element({
+            className: `${pfx}-folder-icon`,
+            content: `<svg viewBox="0 0 22 18" fill="none" width="20" height="16"><path d="M1 5C1 4.4 1.4 4 2 4H8.5L10.5 6H20C20.6 6 21 6.4 21 7V15C21 15.6 20.6 16 20 16H2C1.4 16 1 15.6 1 15V5Z" fill="#EF4444" opacity=".8"/></svg>`,
           }),
-          Skeletons.Box.G({
-            className: `${ui.fig.family}__entry-main`,
+          Skeletons.Element({
+            className: `${pfx}-folder-name`,
+            content: demo.name,
+          }),
+          Skeletons.Element({
+            className: `${pfx}-folder-badge`,
+            content: demo.badge,
+          })
+        ]
+      }),
+      Skeletons.Box.X({
+        className: `${pfx}-content`,
+        kids: [
+          Skeletons.Box.Y({
+            className: `${pfx}-files-panel`,
             kids: [
-              Skeletons.Note({
-                className: `${ui.fig.family}__entry-label country`,
-                content: LOCALE.COUNTRY,
+              Skeletons.Element({
+                className: `${pfx}-panel-label`,
+                content: demo.files_label,
               }),
-              menuInput(ui, {
-                name: 'country_code',
-                service: "select-country",
-                refAttribute: 'locale_name',
-                placeholder: 'Select a country',
-                value: country_code,
+              Skeletons.Element({
+                className: `${pfx}-file-item hl`,
+                content: `<div class="${pfx}-file-icon-wrap" style="background:rgba(239,68,68,.15)">📄</div><div class="${pfx}-file-info"><div class="${pfx}-file-name">Audit_Report_v3.pdf</div><div class="${pfx}-file-size">2.3 MB · 2h ago</div></div>`,
               }),
+              Skeletons.Element({
+                className: `${pfx}-file-item`,
+                content: `<div class="${pfx}-file-icon-wrap" style="background:rgba(245,158,11,.15)">💾</div><div class="${pfx}-file-info"><div class="${pfx}-file-name">Contract_ABI.json</div><div class="${pfx}-file-size">48 KB · 1d ago</div></div>`,
+              })
+            ]
+          }),
+          Skeletons.Box.Y({
+            className: `${pfx}-chat-panel`,
+            kids: [
+              Skeletons.Element({
+                className: `${pfx}-chat-header-bar`,
+                content: `💬 Chat <span class="${pfx}-chat-context-tag">folder context</span>`,
+              }),
+              Skeletons.Element({
+                className: `${pfx}-chat-messages-wrap`,
+                content: msgHtml,
+              }),
+              Skeletons.Element({
+                className: `${pfx}-chat-input-bar`,
+                content: `<input class="${pfx}-chat-text-input" placeholder="${loc.ask_guide_placeholder}" readonly/><span class="${pfx}-send-btn">${loc.send}</span>`,
+              })
             ]
           })
         ]
-      }),
+      })
     ]
-  })
-}
-
-/**
- * 
- * @param {*} ui 
- * @param {*} opt 
- * @returns 
- */
-export function usage_form(ui, opt) {
-  const pfx = `${ui.fig.family}__usage-form`;
-  let tools = ui._saved_data[ui._step] || []
-
-  let service = _e.select;
-  return Skeletons.Box.G({
-    className: `${pfx}-main`,
-    kidsOpt: {
-      service,
-      className: `${pfx}-button`,
-    },
-    kids: [
-      Skeletons.Button.Label({
-        label: "Notion",
-        name: "notion",
-        ico: "notion",
-        state: tools.notion || 0
-      }),
-      Skeletons.Button.Label({
-        label: "Dropbox",
-        name: "dropbox",
-        ico: "dropbox",
-        state: tools.dropbox || 0
-      }),
-      Skeletons.Button.Label({
-        name: "google_drive",
-        label: "Google Drive",
-        ico: "google-drive",
-        state: tools.google_drive || 0
-      }),
-      Skeletons.Note({
-        content: "Other",
-        name: "other",
-        formItem: "other",
-        state: tools.other || 0,
-        reference: _a.state
-      }),
-    ]
-  })
-}
-
-/**
- * 
- * @param {*} ui 
- * @param {*} opt 
- * @returns 
- */
-export function purpose_form(ui, opt) {
-  const pfx = `${ui.fig.family}__purpose-form`;
-  const { purpose } = locale();
-  let plan = ui._saved_data[ui._step] || []
-
-  let service = _e.select;
-  let kids = [];
-  let keys = ['personal', 'team', 'storage', 'other'];
-  let i = 0;
-  for (let p of purpose) {
-    let state = plan[keys[i]] || 0
-    kids.push(Skeletons.Note({
-      content: p,
-      reference: _a.state,
-      state,
-      name: keys[i],
-      dataset: {
-        state,
-      }
-    }))
-    i++;
-  }
-  return Skeletons.Box.G({
-    className: `${pfx}-main`,
-    kidsOpt: {
-      service,
-      className: `${pfx}-button`
-    },
-    kids
   })
 }

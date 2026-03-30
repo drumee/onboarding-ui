@@ -7,42 +7,29 @@ const { locale } = require("../../locale")
 export function header(ui) {
   const fig = ui.fig.family;
   let step = ui._step;
-  const { title, tips } = locale();
-  let kids = [
-    Skeletons.Box.X({
-      className: `${fig}__logo-container`,
-      kids: [
-        Skeletons.Button.Svg({
-          chartName: "logo-drumee-full",
-          type: "raw",
-          className: `${fig}__logo-content`,
-        })
-      ]
-    }),
+  const { steps, total_steps } = locale();
+  const currentStep = steps[step] || steps[0];
 
-    Skeletons.Box.X({
-      className: `${fig}__progress-bar step-${step}`,
-    }),
-
-    Skeletons.Box.Y({
-      className: `${fig}__text-container`,
-      kids: [
-        Skeletons.Note({
-          className: `${fig}__title`,
-          content: title[step],
-        }),
-        Skeletons.Note({
-          className: `${fig}__tips`,
-          content: tips,
-        })
-      ]
-    })
-  ]
-
-  let a = Skeletons.Box.Y({
-    className: `${ui.fig.family}__header`,
+  return Skeletons.Box.Y({
+    className: `${fig}__header`,
     debug: __filename,
-    kids
+    kids: [
+      Skeletons.Element({
+        className: `${fig}__progress-bar step-${step}`,
+        content: ' ',
+      }),
+      Skeletons.Note({
+        className: `${fig}__step-indicator`,
+        content: `STEP ${step + 1} OF ${total_steps} — ${currentStep.label}`,
+      }),
+      Skeletons.Note({
+        className: `${fig}__title`,
+        content: currentStep.title,
+      }),
+      Skeletons.Note({
+        className: `${fig}__tips`,
+        content: currentStep.tips,
+      })
+    ]
   })
-  return a;
 }

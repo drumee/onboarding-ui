@@ -1,11 +1,63 @@
 {
-  "title": [
-    "Want to be part of something new?",
-    "What tools do you currently use for productivity or collaboration?",
-    "How do you plan to use Drumee?",
-    "How much do you care about data privacy?"
+  "steps": [
+    {
+      "label": "TEAM TYPE",
+      "title": "How will you use Drumee?",
+      "tips": "We'll set up your workspace for your team type."
+    },
+    {
+      "label": "INVITE TEAM",
+      "title": "Who's on your team?",
+      "tips": "Invite teammates or share the link later."
+    },
+    {
+      "label": "WELCOME TO DRUMEE",
+      "title": "Welcome to Drumee! 🎉",
+      "tips": "Before you dive in — here's how folder colors work and how to use the product."
+    },
+    {
+      "label": "HOW DRUMEE WORKS",
+      "title": "See Drumee in action",
+      "tips": "Our guide will walk you through the product — right inside a real folder."
+    }
   ],
-  "tips": "Try Drumee, the privacy-first productivity space where your data stays only yours. Sign up for our closed beta, we’ll let you know once you’re in! 🙌",
+  "total_steps": 4,
+  "continue": "Continue →",
+  "back": "← Back",
+  "skip": "Skip",
+  "next_see_live": "Next: see it live →",
+  "enter_workspace": "Enter workspace 🚀",
+  "add": "Add",
+  "send": "Send",
+  "invite_placeholder": "colleague@company.com",
+  "share_link_prefix": "Or share link:",
+  "ask_guide_placeholder": "Ask the guide or reply...",
+  "team_types": [
+    { "key": "personal", "label": "Personal", "desc": "Just you", "icon": "👤" },
+    { "key": "startup", "label": "Startup", "desc": "Small team", "icon": "🚀" },
+    { "key": "enterprise", "label": "Enterprise", "desc": "Large org", "icon": "🏢" }
+  ],
+  "folder_colors": [
+    { "emoji": "🟡", "name": "Purple folder", "color": "purple", "desc": "Private — only you can see it" },
+    { "emoji": "🟠", "name": "Red folder", "color": "red", "desc": "Restricted — shared with specific people only" },
+    { "emoji": "❤️", "name": "Pink folder", "color": "pink", "desc": "Link share — anyone with the link can access" },
+    { "emoji": "📁", "name": "Grey folder", "color": "grey", "desc": "Draft — not configured yet" }
+  ],
+  "demo_folder": {
+    "name": "Smart Contract Audits",
+    "badge": "Red · Restricted",
+    "files_label": "FILES",
+    "chat_label": "💬 Chat",
+    "chat_context": "folder context",
+    "files": [
+      { "name": "Audit_Report_v3.pdf", "size": "2.3 MB · 2h ago", "icon": "📄" },
+      { "name": "Contract_ABI.json", "size": "48 KB · 1d ago", "icon": "📄" }
+    ],
+    "messages": [
+      "👋 Hi! I'm your Drumee guide. This is a real folder — let me show you around.",
+      "📁 On the left, you can see files inside this folder. Each file lives here, scoped to this folder only."
+    ]
+  },
   "purpose": [
     "Personal productivity",
     "Team collaboration",

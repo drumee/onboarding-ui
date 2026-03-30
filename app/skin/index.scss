@@ -1,4 +1,4 @@
-@use "vars";
+@use "vars" as *;
 @use "form";
 @use "done";
 
@@ -7,7 +7,7 @@
 }
 
 .onboarding {
-  font-family: Armin Grotesk;
+  font-family: 'Inter', 'Armin Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 .onboarding-app {
@@ -17,169 +17,154 @@
     align-items: center;
     height: 100vh;
     width: 100vw;
-    background-color: var(--panel);
+    background-color: $bg-dark;
     overflow: auto;
-
-    &[data-device="mobile"] {
-      padding: 0px;
-    }
   }
 
   &__main {
-    justify-content: start;
+    justify-content: center;
     align-items: center;
-    gap: 1rem;
     height: 100%;
     width: 100%;
-    max-width: 688px;
+    max-width: 620px;
+    padding: 40px 20px;
+  }
+
+  &__card {
+    background: $card-bg;
+    border: 1px solid $card-border;
+    border-radius: $border-radius-lg;
+    padding: 40px;
+    width: 100%;
+    gap: 24px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   }
 
   &__header {
     height: auto;
     width: 100%;
+    gap: 8px;
   }
 
-  &__text-container {
-    height: auto;
-    gap: 4px;
+  &__progress-bar {
     width: 100%;
+    height: 4px;
+    background: rgba(108, 92, 231, 0.15);
+    border-radius: 100px;
+    margin-bottom: 8px;
+    overflow: hidden;
+
+    &::before {
+      content: "";
+      display: block;
+      height: 100%;
+      border-radius: 100px;
+      background: $purple;
+      transition: width 0.4s ease;
+    }
+
+    &.step-0::before {
+      width: 25%;
+    }
+    &.step-1::before {
+      width: 50%;
+    }
+    &.step-2::before {
+      width: 75%;
+    }
+    &.step-3::before {
+      width: 100%;
+    }
   }
 
-  &__logo {
-    &-container {
-      height: 104px;
-      align-content: center;
-      justify-content: start;
-      align-items: start;
-      flex-wrap: wrap;
-    }
-
-    &-content {
-      height: 40px;
-    }
+  &__step-indicator {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 1.5px;
+    color: $text-label;
+    text-transform: uppercase;
   }
 
   &__title {
-    font-weight: 600;
-    font-style: normal;
-    font-size: 32px;
-    line-height: 40px;
+    font-weight: 700;
+    font-size: 28px;
+    line-height: 36px;
+    color: $text-white;
   }
 
   &__tips {
     font-weight: 400;
-    font-style: Regular;
-    font-size: 16px;
-    line-height: 26px;
-    letter-spacing: 0%;
-    vertical-align: middle;
+    font-size: 15px;
+    line-height: 22px;
+    color: $text-muted;
   }
 
-  &__progress-bar {
-    background: #DDDFE4;
-    width: 100%;
-    height: 8px;
-    margin-bottom: 32px;
-    border-radius: 1000px;
-    gap: 10px;
-    opacity: 1;
-
-    &::before {
-      height: 100%;
-      content: " ";
-      position: absolute;
-      top: 0;
-      left: 0;
-      border-radius: 1000px;
-      background-color: var(--Primary-500);
-    }
-
-    &.step-0::before {
-      width: 20%;
-    }
-
-    &.step-1::before {
-      width: 40%;
-    }
-
-    &.step-2::before {
-      width: 60%;
-    }
-
-    &.step-3::before {
-      width: 80%;
-    }
-  }
-
-  &__button-main {
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 0.625rem;
-    padding: 0.5rem 1.5rem 0.5rem 1.5rem;
-    border-radius: 999px;
-    text-decoration: none;
-    transition: all 0.2s;
-    background: var(--standby);
-    color: var(--Neutral-400);
-
-    &[data-state="0"] {
-      pointer-events: none;
-    }
-
-    &[data-state="1"] {
-      background: var(--brand);
-      color: var(--white);
-
-      .icon {
-        background: var(--white);
-      }
-    }
-
-    &.with-icon {
-      padding: 0.5rem 2.5rem 0.5rem 1.5rem;
-    }
-
-    &:hover {
-      box-shadow: var(--button-shadow-hover);
-    }
-  }
-
-  &__footer-container {
+  &__footer {
     width: 100%;
     justify-content: flex-end;
     align-items: center;
     gap: 12px;
+    margin-top: 8px;
+  }
 
-    .btn {
-      display: flex;
-      align-items: center;
-      border-radius: 999px;
-      text-decoration: none;
-      font-size: 15px;
-      // height: 36px;
-      font-weight: 600;
-      font-size: 14px;
-      line-height: 22px;
-      vertical-align: middle;
-    }
+  &__back-btn {
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: $text-muted;
+    margin-right: auto;
+    padding: 8px 0;
+    transition: color 0.2s;
 
-    .icon {
-      width: 30px;
-      height: 30px;
-      position: absolute;
-      right: 5px;
-      border-radius: 50%;
-      background: var(--Neutral-50);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-
-      img {
-        width: 14px;
-        height: 14px;
-      }
+    &:hover {
+      color: $text-white;
     }
   }
 
+  &__skip-btn {
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: $text-muted;
+    padding: 8px 16px;
+    transition: color 0.2s;
+
+    &:hover {
+      color: $text-white;
+    }
+  }
+
+  &__primary-btn {
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 24px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    background: $purple;
+    color: $text-white;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+
+    &:hover {
+      background: $purple-light;
+      box-shadow: 0 4px 16px rgba(108, 92, 231, 0.4);
+    }
+
+    &:active {
+      background: $purple-dark;
+    }
+
+    &[data-state="0"] {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    &[data-state="1"] {
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
 }

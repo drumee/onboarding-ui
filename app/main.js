@@ -167,15 +167,15 @@ class onboarding_app extends LetcBox {
         ).then((data) => {
           this.debug("Onboarding marked complete", data);
           if (this.mget(_a.type) == 'app') {
-            this.triggerHandlers()
+            this.softDestroy();
             return;
           }
           window.location.href = '/';
         }).catch((e) => {
           this.warn("mark_complete error", e);
-          // Still navigate even if API fails
+          // Still close even if API fails
           if (this.mget(_a.type) == 'app') {
-            this.triggerHandlers()
+            this.softDestroy();
             return;
           }
           window.location.href = '/';

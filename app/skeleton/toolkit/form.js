@@ -1,57 +1,8 @@
 const { locale } = require("../../locale")
 
 /**
- * Step 1: Sign In form - username/email + password
- * Based on signin module: SERVICE.yp.signin with { vars: { username, password } }
- */
-export function sign_in_form(ui, opt) {
-  const pfx = `${ui.fig.family}__sign-in`;
-  const loc = locale();
-  let data = ui._saved_data[ui._step] || {}
-
-  return Skeletons.Box.Y({
-    className: `${pfx}-main`,
-    kids: [
-      Skeletons.Entry({
-        className: `${pfx}-input`,
-        name: _a.username,
-        sys_pn: _a.username,
-        value: data.username || ui.mget(_a.username) || '',
-        formItem: _a.username,
-        innerClass: _a.username,
-        mode: _a.interactive,
-        service: _a.input,
-        placeholder: loc.email_placeholder,
-        uiHandler: [ui],
-        state: 0,
-        radio: ui._id
-      }),
-      Skeletons.Entry({
-        className: `${pfx}-input`,
-        name: _a.password,
-        sys_pn: _a.password,
-        value: '',
-        formItem: _a.password,
-        innerClass: _a.password,
-        mode: _a.interactive,
-        service: _a.input,
-        placeholder: loc.password_placeholder,
-        uiHandler: [ui],
-        state: 0,
-        radio: ui._id,
-        type: _a.password
-      }),
-      Skeletons.Note({
-        className: `${pfx}-message`,
-        content: "",
-        sys_pn: _a.message
-      })
-    ]
-  })
-}
-
-/**
  * Step 2: Team Type selection - Personal / Startup / Enterprise
+ * Cards with icon, title, description, and arrow chevron
  * Only 1 option can be selected at a time (radio behavior)
  */
 export function team_type_form(ui, opt) {
@@ -64,23 +15,51 @@ export function team_type_form(ui, opt) {
   for (let tt of loc.team_types) {
     let isSelected = selected === tt.key;
     kids.push(
-      Skeletons.Note({
+      Skeletons.Box.X({
         className: `${pfx}-card`,
-        content: `<div class="${pfx}-icon">${tt.icon}</div><div class="${pfx}-label">${tt.label}</div><div class="${pfx}-desc">${tt.desc}</div>`,
         name: tt.key,
         sys_pn: `team-type-${tt.key}`,
+        partHandler: [ui],
         service: 'select-team-type',
         uiHandler: [ui],
         state: isSelected ? 1 : 0,
         dataset: {
           state: isSelected ? 1 : 0,
           value: tt.key,
-        }
+        },
+        kids: [
+          Skeletons.Element({
+            className: `${pfx}-icon-wrap`,
+            content: `<span class="${pfx}-icon-inner">${tt.icon}</span>`,
+            active: 0,
+          }),
+          Skeletons.Box.Y({
+            className: `${pfx}-info`,
+            active: 0,
+            kids: [
+              Skeletons.Element({
+                className: `${pfx}-label`,
+                content: tt.label,
+                active: 0,
+              }),
+              Skeletons.Element({
+                className: `${pfx}-desc`,
+                content: tt.desc,
+                active: 0,
+              }),
+            ]
+          }),
+          Skeletons.Element({
+            className: `${pfx}-arrow`,
+            content: `<svg width="8" height="14" viewBox="0 0 8 14" fill="none"><path d="M1 1L7 7L1 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+            active: 0,
+          }),
+        ]
       })
     )
   }
 
-  return Skeletons.Box.X({
+  return Skeletons.Box.Y({
     className: `${pfx}-main`,
     sys_pn: 'team-type-container',
     partHandler: [ui],
@@ -89,156 +68,201 @@ export function team_type_form(ui, opt) {
 }
 
 /**
- * Step 3: Invite Team - email input + share link
+ * Step 3: Invite Team - multiple email inputs + add another + copy shareable link
  */
 export function invite_team_form(ui, opt) {
   const pfx = `${ui.fig.family}__invite`;
   const loc = locale();
-  let shareLink = ui._shareLink || 'acme-agency.drumee.com/invite/xyz';
+  let invites = (ui._data.invites || []);
 
-  return Skeletons.Box.Y({
-    className: `${pfx}-main`,
-    kids: [
+  let emailKids = [];
+
+  // Pre-populated email fields
+  let placeholders = loc.invite_placeholders || ['alex@company.com', 'jordan@company.com'];
+  for (let i = 0; i < Math.max(placeholders.length, invites.length); i++) {
+    let val = invites[i] || '';
+    let ph = placeholders[i] || loc.invite_placeholder || 'colleague@company.com';
+    emailKids.push(
       Skeletons.Box.X({
         className: `${pfx}-input-row`,
         kids: [
+          Skeletons.Button.Svg({
+            ico: "mail",
+            className: `${pfx}-input-ico`,
+          }),
           Skeletons.Entry({
             className: `${pfx}-input`,
-            name: 'invite_email',
-            value: '',
-            formItem: 'invite_email',
-            innerClass: 'invite_email',
+            name: `invite_email_${i}`,
+            value: val,
+            formItem: `invite_email_${i}`,
+            innerClass: `invite_email_${i}`,
             mode: _a.interactive,
             service: _a.input,
-            placeholder: loc.invite_placeholder,
+            placeholder: ph,
             uiHandler: [ui],
             state: 0,
             radio: ui._id
           }),
+        ]
+      })
+    )
+  }
+
+  // "Add another" button
+  emailKids.push(
+    Skeletons.Box.X({
+      className: `${pfx}-add-row`,
+      service: 'add-invite',
+      uiHandler: [ui],
+      kids: [
+        Skeletons.Element({
+          className: `${pfx}-add-icon`,
+          active: 0,
+          content: `<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M8 5V11M5 8H11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+        }),
+        Skeletons.Element({
+          className: `${pfx}-add-text`,
+          active: 0,
+          content: LOCALE.ADD_ANOTHER || loc.add_another || "Add another",
+        })
+      ]
+    })
+  )
+
+  // Copy shareable link card
+  let shareLink = ui._shareLink || 'acme-agency.drumee.com/invite/xyz';
+  let shareLinkCard = Skeletons.Box.X({
+    className: `${pfx}-share-card`,
+    kids: [
+      Skeletons.Element({
+        className: `${pfx}-share-icon`,
+        content: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M8 12L12 8M7 9L5.5 10.5C4.1 11.9 4.1 14.1 5.5 15.5C6.9 16.9 9.1 16.9 10.5 15.5L12 14M13 11L14.5 9.5C15.9 8.1 15.9 5.9 14.5 4.5C13.1 3.1 10.9 3.1 9.5 4.5L8 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+      }),
+      Skeletons.Box.Y({
+        className: `${pfx}-share-info`,
+        kids: [
           Skeletons.Element({
-            className: `${pfx}-add-btn`,
-            content: loc.add,
-            service: 'add-invite'
-          })
+            className: `${pfx}-share-title`,
+            content: LOCALE.COPY_SHAREABLE_LINK || loc.copy_shareable_link || "Copy shareable link",
+          }),
+          Skeletons.Element({
+            className: `${pfx}-share-desc`,
+            content: LOCALE.SHARE_LINK_DESC || loc.share_link_desc || "Invite anyone with a private URL",
+          }),
         ]
       }),
       Skeletons.Element({
-        className: `${pfx}-share-link`,
-        content: `${loc.share_link_prefix} <strong>${shareLink}</strong>`,
-      })
+        className: `${pfx}-copy-btn`,
+        content: `<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="6" y="6" width="10" height="10" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M12 6V4C12 2.9 11.1 2 10 2H4C2.9 2 2 2.9 2 4V10C2 11.1 2.9 12 4 12H6" stroke="currentColor" stroke-width="1.5"/></svg>`,
+        service: 'copy-share-link',
+      }),
+    ]
+  })
+
+  return Skeletons.Box.Y({
+    className: `${pfx}-main`,
+    kids: [
+      Skeletons.Note({
+        className: `${pfx}-section-label`,
+        content: LOCALE.TEAMMATE_EMAIL || loc.teammate_email_label || "TEAMMATE EMAIL",
+      }),
+      Skeletons.Box.Y({
+        className: `${pfx}-emails`,
+        kids: emailKids,
+      }),
+      shareLinkCard,
     ]
   })
 }
 
 /**
- * Step 4: Welcome to Drumee - folder color guide
+ * Step 4: "You're all set!" - Confirmation with feature cards
  */
 export function welcome_form(ui, opt) {
   const pfx = `${ui.fig.family}__welcome`;
   const loc = locale();
-
-  let colorKids = [];
-  for (let fc of loc.folder_colors) {
-    colorKids.push(
-      Skeletons.Element({
-        className: `${pfx}-folder-item ${fc.color}`,
-        content: `<div class="${pfx}-folder-header"><span class="${pfx}-folder-emoji">${fc.emoji}</span> <span class="${pfx}-folder-name ${fc.color}">${fc.name}</span></div><div class="${pfx}-folder-desc">${fc.desc}</div>`,
-      })
-    )
-  }
-
-  return Skeletons.Box.Y({
-    className: `${pfx}-main`,
-    kids: colorKids
-  })
-}
-
-/**
- * Step 5: See Drumee in action - demo folder view with animated chat
- */
-export function see_action_form(ui, opt) {
-  const pfx = `${ui.fig.family}__action`;
-  const loc = locale();
-  const demo = loc.demo_folder;
-
-  const allMessages = [
-    { type: 'bot', text: "👋 Hi! I'm your Drumee guide. This is a real folder — let me show you around." },
-    { type: 'bot', text: "📁 On the left, you can see files inside this folder. Each file lives here, scoped to this folder only." },
-    { type: 'bot', text: "💬 Over here on the right is the Chat panel. Every folder has its own chat — conversations are always in context with the files." },
-    { type: 'user', text: "Cool, so chat is linked to this folder?" },
-    { type: 'bot', text: "Exactly! Try typing in the chat input below — it's scoped to this folder only, not global." },
-    { type: 'bot', text: "🔒 Now hover over a folder on the desk to see its sharing mode. Purple = private, Red = restricted, Pink = link share." },
-    { type: 'bot', text: "✅ That's it! You're ready to use Drumee. Click 'Enter workspace' to begin." }
-  ];
-
-  let msgHtml = '';
-  allMessages.forEach((msg, i) => {
-    const delay = (i + 1) * 1.8;
-    if (msg.type === 'bot') {
-      msgHtml += `<div class="${pfx}-chat-msg ${pfx}-anim" style="animation-delay:${delay}s"><span class="${pfx}-chat-avatar">d</span><div class="${pfx}-chat-bubble">${msg.text}</div></div>`;
-    } else {
-      msgHtml += `<div class="${pfx}-user-msg ${pfx}-anim" style="animation-delay:${delay}s"><div class="${pfx}-user-bubble">${msg.text}</div></div>`;
-    }
-  });
+  let userName = ui._data.firstname || Visitor.get('firstname') || 'Alex';
 
   return Skeletons.Box.Y({
     className: `${pfx}-main`,
     kids: [
+      // Hero image area
+      Skeletons.Element({
+        className: `${pfx}-hero`,
+        content: `<div class="${pfx}-hero-bg"></div>`,
+      }),
+      // Success badge
+      Skeletons.Element({
+        className: `${pfx}-badge`,
+        content: `<svg width="32" height="32" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="14" fill="#6c5ce7"/><path d="M11 16L14.5 19.5L21 13" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+      }),
+      // Title
+      Skeletons.Note({
+        className: `${pfx}-title`,
+        content: (LOCALE.ALL_SET_TITLE || loc.all_set_title || "You're all set, {0}!").replace('{0}', userName),
+      }),
+      // Description
+      Skeletons.Note({
+        className: `${pfx}-desc`,
+        content: LOCALE.ALL_SET_DESC || loc.all_set_desc || "Your personal DRUMEE workspace is ready. We've organized your tools and folders so you can start creating without the clutter.",
+      }),
+      // Feature cards
       Skeletons.Box.X({
-        className: `${pfx}-folder-header`,
+        className: `${pfx}-features`,
         kids: [
-          Skeletons.Element({
-            className: `${pfx}-folder-icon`,
-            content: `<svg viewBox="0 0 22 18" fill="none" width="20" height="16"><path d="M1 5C1 4.4 1.4 4 2 4H8.5L10.5 6H20C20.6 6 21 6.4 21 7V15C21 15.6 20.6 16 20 16H2C1.4 16 1 15.6 1 15V5Z" fill="#EF4444" opacity=".8"/></svg>`,
+          Skeletons.Box.Y({
+            className: `${pfx}-feature-card`,
+            kids: [
+              Skeletons.Element({
+                className: `${pfx}-feature-icon`,
+                content: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" stroke-width="1.5"/><path d="M3 9H21M9 9V21" stroke="currentColor" stroke-width="1.5"/></svg>`,
+              }),
+              Skeletons.Element({
+                className: `${pfx}-feature-title`,
+                content: LOCALE.FEATURE_SMART_FOLDERS || loc.feature_smart_folders || "Smart Folders",
+              }),
+              Skeletons.Element({
+                className: `${pfx}-feature-desc`,
+                content: LOCALE.FEATURE_SMART_FOLDERS_DESC || loc.feature_smart_folders_desc || "Auto-organized assets",
+              }),
+            ]
           }),
-          Skeletons.Element({
-            className: `${pfx}-folder-name`,
-            content: demo.name,
+          Skeletons.Box.Y({
+            className: `${pfx}-feature-card`,
+            kids: [
+              Skeletons.Element({
+                className: `${pfx}-feature-icon`,
+                content: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+              }),
+              Skeletons.Element({
+                className: `${pfx}-feature-title`,
+                content: LOCALE.FEATURE_QUICK_ACCESS || loc.feature_quick_access || "Quick Access",
+              }),
+              Skeletons.Element({
+                className: `${pfx}-feature-desc`,
+                content: LOCALE.FEATURE_QUICK_ACCESS_DESC || loc.feature_quick_access_desc || "Universal file search",
+              }),
+            ]
           }),
-          Skeletons.Element({
-            className: `${pfx}-folder-badge`,
-            content: demo.badge,
-          })
         ]
       }),
-      Skeletons.Box.X({
-        className: `${pfx}-content`,
-        kids: [
-          Skeletons.Box.Y({
-            className: `${pfx}-files-panel`,
-            kids: [
-              Skeletons.Element({
-                className: `${pfx}-panel-label`,
-                content: demo.files_label,
-              }),
-              Skeletons.Element({
-                className: `${pfx}-file-item hl`,
-                content: `<div class="${pfx}-file-icon-wrap" style="background:rgba(239,68,68,.15)">📄</div><div class="${pfx}-file-info"><div class="${pfx}-file-name">Audit_Report_v3.pdf</div><div class="${pfx}-file-size">2.3 MB · 2h ago</div></div>`,
-              }),
-              Skeletons.Element({
-                className: `${pfx}-file-item`,
-                content: `<div class="${pfx}-file-icon-wrap" style="background:rgba(245,158,11,.15)">💾</div><div class="${pfx}-file-info"><div class="${pfx}-file-name">Contract_ABI.json</div><div class="${pfx}-file-size">48 KB · 1d ago</div></div>`,
-              })
-            ]
-          }),
-          Skeletons.Box.Y({
-            className: `${pfx}-chat-panel`,
-            kids: [
-              Skeletons.Element({
-                className: `${pfx}-chat-header-bar`,
-                content: `💬 Chat <span class="${pfx}-chat-context-tag">folder context</span>`,
-              }),
-              Skeletons.Element({
-                className: `${pfx}-chat-messages-wrap`,
-                content: msgHtml,
-              }),
-              Skeletons.Element({
-                className: `${pfx}-chat-input-bar`,
-                content: `<input class="${pfx}-chat-text-input" placeholder="${loc.ask_guide_placeholder}" readonly/><span class="${pfx}-send-btn">${loc.send}</span>`,
-              })
-            ]
-          })
-        ]
+    ]
+  })
+}
+
+/**
+ * Step 5 (unused currently): See Drumee in action - demo folder view
+ */
+export function see_action_form(ui, opt) {
+  const pfx = `${ui.fig.family}__action`;
+  const loc = locale();
+
+  return Skeletons.Box.Y({
+    className: `${pfx}-main`,
+    kids: [
+      Skeletons.Element({
+        className: `${pfx}-placeholder`,
+        content: loc.action_placeholder || "Explore your workspace",
       })
     ]
   })

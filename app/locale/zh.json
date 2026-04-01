@@ -1,15 +1,81 @@
 {
-  "title": [
-    "Want to be part of something new?",
-    "What tools do you currently use for productivity or collaboration?",
-    "How do you plan to use Drumee?",
-    "How much do you care about data privacy?"
+  "steps": [
+    {
+      "label": "选择团队类型",
+      "title": "您将如何使用 DRUMEE？",
+      "tips": "选择最适合您工作流程的工作空间类型。这有助于我们为您定制体验。"
+    },
+    {
+      "label": "邀请您的团队",
+      "title": "邀请您的团队",
+      "tips": "协作更有力量。添加您的队友开始协作。"
+    },
+    {
+      "label": "身份验证",
+      "title": "一切就绪！",
+      "tips": "您的个人 DRUMEE 工作空间已准备就绪。"
+    },
+    {
+      "label": "DRUMEE 如何运作",
+      "title": "查看 Drumee 实际操作",
+      "tips": "我们的向导将带您浏览产品 — 直接在真实文件夹中。"
+    }
   ],
-  "tips": "Try Drumee, the privacy-first productivity space where your data stays only yours. Sign up for our closed beta, we’ll let you know once you’re in! 🙌",
+  "total_steps": 4,
+  "continue": "继续",
+  "back": "← 返回",
+  "skip": "跳过",
+  "skip_for_now": "暂时跳过",
+  "take_quick_tour": "让我们快速浏览一下",
+  "skip_to_workspace": "跳过并前往工作空间",
+  "next_see_live": "下一步：实时查看 →",
+  "enter_workspace": "进入工作空间 🚀",
+  "add": "添加",
+  "add_another": "再添加一个",
+  "send": "发送",
+  "invite_placeholder": "同事@公司.com",
+  "invite_placeholders": ["alex@公司.com", "jordan@公司.com"],
+  "teammate_email_label": "队友邮箱",
+  "copy_shareable_link": "复制分享链接",
+  "share_link_desc": "通过私人链接邀请任何人",
+  "share_link_prefix": "或分享链接：",
+  "ask_guide_placeholder": "询问向导或回复...",
+  "all_set_title": "一切就绪，{0}！",
+  "all_set_desc": "您的个人 DRUMEE 工作空间已准备就绪。我们已为您整理好工具和文件夹，让您可以轻松开始创建。",
+  "feature_smart_folders": "智能文件夹",
+  "feature_smart_folders_desc": "自动整理的资源",
+  "feature_quick_access": "快速访问",
+  "feature_quick_access_desc": "全局文件搜索",
+  "team_types": [
+    { "key": "personal", "label": "个人", "desc": "非常适合个人和独立创作者。", "icon": "👤" },
+    { "key": "startup", "label": "初创企业", "desc": "为敏捷成长型团队提供协作空间。", "icon": "🚀" },
+    { "key": "enterprise", "label": "企业", "desc": "为大型组织提供可扩展的治理。", "icon": "🏢" }
+  ],
+  "folder_colors": [
+    { "emoji": "🟡", "name": "紫色文件夹", "color": "purple", "desc": "私密 — 仅您可见" },
+    { "emoji": "🟠", "name": "红色文件夹", "color": "red", "desc": "受限 — 仅与特定人员共享" },
+    { "emoji": "❤️", "name": "粉色文件夹", "color": "pink", "desc": "链接共享 — 任何有链接的人都可以访问" },
+    { "emoji": "📁", "name": "灰色文件夹", "color": "grey", "desc": "草稿 — 尚未配置" }
+  ],
+  "demo_folder": {
+    "name": "智能合约审计",
+    "badge": "红色 · 受限",
+    "files_label": "文件",
+    "chat_label": "💬 聊天",
+    "chat_context": "文件夹上下文",
+    "files": [
+      { "name": "审计报告_v3.pdf", "size": "2.3 MB · 2小时前", "icon": "📄" },
+      { "name": "合约_ABI.json", "size": "48 KB · 1天前", "icon": "📄" }
+    ],
+    "messages": [
+      "👋 您好！我是您的 Drumee 向导。这是一个真实的文件夹 — 让我带您看看。",
+      "📁 在左侧，您可以看到此文件夹中的文件。每个文件都在这里，仅限于此文件夹。"
+    ]
+  },
   "purpose": [
-    "Personal productivity",
-    "Team collaboration",
-    "File storage",
-    "Other"
+    "个人生产力",
+    "团队协作",
+    "文件存储",
+    "其他"
   ]
 }

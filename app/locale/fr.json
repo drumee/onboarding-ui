@@ -1,15 +1,81 @@
 {
-  "title": [
-    "Want to be part of something new?",
-    "What tools do you currently use for productivity or collaboration?",
-    "How do you plan to use Drumee?",
-    "How much do you care about data privacy?"
+  "steps": [
+    {
+      "label": "SÉLECTIONNER LE TYPE D'ÉQUIPE",
+      "title": "Comment utiliserez-vous DRUMEE ?",
+      "tips": "Sélectionnez le type d'espace de travail qui correspond le mieux à votre flux de travail. Cela nous aide à personnaliser votre expérience."
+    },
+    {
+      "label": "INVITER VOTRE ÉQUIPE",
+      "title": "Invitez votre équipe",
+      "tips": "La collaboration est meilleure ensemble. Ajoutez vos coéquipiers pour commencer à collaborer."
+    },
+    {
+      "label": "VÉRIFICATION D'IDENTITÉ",
+      "title": "Vous êtes prêt !",
+      "tips": "Votre espace de travail personnel DRUMEE est prêt."
+    },
+    {
+      "label": "COMMENT DRUMEE FONCTIONNE",
+      "title": "Découvrez Drumee en action",
+      "tips": "Notre guide vous accompagnera à travers le produit — directement dans un vrai dossier."
+    }
   ],
-  "tips": "Try Drumee, the privacy-first productivity space where your data stays only yours. Sign up for our closed beta, we’ll let you know once you’re in! 🙌",
+  "total_steps": 4,
+  "continue": "Continuer",
+  "back": "← Retour",
+  "skip": "Passer",
+  "skip_for_now": "Passer pour l'instant",
+  "take_quick_tour": "Faisons un tour rapide",
+  "skip_to_workspace": "Passer et aller à l'espace de travail",
+  "next_see_live": "Suivant : voir en direct →",
+  "enter_workspace": "Entrer dans l'espace de travail 🚀",
+  "add": "Ajouter",
+  "add_another": "Ajouter un autre",
+  "send": "Envoyer",
+  "invite_placeholder": "collegue@entreprise.com",
+  "invite_placeholders": ["alex@entreprise.com", "jordan@entreprise.com"],
+  "teammate_email_label": "E-MAIL DU COÉQUIPIER",
+  "copy_shareable_link": "Copier le lien partageable",
+  "share_link_desc": "Invitez n'importe qui avec une URL privée",
+  "share_link_prefix": "Ou partagez le lien :",
+  "ask_guide_placeholder": "Posez une question au guide ou répondez...",
+  "all_set_title": "Vous êtes prêt, {0} !",
+  "all_set_desc": "Votre espace de travail personnel DRUMEE est prêt. Nous avons organisé vos outils et dossiers pour que vous puissiez commencer à créer sans encombrement.",
+  "feature_smart_folders": "Dossiers intelligents",
+  "feature_smart_folders_desc": "Ressources auto-organisées",
+  "feature_quick_access": "Accès rapide",
+  "feature_quick_access_desc": "Recherche universelle de fichiers",
+  "team_types": [
+    { "key": "personal", "label": "Personnel", "desc": "Parfait pour les individus et les créateurs solo.", "icon": "👤" },
+    { "key": "startup", "label": "Startup", "desc": "Espaces collaboratifs pour les équipes agiles en croissance.", "icon": "🚀" },
+    { "key": "enterprise", "label": "Entreprise", "desc": "Gouvernance évolutive pour les grandes organisations.", "icon": "🏢" }
+  ],
+  "folder_colors": [
+    { "emoji": "🟡", "name": "Dossier violet", "color": "purple", "desc": "Privé — vous seul pouvez le voir" },
+    { "emoji": "🟠", "name": "Dossier rouge", "color": "red", "desc": "Restreint — partagé avec des personnes spécifiques uniquement" },
+    { "emoji": "❤️", "name": "Dossier rose", "color": "pink", "desc": "Partage par lien — toute personne ayant le lien peut y accéder" },
+    { "emoji": "📁", "name": "Dossier gris", "color": "grey", "desc": "Brouillon — pas encore configuré" }
+  ],
+  "demo_folder": {
+    "name": "Audits de contrats intelligents",
+    "badge": "Rouge · Restreint",
+    "files_label": "FICHIERS",
+    "chat_label": "💬 Discussion",
+    "chat_context": "contexte du dossier",
+    "files": [
+      { "name": "Rapport_Audit_v3.pdf", "size": "2,3 Mo · il y a 2h", "icon": "📄" },
+      { "name": "Contrat_ABI.json", "size": "48 Ko · il y a 1j", "icon": "📄" }
+    ],
+    "messages": [
+      "👋 Bonjour ! Je suis votre guide Drumee. Ceci est un vrai dossier — laissez-moi vous faire visiter.",
+      "📁 À gauche, vous pouvez voir les fichiers dans ce dossier. Chaque fichier est ici, limité à ce dossier uniquement."
+    ]
+  },
   "purpose": [
-    "Personal productivity",
-    "Team collaboration",
-    "File storage",
-    "Other"
+    "Productivité personnelle",
+    "Collaboration d'équipe",
+    "Stockage de fichiers",
+    "Autre"
   ]
 }

@@ -20,6 +20,7 @@ class onboarding_app extends LetcBox {
     this._data = {}
     this._saved_data = []
     this._shareLink = 'acme-agency.drumee.com/invite/xyz';
+    this._inviteCount = 2; // Start with 2 email fields
   }
 
   /**
@@ -72,7 +73,7 @@ class onboarding_app extends LetcBox {
         // Can always continue (skip is also available)
         completed = 1;
         break;
-      case 2: // Welcome - folder guide (info only)
+      case 2: // Welcome - all set (info only)
         completed = 1;
         break;
       case 3: // See in action
@@ -104,10 +105,20 @@ class onboarding_app extends LetcBox {
         });
         break;
       case 1: // Invite team
+        // Collect all invite emails
+        let inviteEmails = [];
+        for (let i = 0; i < this._inviteCount; i++) {
+          let email = args[`invite_email_${i}`];
+          if (email && email.trim()) {
+            inviteEmails.push(email.trim());
+          }
+        }
+        args.invites = inviteEmails;
         this.postService(
           SERVICE.onboarding.save_tools, { args }, SVC_OPT
         ).then((data) => {
           this._saved_data[this._step] = args;
+          this._data.invites = inviteEmails;
           this._step++;
           if (this._step > MAX_STEP) this._step = MAX_STEP;
           this.loadForm()
@@ -212,15 +223,41 @@ class onboarding_app extends LetcBox {
               });
             }
             this.setItemState(_a.next, 1);
+            // Auto-advance after selection with short delay
+            setTimeout(() => {
+              this.commitForm();
+            }, 400);
           }
         }
         break;
       case 'add-invite':
-        // Handle adding invite email
-        let inviteData = this.getData();
-        if (inviteData.invite_email) {
-          this._data.invites = this._data.invites || [];
-          this._data.invites.push(inviteData.invite_email);
+        // Add new invite email field by incrementing count and reloading
+        {
+          // Save current email values
+          let currentData = this.getData() || {};
+          let currentEmails = [];
+          for (let i = 0; i < this._inviteCount; i++) {
+            let email = currentData[`invite_email_${i}`];
+            if (email) currentEmails.push(email);
+            else currentEmails.push('');
+          }
+          this._data.invites = currentEmails;
+          this._data.invites.push(''); // Add empty slot
+          this._inviteCount++;
+          this.loadForm();
+        }
+        break;
+      case 'copy-share-link':
+        // Copy share link to clipboard
+        {
+          let link = this._shareLink || 'acme-agency.drumee.com/invite/xyz';
+          if (navigator.clipboard) {
+            navigator.clipboard.writeText(link).then(() => {
+              Butler.say("Link copied to clipboard!");
+            }).catch(() => {
+              Butler.say("Could not copy link");
+            });
+          }
         }
         break;
       case 'send-chat':

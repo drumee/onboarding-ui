@@ -1,15 +1,81 @@
 {
-  "title": [
-    "Want to be part of something new?",
-    "What tools do you currently use for productivity or collaboration?",
-    "How do you plan to use Drumee?",
-    "How much do you care about data privacy?"
+  "steps": [
+    {
+      "label": "ВЫБРАТЬ ТИП КОМАНДЫ",
+      "title": "Как вы будете использовать DRUMEE?",
+      "tips": "Выберите тип рабочего пространства, который лучше всего подходит для вашего рабочего процесса. Это поможет нам настроить ваш опыт."
+    },
+    {
+      "label": "ПРИГЛАСИТЬ КОМАНДУ",
+      "title": "Пригласите вашу команду",
+      "tips": "Сотрудничество лучше вместе. Добавьте своих коллег, чтобы начать совместную работу."
+    },
+    {
+      "label": "ВЕРИФИКАЦИЯ ЛИЧНОСТИ",
+      "title": "Всё готово!",
+      "tips": "Ваше персональное рабочее пространство DRUMEE готово."
+    },
+    {
+      "label": "КАК РАБОТАЕТ DRUMEE",
+      "title": "Посмотрите Drumee в действии",
+      "tips": "Наш гид проведёт вас по продукту — прямо в настоящей папке."
+    }
   ],
-  "tips": "Try Drumee, the privacy-first productivity space where your data stays only yours. Sign up for our closed beta, we’ll let you know once you’re in! 🙌",
+  "total_steps": 4,
+  "continue": "Продолжить",
+  "back": "← Назад",
+  "skip": "Пропустить",
+  "skip_for_now": "Пропустить пока",
+  "take_quick_tour": "Давайте пройдём быстрый тур",
+  "skip_to_workspace": "Пропустить и перейти к рабочему пространству",
+  "next_see_live": "Далее: посмотреть вживую →",
+  "enter_workspace": "Войти в рабочее пространство 🚀",
+  "add": "Добавить",
+  "add_another": "Добавить ещё",
+  "send": "Отправить",
+  "invite_placeholder": "коллега@компания.com",
+  "invite_placeholders": ["alex@компания.com", "jordan@компания.com"],
+  "teammate_email_label": "ЭЛЕКТРОННАЯ ПОЧТА КОЛЛЕГИ",
+  "copy_shareable_link": "Скопировать ссылку для обмена",
+  "share_link_desc": "Пригласите кого угодно с помощью приватной ссылки",
+  "share_link_prefix": "Или поделитесь ссылкой:",
+  "ask_guide_placeholder": "Спросите гида или ответьте...",
+  "all_set_title": "Всё готово, {0}!",
+  "all_set_desc": "Ваше персональное рабочее пространство DRUMEE готово. Мы организовали ваши инструменты и папки, чтобы вы могли начать работать без беспорядка.",
+  "feature_smart_folders": "Умные папки",
+  "feature_smart_folders_desc": "Автоматически организованные ресурсы",
+  "feature_quick_access": "Быстрый доступ",
+  "feature_quick_access_desc": "Универсальный поиск файлов",
+  "team_types": [
+    { "key": "personal", "label": "Персональный", "desc": "Идеально для индивидуальных пользователей и сольных создателей.", "icon": "👤" },
+    { "key": "startup", "label": "Стартап", "desc": "Совместные пространства для гибких растущих команд.", "icon": "🚀" },
+    { "key": "enterprise", "label": "Предприятие", "desc": "Масштабируемое управление для крупных организаций.", "icon": "🏢" }
+  ],
+  "folder_colors": [
+    { "emoji": "🟡", "name": "Фиолетовая папка", "color": "purple", "desc": "Приватная — только вы можете её видеть" },
+    { "emoji": "🟠", "name": "Красная папка", "color": "red", "desc": "Ограниченная — доступна только определённым людям" },
+    { "emoji": "❤️", "name": "Розовая папка", "color": "pink", "desc": "По ссылке — любой с ссылкой может получить доступ" },
+    { "emoji": "📁", "name": "Серая папка", "color": "grey", "desc": "Черновик — ещё не настроена" }
+  ],
+  "demo_folder": {
+    "name": "Аудит смарт-контрактов",
+    "badge": "Красный · Ограниченный",
+    "files_label": "ФАЙЛЫ",
+    "chat_label": "💬 Чат",
+    "chat_context": "контекст папки",
+    "files": [
+      { "name": "Отчёт_Аудит_v3.pdf", "size": "2,3 МБ · 2ч назад", "icon": "📄" },
+      { "name": "Контракт_ABI.json", "size": "48 КБ · 1д назад", "icon": "📄" }
+    ],
+    "messages": [
+      "👋 Привет! Я ваш гид по Drumee. Это настоящая папка — позвольте показать вам.",
+      "📁 Слева вы можете видеть файлы в этой папке. Каждый файл находится здесь, ограничен только этой папкой."
+    ]
+  },
   "purpose": [
-    "Personal productivity",
-    "Team collaboration",
-    "File storage",
-    "Other"
+    "Личная продуктивность",
+    "Командная работа",
+    "Хранение файлов",
+    "Другое"
   ]
 }

@@ -1,278 +1,33 @@
-@use "vars" as *;
-
 /* ============================================
-   Chat message animation keyframes
-   ============================================ */
-@keyframes msgFadeIn {
-  0% { opacity: 0; transform: translateY(12px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
-
-/* ============================================
-   Step 5: See Drumee in Action - Demo View
+   Step 4: See Drumee in Action (placeholder/demo)
    ============================================ */
 .onboarding-app__action {
   &-main {
     width: 100%;
-    gap: 0;
+    gap: var(--spacer-5);
+    align-items: center;
   }
 
-  &-folder-header {
+  &-placeholder {
+    font-size: 16px;
+    font-family: var(--font-medium);
+    color: var(--neutral-600);
+    text-align: center;
+    padding: var(--spacer-10) var(--spacer-7);
     width: 100%;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 14px;
-    background: $input-bg;
-    border: 1px solid $input-border;
-    border-radius: $border-radius-sm $border-radius-sm 0 0;
-  }
-
-  &-folder-icon {
-    display: flex;
-    align-items: center;
-    svg { display: block; }
-  }
-
-  &-folder-name {
-    font-size: 14px;
-    font-weight: 600;
-    color: $text-white;
-  }
-
-  &-folder-badge {
-    font-size: 10px;
-    font-weight: 500;
-    color: $red-accent;
-    background: rgba(231, 76, 60, 0.12);
-    border: 1px solid rgba(231, 76, 60, 0.25);
-    padding: 2px 8px;
-    border-radius: 4px;
-    margin-left: auto;
-  }
-
-  &-content {
-    width: 100%;
-    gap: 0;
-    align-items: stretch;
-    border: 1px solid $input-border;
-    border-top: none;
-    border-radius: 0 0 $border-radius-sm $border-radius-sm;
-    overflow: hidden;
-    min-height: 220px;
-  }
-
-  &-files-panel {
-    flex: 0 0 42%;
-    background: $input-bg;
-    padding: 12px;
-    gap: 6px;
-    border-right: 1px solid $input-border;
-  }
-
-  &-panel-label {
-    font-size: 9px;
-    font-weight: 600;
-    letter-spacing: 0.07em;
-    color: $text-muted;
-    text-transform: uppercase;
-    margin-bottom: 4px;
-  }
-
-  &-file-item {
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: center;
-    gap: 8px;
-    padding: 7px 8px;
-    border-radius: 6px;
-    transition: background 0.15s;
-
-    &.hl {
-      background: rgba(255, 255, 255, 0.04);
-    }
-
-    &:hover {
-      background: rgba(255, 255, 255, 0.06);
-    }
-  }
-
-  &-file-icon-wrap {
-    width: 28px;
-    height: 28px;
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
-    flex-shrink: 0;
-  }
-
-  &-file-info {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-  }
-
-  &-file-name {
-    font-size: 11px;
-    font-weight: 500;
-    color: $text-white;
-  }
-
-  &-file-size {
-    font-size: 9px;
-    color: $text-muted;
-  }
-
-  /* Chat Panel */
-  &-chat-panel {
-    flex: 1;
-    background: $input-bg;
-    gap: 0;
-    display: flex;
-    flex-direction: column;
-  }
-
-  &-chat-header-bar {
-    padding: 8px 12px;
-    border-bottom: 1px solid $input-border;
-    font-size: 12px;
-    font-weight: 600;
-    color: $text-white;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  &-chat-context-tag {
-    background: rgba(124, 111, 247, 0.15);
-    border-radius: 4px;
-    padding: 2px 5px;
-    font-size: 9px;
-    color: $purple-light;
-    font-weight: 500;
-  }
-
-  &-chat-messages-wrap {
-    padding: 10px 12px;
-    flex: 1;
-    overflow-y: auto;
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 10px;
-    max-height: 240px;
-  }
-
-  /* Bot message */
-  &-chat-msg {
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: flex-start;
-    gap: 8px;
-    opacity: 0;
-    animation: msgFadeIn 0.5s ease forwards;
-  }
-
-  &-chat-avatar {
-    width: 24px;
-    height: 24px;
-    min-width: 24px;
-    border-radius: 50%;
-    background: $purple;
-    color: $text-white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
-    font-weight: 700;
-    flex-shrink: 0;
-  }
-
-  &-chat-bubble {
-    background: rgba(108, 92, 231, 0.1);
-    border: 1px solid rgba(108, 92, 231, 0.18);
-    border-radius: 10px;
-    padding: 8px 12px;
-    font-size: 12px;
-    line-height: 1.5;
-    color: $text-white;
-    max-width: 88%;
-  }
-
-  /* User message */
-  &-user-msg {
-    display: flex !important;
-    flex-direction: row !important;
-    justify-content: flex-end;
-    opacity: 0;
-    animation: msgFadeIn 0.5s ease forwards;
-  }
-
-  &-user-bubble {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 10px;
-    padding: 8px 12px;
-    font-size: 12px;
-    line-height: 1.5;
-    color: $text-white;
-    max-width: 80%;
-  }
-
-  /* Animation class */
-  &-anim {
-    opacity: 0;
-    animation: msgFadeIn 0.5s ease forwards;
-  }
-
-  /* Chat input bar */
-  &-chat-input-bar {
-    padding: 8px 12px;
-    border-top: 1px solid $input-border;
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: center;
-    gap: 6px;
-  }
-
-  &-chat-text-input {
-    flex: 1;
-    background: transparent;
-    border: 1px solid $input-border;
-    border-radius: 6px;
-    padding: 6px 10px;
-    color: $text-white;
-    font-size: 12px;
-    outline: none;
-
-    &::placeholder {
-      color: $text-muted;
-    }
-  }
-
-  &-send-btn {
-    cursor: pointer;
-    padding: 5px 12px;
-    background: $purple;
-    color: $text-white;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 600;
-    transition: background 0.2s;
-
-    &:hover {
-      background: $purple-light;
-    }
+    background: var(--neutral-950);
+    border: 1px solid var(--neutral-700);
+    border-radius: var(--corner-radius-3);
   }
 }
 
 /* ============================================
-   Done screen (legacy)
+   Done screen (legacy compatibility)
    ============================================ */
 .onboarding-app__done {
   &-main {
     width: 100%;
-    gap: 16px;
+    gap: var(--spacer-5);
     align-items: center;
     text-align: center;
   }

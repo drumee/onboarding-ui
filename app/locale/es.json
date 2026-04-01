@@ -1,15 +1,81 @@
 {
-  "title": [
-    "Want to be part of something new?",
-    "What tools do you currently use for productivity or collaboration?",
-    "How do you plan to use Drumee?",
-    "How much do you care about data privacy?"
+  "steps": [
+    {
+      "label": "SELECCIONAR TIPO DE EQUIPO",
+      "title": "¿Cómo usarás DRUMEE?",
+      "tips": "Selecciona el tipo de espacio de trabajo que mejor se adapte a tu flujo de trabajo. Esto nos ayuda a personalizar tu experiencia."
+    },
+    {
+      "label": "INVITAR A TU EQUIPO",
+      "title": "Invita a tu equipo",
+      "tips": "La colaboración es mejor en equipo. Añade a tus compañeros para empezar a colaborar."
+    },
+    {
+      "label": "VERIFICACIÓN DE IDENTIDAD",
+      "title": "¡Todo listo!",
+      "tips": "Tu espacio de trabajo personal DRUMEE está listo."
+    },
+    {
+      "label": "CÓMO FUNCIONA DRUMEE",
+      "title": "Mira Drumee en acción",
+      "tips": "Nuestra guía te acompañará por el producto — directamente dentro de una carpeta real."
+    }
   ],
-  "tips": "Try Drumee, the privacy-first productivity space where your data stays only yours. Sign up for our closed beta, we’ll let you know once you’re in! 🙌",
+  "total_steps": 4,
+  "continue": "Continuar",
+  "back": "← Atrás",
+  "skip": "Omitir",
+  "skip_for_now": "Omitir por ahora",
+  "take_quick_tour": "Hagamos un tour rápido",
+  "skip_to_workspace": "Omitir e ir al espacio de trabajo",
+  "next_see_live": "Siguiente: ver en vivo →",
+  "enter_workspace": "Entrar al espacio de trabajo 🚀",
+  "add": "Añadir",
+  "add_another": "Añadir otro",
+  "send": "Enviar",
+  "invite_placeholder": "colega@empresa.com",
+  "invite_placeholders": ["alex@empresa.com", "jordan@empresa.com"],
+  "teammate_email_label": "CORREO DEL COMPAÑERO",
+  "copy_shareable_link": "Copiar enlace compartible",
+  "share_link_desc": "Invita a cualquiera con una URL privada",
+  "share_link_prefix": "O comparte el enlace:",
+  "ask_guide_placeholder": "Pregunta al guía o responde...",
+  "all_set_title": "¡Todo listo, {0}!",
+  "all_set_desc": "Tu espacio de trabajo personal DRUMEE está listo. Hemos organizado tus herramientas y carpetas para que puedas empezar a crear sin desorden.",
+  "feature_smart_folders": "Carpetas inteligentes",
+  "feature_smart_folders_desc": "Recursos auto-organizados",
+  "feature_quick_access": "Acceso rápido",
+  "feature_quick_access_desc": "Búsqueda universal de archivos",
+  "team_types": [
+    { "key": "personal", "label": "Personal", "desc": "Perfecto para individuos y creadores independientes.", "icon": "👤" },
+    { "key": "startup", "label": "Startup", "desc": "Espacios colaborativos para equipos ágiles en crecimiento.", "icon": "🚀" },
+    { "key": "enterprise", "label": "Empresa", "desc": "Gobernanza escalable para grandes organizaciones.", "icon": "🏢" }
+  ],
+  "folder_colors": [
+    { "emoji": "🟡", "name": "Carpeta morada", "color": "purple", "desc": "Privada — solo tú puedes verla" },
+    { "emoji": "🟠", "name": "Carpeta roja", "color": "red", "desc": "Restringida — compartida solo con personas específicas" },
+    { "emoji": "❤️", "name": "Carpeta rosa", "color": "pink", "desc": "Enlace compartido — cualquiera con el enlace puede acceder" },
+    { "emoji": "📁", "name": "Carpeta gris", "color": "grey", "desc": "Borrador — aún no configurada" }
+  ],
+  "demo_folder": {
+    "name": "Auditorías de contratos inteligentes",
+    "badge": "Rojo · Restringido",
+    "files_label": "ARCHIVOS",
+    "chat_label": "💬 Chat",
+    "chat_context": "contexto de carpeta",
+    "files": [
+      { "name": "Informe_Auditoría_v3.pdf", "size": "2,3 MB · hace 2h", "icon": "📄" },
+      { "name": "Contrato_ABI.json", "size": "48 KB · hace 1d", "icon": "📄" }
+    ],
+    "messages": [
+      "👋 ¡Hola! Soy tu guía de Drumee. Esta es una carpeta real — déjame mostrarte.",
+      "📁 A la izquierda, puedes ver los archivos dentro de esta carpeta. Cada archivo está aquí, limitado solo a esta carpeta."
+    ]
+  },
   "purpose": [
-    "Personal productivity",
-    "Team collaboration",
-    "File storage",
-    "Other"
+    "Productividad personal",
+    "Colaboración en equipo",
+    "Almacenamiento de archivos",
+    "Otro"
   ]
 }

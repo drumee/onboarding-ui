@@ -1,15 +1,81 @@
 {
-  "title": [
-    "Want to be part of something new?",
-    "What tools do you currently use for productivity or collaboration?",
-    "How do you plan to use Drumee?",
-    "How much do you care about data privacy?"
+  "steps": [
+    {
+      "label": "ជ្រើសរើសប្រភេទក្រុម",
+      "title": "តើអ្នកនឹងប្រើ DRUMEE យ៉ាងដូចម្ដេច?",
+      "tips": "ជ្រើសរើសប្រភេទកន្លែងធ្វើការដែលសមស្របនឹងលំហូរការងាររបស់អ្នក។ វាជួយយើងកែសម្រួលបទពិសោធន៍របស់អ្នក។"
+    },
+    {
+      "label": "អញ្ជើញក្រុមរបស់អ្នក",
+      "title": "អញ្ជើញក្រុមរបស់អ្នក",
+      "tips": "កិច្ចសហការល្អប្រសើរជាងនៅម្នាក់ឯង។ បន្ថែមសមាជិកក្រុមរបស់អ្នកដើម្បីចាប់ផ្ដើមសហការ។"
+    },
+    {
+      "label": "ផ្ទៀងផ្ទាត់អត្តសញ្ញាណ",
+      "title": "អ្នករួចរាល់ហើយ!",
+      "tips": "កន្លែងធ្វើការផ្ទាល់ខ្លួន DRUMEE របស់អ្នកបានត្រៀមរួចរាល់។"
+    },
+    {
+      "label": "របៀប DRUMEE ដំណើរការ",
+      "title": "មើល Drumee ក្នុងសកម្មភាព",
+      "tips": "មគ្គុទ្ទេសក៍របស់យើងនឹងនាំអ្នកទស្សនាផលិតផល — នៅក្នុងថតឯកសារពិត។"
+    }
   ],
-  "tips": "Try Drumee, the privacy-first productivity space where your data stays only yours. Sign up for our closed beta, we’ll let you know once you’re in! 🙌",
+  "total_steps": 4,
+  "continue": "បន្ត",
+  "back": "← ថយក្រោយ",
+  "skip": "រំលង",
+  "skip_for_now": "រំលងសិន",
+  "take_quick_tour": "តោះទស្សនាខ្លី",
+  "skip_to_workspace": "រំលង ហើយទៅកន្លែងធ្វើការ",
+  "next_see_live": "បន្ទាប់: មើលផ្ទាល់ →",
+  "enter_workspace": "ចូលកន្លែងធ្វើការ 🚀",
+  "add": "បន្ថែម",
+  "add_another": "បន្ថែមទៀត",
+  "send": "ផ្ញើ",
+  "invite_placeholder": "សមាជិក@ក្រុមហ៊ុន.com",
+  "invite_placeholders": ["alex@ក្រុមហ៊ុន.com", "jordan@ក្រុមហ៊ុន.com"],
+  "teammate_email_label": "អ៊ីមែលសមាជិកក្រុម",
+  "copy_shareable_link": "ចម្លងតំណចែករំលែក",
+  "share_link_desc": "អញ្ជើញអ្នកណាម្នាក់ជាមួយ URL ឯកជន",
+  "share_link_prefix": "ឬចែករំលែកតំណ:",
+  "ask_guide_placeholder": "សួរមគ្គុទ្ទេសក៍ ឬឆ្លើយ...",
+  "all_set_title": "អ្នករួចរាល់ហើយ {0}!",
+  "all_set_desc": "កន្លែងធ្វើការផ្ទាល់ខ្លួន DRUMEE របស់អ្នកបានត្រៀមរួចរាល់។ យើងបានរៀបចំឧបករណ៍និងថតឯកសាររបស់អ្នកដើម្បីឱ្យអ្នកចាប់ផ្ដើមបង្កើតដោយគ្មានភាពច្របូកច្របល់។",
+  "feature_smart_folders": "ថតឯកសារឆ្លាតវៃ",
+  "feature_smart_folders_desc": "ទ្រព្យសម្បត្តិរៀបចំដោយស្វ័យប្រវត្តិ",
+  "feature_quick_access": "ចូលប្រើរហ័ស",
+  "feature_quick_access_desc": "ស្វែងរកឯកសារជាសកល",
+  "team_types": [
+    { "key": "personal", "label": "ផ្ទាល់ខ្លួន", "desc": "ល្អឥតខ្ចោះសម្រាប់បុគ្គល និងអ្នកបង្កើតឯកជន។", "icon": "👤" },
+    { "key": "startup", "label": "ស្ដាតអាប់", "desc": "កន្លែងសហការសម្រាប់ក្រុមរហ័សដែលកំពុងរីកចម្រើន។", "icon": "🚀" },
+    { "key": "enterprise", "label": "សហគ្រាស", "desc": "អភិបាลកិច្ចដែលអាចពង្រីកបានសម្រាប់អង្គការធំ។", "icon": "🏢" }
+  ],
+  "folder_colors": [
+    { "emoji": "🟡", "name": "ថតពណ៌ស្វាយ", "color": "purple", "desc": "ឯកជន — មានតែអ្នកទេដែលអាចមើលឃើញ" },
+    { "emoji": "🟠", "name": "ថតពណ៌ក្រហម", "color": "red", "desc": "កំណត់ — ចែករំលែកជាមួយមនុស្សជាក់លាក់តែប៉ុណ្ណោះ" },
+    { "emoji": "❤️", "name": "ថតពណ៌ផ្កាឈូក", "color": "pink", "desc": "ចែករំលែកតំណ — អ្នកណាដែលមានតំណអាចចូលប្រើបាន" },
+    { "emoji": "📁", "name": "ថតពណ៌ប្រផេះ", "color": "grey", "desc": "សេចក្ដីព្រាង — មិនទាន់បានកំណត់រចនាសម្ព័ន្ធ" }
+  ],
+  "demo_folder": {
+    "name": "សវនកម្មកិច្ចសន្យាឆ្លាតវៃ",
+    "badge": "ក្រហម · កំណត់",
+    "files_label": "ឯកសារ",
+    "chat_label": "💬 ជជែក",
+    "chat_context": "បរិបទថត",
+    "files": [
+      { "name": "របាយការណ៍_សវនកម្ម_v3.pdf", "size": "2.3 MB · 2ម៉ោងមុន", "icon": "📄" },
+      { "name": "កិច្ចសន្យា_ABI.json", "size": "48 KB · 1ថ្ងៃមុន", "icon": "📄" }
+    ],
+    "messages": [
+      "👋 សួស្ដី! ខ្ញុំជាមគ្គុទ្ទេសក៍ Drumee របស់អ្នក។ នេះជាថតឯកសារពិត — អនុញ្ញាតឱ្យខ្ញុំនាំអ្នកទស្សនា។",
+      "📁 នៅខាងឆ្វេង អ្នកអាចមើលឃើញឯកសារនៅក្នុងថតនេះ។ ឯកសារនីមួយៗស្ថិតនៅទីនេះ កំណត់តែក្នុងថតនេះប៉ុណ្ណោះ។"
+    ]
+  },
   "purpose": [
-    "Personal productivity",
-    "Team collaboration",
-    "File storage",
-    "Other"
+    "ផលិតភាពផ្ទាល់ខ្លួន",
+    "សហការក្រុម",
+    "ផ្ទុកឯកសារ",
+    "ផ្សេងទៀត"
   ]
 }

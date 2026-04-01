@@ -1,19 +1,19 @@
 {
   "steps": [
     {
-      "label": "TEAM TYPE",
-      "title": "How will you use Drumee?",
-      "tips": "We'll set up your workspace for your team type."
+      "label": "SELECT TEAM TYPE",
+      "title": "How will you use DRUMEE?",
+      "tips": "Select the workspace type that best fits your workflow. This helps us curate your experience."
     },
     {
-      "label": "INVITE TEAM",
-      "title": "Who's on your team?",
-      "tips": "Invite teammates or share the link later."
+      "label": "INVITE YOUR TEAM",
+      "title": "Invite your team",
+      "tips": "Collaboration is better together. Add your teammates to start curating."
     },
     {
-      "label": "WELCOME TO DRUMEE",
-      "title": "Welcome to Drumee! 🎉",
-      "tips": "Before you dive in — here's how folder colors work and how to use the product."
+      "label": "IDENTITY VERIFICATION",
+      "title": "You're all set!",
+      "tips": "Your personal DRUMEE workspace is ready."
     },
     {
       "label": "HOW DRUMEE WORKS",
@@ -22,20 +22,34 @@
     }
   ],
   "total_steps": 4,
-  "continue": "Continue →",
+  "continue": "Continue",
   "back": "← Back",
   "skip": "Skip",
+  "skip_for_now": "Skip for now",
+  "take_quick_tour": "Let's take a quick tour",
+  "skip_to_workspace": "Skip and go to workspace",
   "next_see_live": "Next: see it live →",
   "enter_workspace": "Enter workspace 🚀",
   "add": "Add",
+  "add_another": "Add another",
   "send": "Send",
   "invite_placeholder": "colleague@company.com",
+  "invite_placeholders": ["alex@company.com", "jordan@company.com"],
+  "teammate_email_label": "TEAMMATE EMAIL",
+  "copy_shareable_link": "Copy shareable link",
+  "share_link_desc": "Invite anyone with a private URL",
   "share_link_prefix": "Or share link:",
   "ask_guide_placeholder": "Ask the guide or reply...",
+  "all_set_title": "You're all set, {0}!",
+  "all_set_desc": "Your personal DRUMEE workspace is ready. We've organized your tools and folders so you can start creating without the clutter.",
+  "feature_smart_folders": "Smart Folders",
+  "feature_smart_folders_desc": "Auto-organized assets",
+  "feature_quick_access": "Quick Access",
+  "feature_quick_access_desc": "Universal file search",
   "team_types": [
-    { "key": "personal", "label": "Personal", "desc": "Just you", "icon": "👤" },
-    { "key": "startup", "label": "Startup", "desc": "Small team", "icon": "🚀" },
-    { "key": "enterprise", "label": "Enterprise", "desc": "Large org", "icon": "🏢" }
+    { "key": "personal", "label": "Personal", "desc": "Perfect for individuals and solo curators.", "icon": "👤" },
+    { "key": "startup", "label": "Startup", "desc": "Collaborative spaces for agile growing teams.", "icon": "🚀" },
+    { "key": "enterprise", "label": "Enterprise", "desc": "Scalable governance for large organizations.", "icon": "🏢" }
   ],
   "folder_colors": [
     { "emoji": "🟡", "name": "Purple folder", "color": "purple", "desc": "Private — only you can see it" },

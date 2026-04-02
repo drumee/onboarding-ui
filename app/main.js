@@ -220,7 +220,10 @@ class onboarding_app extends LetcBox {
       case 'enter-workspace':
         localStorage.onboarding_step = "0";
         this.postService(
-          SERVICE.drumate.mark_onboarding_complete, {}, SVC_OPT
+          SERVICE.drumate.mark_onboarding_complete, 
+          {
+            hub_id: Visitor.id,
+          }, SVC_OPT
         ).then((data) => {
           this.debug("Onboarding marked complete", data);
           if (this.mget(_a.type) == 'app') {

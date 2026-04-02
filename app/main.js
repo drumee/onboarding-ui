@@ -128,9 +128,8 @@ class onboarding_app extends LetcBox {
     this.setItemState(_a.next, 0)
     switch (this._step) {
       case 0: // Team type
-        args.team_type = this._data.team_type;
         this.postService(
-          SERVICE.onboarding.save_usage_plan, { args }, SVC_OPT
+          SERVICE.onboarding.save_usage_plan, { args: this._data.team_type }, SVC_OPT
         ).then((data) => {
           this._saved_data[this._step] = { team_type: this._data.team_type };
           this._step++;
@@ -141,15 +140,20 @@ class onboarding_app extends LetcBox {
       case 1: // Invite team
         {
           let emails = this._collectEmails(args);
-          this.postService(
-            SERVICE.onboarding.send_onboarding_invites, { emails }, SVC_OPT
-          ).then((data) => {
+          const advance = () => {
             this._saved_data[this._step] = { invites: emails };
             this._data.invites = emails;
             this._step++;
             if (this._step > MAX_STEP) this._step = MAX_STEP;
             this.loadForm()
-          });
+          };
+          if (emails.length > 0) {
+            this.postService(
+              SERVICE.onboarding.send_onboarding_invites, { emails }, SVC_OPT
+            ).then(advance);
+          } else {
+            advance();
+          }
         }
         break;
       case 2: // Welcome (info step)

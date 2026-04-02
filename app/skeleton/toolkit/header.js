@@ -23,7 +23,7 @@ const STEP_TIPS_KEYS = [
 export function header(ui) {
   const fig = ui.fig.family;
   let step = ui._step;
-  const { steps, total_steps } = locale();
+  const { steps } = locale();
   const currentStep = steps[step] || steps[0];
 
   // Resolve title and tips: LOCALE.* first, then local locale fallback
@@ -32,12 +32,15 @@ export function header(ui) {
   const title = (titleKey && LOCALE[titleKey]) || currentStep.title;
   const tips = (tipsKey && LOCALE[tipsKey]) || currentStep.tips;
 
-  // Build progress steps (5 total, step+1 because step 0 = signin which is step 1 in the flow)
+  // Build progress steps (5 total)
+  // step 1 (signin) is always completed, onboarding starts at step 2
+  // So active count = step + 2 (signin done + current progress)
   let progressKids = [];
-  for (let i = 0; i < (total_steps + 1); i++) {
+  const TOTAL_PROGRESS = 5;
+  for (let i = 0; i < TOTAL_PROGRESS; i++) {
     progressKids.push(
       Skeletons.Element({
-        className: `${fig}__progress-step${i <= step ? ' active' : ''}`,
+        className: `${fig}__progress-step${i <= step + 1 ? ' active' : ''}`,
         content: ' ',
       })
     )

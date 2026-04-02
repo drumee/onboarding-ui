@@ -6,7 +6,7 @@ const TEAM_TYPES = ['personal', 'startup', 'enterprise'];
 class onboarding_app extends LetcBox {
 
   /**
-   * 
+   *
    */
   initialize(opt = {}) {
     require('./skin');
@@ -19,28 +19,49 @@ class onboarding_app extends LetcBox {
     this._step = parseInt(localStorage.onboarding_step) || 0;
     this._data = {}
     this._saved_data = []
-    this._shareLink = 'acme-agency.drumee.com/invite/xyz';
-    this._inviteCount = 2; // Start with 2 email fields
+    this._shareLink = '';
+    this._referralCode = null;
+    this._inviteCount = 2;
   }
 
   /**
-   * 
+   *
    */
   async start() {
     this.loadForm();
   }
 
   /**
-   * 
+   *
    */
   loadForm() {
     localStorage.onboarding_step = this._step;
+    if (this._step === 1 && !this._shareLink) {
+      this.fetchInviteLink();
+    }
     this.feed(require('./skeleton')(this))
     this.checkForm()
   }
 
   /**
-   * 
+   * Fetch referral invite link from backend
+   */
+  async fetchInviteLink() {
+    try {
+      let data = await this.postService(
+        SERVICE.onboarding.get_onboarding_invite_link, {}, SVC_OPT
+      );
+      if (data) {
+        this._referralCode = data.referral_code;
+        this._shareLink = data.referral_url;
+      }
+    } catch (e) {
+      this.warn("Failed to fetch invite link", e);
+    }
+  }
+
+  /**
+   *
    */
   setItemState(pn, s = 0) {
     this.ensurePart(pn).then((p) => { p.setState(s) })
@@ -54,7 +75,7 @@ class onboarding_app extends LetcBox {
   }
 
   /**
-   * 
+   *
    */
   checkForm() {
     let data = this.getData() || {}
@@ -70,7 +91,6 @@ class onboarding_app extends LetcBox {
         }
         break;
       case 1: // Invite team
-        // Can always continue (skip is also available)
         completed = 1;
         break;
       case 2: // Welcome - all set (info only)
@@ -87,7 +107,21 @@ class onboarding_app extends LetcBox {
   }
 
   /**
-   * 
+   * Collect invite emails from form
+   */
+  _collectEmails(formData) {
+    let emails = [];
+    for (let i = 0; i < this._inviteCount; i++) {
+      let email = formData[`invite_email_${i}`];
+      if (email && email.trim() && String(email.trim()).isEmail()) {
+        emails.push(email.trim());
+      }
+    }
+    return emails;
+  }
+
+  /**
+   *
    */
   commitForm() {
     let args = this.getData()
@@ -105,24 +139,18 @@ class onboarding_app extends LetcBox {
         });
         break;
       case 1: // Invite team
-        // Collect all invite emails
-        let inviteEmails = [];
-        for (let i = 0; i < this._inviteCount; i++) {
-          let email = args[`invite_email_${i}`];
-          if (email && email.trim()) {
-            inviteEmails.push(email.trim());
-          }
+        {
+          let emails = this._collectEmails(args);
+          this.postService(
+            SERVICE.onboarding.send_onboarding_invites, { emails }, SVC_OPT
+          ).then((data) => {
+            this._saved_data[this._step] = { invites: emails };
+            this._data.invites = emails;
+            this._step++;
+            if (this._step > MAX_STEP) this._step = MAX_STEP;
+            this.loadForm()
+          });
         }
-        args.invites = inviteEmails;
-        this.postService(
-          SERVICE.onboarding.save_tools, { args }, SVC_OPT
-        ).then((data) => {
-          this._saved_data[this._step] = args;
-          this._data.invites = inviteEmails;
-          this._step++;
-          if (this._step > MAX_STEP) this._step = MAX_STEP;
-          this.loadForm()
-        });
         break;
       case 2: // Welcome (info step)
         this._saved_data[this._step] = args;
@@ -140,8 +168,8 @@ class onboarding_app extends LetcBox {
   }
 
   /**
-   * 
-   * @param {*} res 
+   *
+   * @param {*} res
    */
   onServerComplain(err) {
     this.warn("[onServerComplain]", err)
@@ -166,15 +194,29 @@ class onboarding_app extends LetcBox {
         this.loadForm()
         break;
       case 'skip':
-        this._step++;
-        if (this._step > MAX_STEP) this._step = MAX_STEP;
-        this.loadForm()
+        // When skipping invite step, still notify backend
+        if (this._step === 1) {
+          this.postService(
+            SERVICE.onboarding.send_onboarding_invites, { emails: [] }, SVC_OPT
+          ).then(() => {
+            this._step++;
+            if (this._step > MAX_STEP) this._step = MAX_STEP;
+            this.loadForm()
+          }).catch(() => {
+            this._step++;
+            if (this._step > MAX_STEP) this._step = MAX_STEP;
+            this.loadForm()
+          });
+        } else {
+          this._step++;
+          if (this._step > MAX_STEP) this._step = MAX_STEP;
+          this.loadForm()
+        }
         break;
       case 'enter-workspace':
-        // Call mark_complete API to finish onboarding
         localStorage.onboarding_step = "0";
         this.postService(
-          SERVICE.onboarding.mark_complete, {}, SVC_OPT
+          SERVICE.drumate.mark_onboarding_complete, {}, SVC_OPT
         ).then((data) => {
           this.debug("Onboarding marked complete", data);
           if (this.mget(_a.type) == 'app') {
@@ -183,8 +225,7 @@ class onboarding_app extends LetcBox {
           }
           window.location.href = '/';
         }).catch((e) => {
-          this.warn("mark_complete error", e);
-          // Still close even if API fails
+          this.warn("mark_onboarding_complete error", e);
           if (this.mget(_a.type) == 'app') {
             this.softDestroy();
             return;
@@ -205,12 +246,10 @@ class onboarding_app extends LetcBox {
         this.checkForm();
         break;
       case 'select-team-type':
-        // Radio behavior: only 1 team type card selected at a time
         {
           let selectedName = cmd.mget(_a.name);
           if (selectedName && TEAM_TYPES.includes(selectedName)) {
             this._data.team_type = selectedName;
-            // Deselect all, select clicked one
             for (let tt of TEAM_TYPES) {
               this.ensurePart(`team-type-${tt}`).then((p) => {
                 if (tt === selectedName) {
@@ -223,7 +262,6 @@ class onboarding_app extends LetcBox {
               });
             }
             this.setItemState(_a.next, 1);
-            // Auto-advance after selection with short delay
             setTimeout(() => {
               this.commitForm();
             }, 400);
@@ -231,9 +269,7 @@ class onboarding_app extends LetcBox {
         }
         break;
       case 'add-invite':
-        // Add new invite email field by incrementing count and reloading
         {
-          // Save current email values
           let currentData = this.getData() || {};
           let currentEmails = [];
           for (let i = 0; i < this._inviteCount; i++) {
@@ -242,16 +278,20 @@ class onboarding_app extends LetcBox {
             else currentEmails.push('');
           }
           this._data.invites = currentEmails;
-          this._data.invites.push(''); // Add empty slot
+          this._data.invites.push('');
           this._inviteCount++;
           this.loadForm();
         }
         break;
       case 'copy-share-link':
-        // Copy share link to clipboard
         {
-          let link = this._shareLink || 'acme-agency.drumee.com/invite/xyz';
-          if (navigator.clipboard) {
+          let link = this._shareLink;
+          if (!link) {
+            Butler.say("Loading invite link...");
+            await this.fetchInviteLink();
+            link = this._shareLink;
+          }
+          if (link && navigator.clipboard) {
             navigator.clipboard.writeText(link).then(() => {
               Butler.say("Link copied to clipboard!");
             }).catch(() => {
@@ -261,7 +301,6 @@ class onboarding_app extends LetcBox {
         }
         break;
       case 'send-chat':
-        // Handle chat send (demo only)
         break;
       case _e.close:
         localStorage.onboarding_step = "0";
@@ -282,7 +321,7 @@ class onboarding_app extends LetcBox {
     }
   }
 
-  /** 
+  /**
    * Websocket Service Endpoint
    * @param {String} service
    * @param {Object} options

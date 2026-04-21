@@ -4,81 +4,123 @@ export function footer(ui) {
   const fig = ui.fig.family;
   const loc = locale();
   let step = ui._step;
-
   let kids = [];
 
   switch (step) {
-    case 0: // Team Type - no explicit footer needed, cards are clickable
-      break;
-
-    case 1: // Invite Team - Continue button + Skip for now
+    case 0: // Name — Continue only
       kids.push(
         Skeletons.Note({
           className: `${fig}__primary-btn`,
           sys_pn: _a.next,
           partHandler: [ui],
-          content: LOCALE.CONTINUE || loc.continue || "Continue",
+          content: loc.continue || "Continue",
           service: _a.next,
-          state: 1,
+          state: 0,
           reference: _a.state,
-          dataset: { state: 1 },
+          dataset: { state: 0 },
         })
-      )
+      );
+      break;
+
+    case 1: // Industry — Continue only
+    case 3: // Team size — Continue only
       kids.push(
         Skeletons.Note({
-          className: `${fig}__skip-btn`,
-          content: LOCALE.SKIP_FOR_NOW || loc.skip_for_now || "Skip for now",
+          className: `${fig}__primary-btn`,
+          sys_pn: _a.next,
+          partHandler: [ui],
+          content: loc.continue || "Continue",
+          service: _a.next,
+          state: 0,
+          reference: _a.state,
+          dataset: { state: 0 },
+        })
+      );
+      break;
+
+    case 2: // Role — Continue + Tell me later
+    case 5: // Goals — Continue + Tell me later
+      kids.push(
+        Skeletons.Note({
+          className: `${fig}__primary-btn`,
+          sys_pn: _a.next,
+          partHandler: [ui],
+          content: loc.continue || "Continue",
+          service: _a.next,
+          state: 0,
+          reference: _a.state,
+          dataset: { state: 0 },
+        })
+      );
+      kids.push(
+        Skeletons.Note({
+          className: `${fig}__secondary-btn`,
+          content: loc.tell_me_later || "Tell me later ->",
           service: 'skip',
+          uiHandler: [ui],
         })
-      )
+      );
       break;
 
-    case 2: // Welcome / All set - Tour button + Skip to workspace
+    case 4: // Tools — Continue + Tell me later
       kids.push(
-        Skeletons.Box.X({
+        Skeletons.Note({
           className: `${fig}__primary-btn`,
           sys_pn: _a.next,
           partHandler: [ui],
+          content: loc.continue || "Continue",
           service: _a.next,
           state: 1,
           reference: _a.state,
           dataset: { state: 1 },
-          kids: [
-            Skeletons.Note({
-              className: `${fig}__primary-btn-label`,
-              content: LOCALE.TAKE_QUICK_TOUR || loc.take_quick_tour || "Let's take a quick tour",
-              active: 0,
-            }),
-            Skeletons.Element({
-              className: `${fig}__primary-btn-icon`,
-              content: `<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
-              active: 0,
-            })
-          ]
         })
-      )
+      );
       kids.push(
         Skeletons.Note({
-          className: `${fig}__skip-btn`,
-          content: LOCALE.SKIP_TO_WORKSPACE || loc.skip_to_workspace || "Skip and go to workspace",
-          service: 'enter-workspace',
+          className: `${fig}__secondary-btn`,
+          content: loc.tell_me_later || "Tell me later ->",
+          service: 'skip',
+          uiHandler: [ui],
         })
-      )
+      );
       break;
 
-    case 3: // Final step
+    case 6: // Invite — Send invites + Skip this step
       kids.push(
         Skeletons.Note({
           className: `${fig}__primary-btn`,
           sys_pn: _a.next,
           partHandler: [ui],
-          content: LOCALE.ENTER_WORKSPACE || loc.enter_workspace || "Enter workspace 🚀",
+          content: loc.send_invites || "Send invites",
+          service: _a.next,
+          state: 1,
+          reference: _a.state,
+          dataset: { state: 1 },
+        })
+      );
+      kids.push(
+        Skeletons.Note({
+          className: `${fig}__secondary-btn`,
+          content: loc.skip_this_step || "Skip this step ->",
+          service: 'skip',
+          uiHandler: [ui],
+        })
+      );
+      break;
+
+    default: // Done (step 7) — Open workspace
+      kids.push(
+        Skeletons.Note({
+          className: `${fig}__primary-btn`,
+          sys_pn: _a.next,
+          partHandler: [ui],
+          content: loc.open_workspace || "Open workspace ->",
           service: 'enter-workspace',
           state: 1,
           reference: _a.state,
           dataset: { state: 1 },
         })
-      )
+      );
       break;
   }
 

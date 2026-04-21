@@ -1,81 +1,100 @@
 {
   "steps": [
     {
-      "label": "SELECT TEAM TYPE",
-      "title": "How will you use DRUMEE?",
-      "tips": "Select the workspace type that best fits your workflow. This helps us curate your experience."
+      "title": "What should we call you?",
+      "tips": "Just your first name is perfect."
     },
     {
-      "label": "INVITE YOUR TEAM",
-      "title": "Invite your team",
-      "tips": "Collaboration is better together. Add your teammates to start curating."
+      "title": "Hi {0}, what kind of work do you do?",
+      "tips": "Pick the one that fits best."
     },
     {
-      "label": "IDENTITY VERIFICATION",
-      "title": "You're all set!",
-      "tips": "Your personal DRUMEE workspace is ready."
+      "title": "What's your role, {0}?",
+      "tips": "Pick the one that fits best."
     },
     {
-      "label": "HOW DRUMEE WORKS",
-      "title": "See Drumee in action",
-      "tips": "Our guide will walk you through the product — right inside a real folder."
+      "title": "How many people do you work with, {0}?",
+      "tips": "Pick the one that fits best."
+    },
+    {
+      "title": "Help us tailor your workspace",
+      "tips": ""
+    },
+    {
+      "title": "What do you want to start with?",
+      "tips": "This shapes your workspace setup."
+    },
+    {
+      "title": "Invite your team members",
+      "tips": "Your workspace is ready. Bring your team in."
     }
   ],
-  "total_steps": 4,
+  "total_steps": 7,
   "continue": "Continue",
-  "back": "← Back",
-  "skip": "Skip",
-  "skip_for_now": "Skip for now",
-  "take_quick_tour": "Let's take a quick tour",
-  "skip_to_workspace": "Skip and go to workspace",
-  "next_see_live": "Next: see it live →",
-  "enter_workspace": "Enter workspace 🚀",
-  "add": "Add",
-  "add_another": "Add another",
-  "send": "Send",
-  "invite_placeholder": "colleague@company.com",
-  "invite_placeholders": ["alex@company.com", "jordan@company.com"],
-  "teammate_email_label": "TEAMMATE EMAIL",
-  "copy_shareable_link": "Copy shareable link",
-  "share_link_desc": "Invite anyone with a private URL",
-  "share_link_prefix": "Or share link:",
-  "ask_guide_placeholder": "Ask the guide or reply...",
-  "all_set_title": "You're all set, {0}!",
-  "all_set_desc": "Your personal DRUMEE workspace is ready. We've organized your tools and folders so you can start creating without the clutter.",
-  "feature_smart_folders": "Smart Folders",
-  "feature_smart_folders_desc": "Auto-organized assets",
-  "feature_quick_access": "Quick Access",
-  "feature_quick_access_desc": "Universal file search",
-  "team_types": [
-    { "key": "personal", "label": "Personal", "desc": "Perfect for individuals and solo curators.", "icon": "👤" },
-    { "key": "startup", "label": "Startup", "desc": "Collaborative spaces for agile growing teams.", "icon": "🚀" },
-    { "key": "enterprise", "label": "Enterprise", "desc": "Scalable governance for large organizations.", "icon": "🏢" }
-  ],
-  "folder_colors": [
-    { "emoji": "🟡", "name": "Purple folder", "color": "purple", "desc": "Private — only you can see it" },
-    { "emoji": "🟠", "name": "Red folder", "color": "red", "desc": "Restricted — shared with specific people only" },
-    { "emoji": "❤️", "name": "Pink folder", "color": "pink", "desc": "Link share — anyone with the link can access" },
-    { "emoji": "📁", "name": "Grey folder", "color": "grey", "desc": "Draft — not configured yet" }
-  ],
-  "demo_folder": {
-    "name": "Smart Contract Audits",
-    "badge": "Red · Restricted",
-    "files_label": "FILES",
-    "chat_label": "💬 Chat",
-    "chat_context": "folder context",
-    "files": [
-      { "name": "Audit_Report_v3.pdf", "size": "2.3 MB · 2h ago", "icon": "📄" },
-      { "name": "Contract_ABI.json", "size": "48 KB · 1d ago", "icon": "📄" }
-    ],
-    "messages": [
-      "👋 Hi! I'm your Drumee guide. This is a real folder — let me show you around.",
-      "📁 On the left, you can see files inside this folder. Each file lives here, scoped to this folder only."
-    ]
-  },
-  "purpose": [
-    "Personal productivity",
-    "Team collaboration",
-    "File storage",
+  "tell_me_later": "Tell me later ->",
+  "skip_this_step": "Skip this step ->",
+  "send_invites": "Send invites",
+  "open_workspace": "Open workspace ->",
+  "add": "+ Add",
+  "name_placeholder": "Alex",
+  "invite_placeholder": "name@company.com",
+  "invite_info": "Invitees receive an email to join your workspace. Manage permissions anytime from settings.",
+  "all_set_title": "You're all set, {0}",
+  "all_set_tips": "Your workspace is configured and ready to go.",
+  "tools_question": "What tools are you using?",
+  "challenges_question": "What challenges are you facing with your current setup?",
+  "challenges_freetext": "Tell me more about your challenge...",
+  "industries": [
+    "Tech / Software",
+    "Creative / Marketing",
+    "Consulting / Agency",
+    "Legal / Compliance",
+    "Finance / Accounting",
+    "Healthcare",
+    "Education",
+    "Real Estate",
+    "E-commerce / Retail",
+    "Media / Content",
+    "Operations",
     "Other"
-  ]
+  ],
+  "roles": [
+    "Founder / CEO",
+    "Manager / Team lead",
+    "Executive / Associate",
+    "Freelancer / Consultant",
+    "Other"
+  ],
+  "team_sizes": [
+    "Just me",
+    "2 - 10",
+    "10 - 50",
+    "50+"
+  ],
+  "tools": [
+    "Google Drive",
+    "Notion",
+    "Slack",
+    "Dropbox",
+    "ClickUp",
+    "Trello",
+    "Jira",
+    "Other"
+  ],
+  "challenges": [
+    "Files are scattered across tools",
+    "Conversations and files are disconnected",
+    "Concerned about data security and ownership",
+    "Tool costs are too high",
+    "Hard to manage access and permissions",
+    "No visibility on who views or edits what"
+  ],
+  "goals": [
+    { "key": "manage_projects", "label": "Manage projects or team workspace", "icon": "folder" },
+    { "key": "work_clients", "label": "Work with clients - context-native folder", "icon": "users" },
+    { "key": "store_data", "label": "Store sensitive data - fully under your control", "icon": "lock" },
+    { "key": "build_workflows", "label": "Build your own workflows on your data", "icon": "settings" },
+    { "key": "personal_files", "label": "Personal file management - one system", "icon": "file" }
+  ],
+  "invite_roles": ["Admin", "Member", "Viewer"]
 }

@@ -1,269 +1,475 @@
 const { locale } = require("../../locale")
 
 /**
- * Step 2: Team Type selection - Personal / Startup / Enterprise
- * Cards with icon, title, description, and arrow chevron
- * Only 1 option can be selected at a time (radio behavior)
+ * Step 0: "What should we call you?" — first name input
  */
-export function team_type_form(ui, opt) {
-  const pfx = `${ui.fig.family}__team-type`;
+export function name_form(ui) {
+  const pfx = `${ui.fig.family}`;
   const loc = locale();
-  let data = ui._saved_data[ui._step] || {}
-  let selected = data.team_type || ui._data.team_type || '';
+  let val = ui._data.firstname || Visitor.get('firstname') || '';
 
-  let kids = [];
-  for (let tt of loc.team_types) {
-    let isSelected = selected === tt.key;
-    kids.push(
-      Skeletons.Box.X({
-        className: `${pfx}-card`,
-        name: tt.key,
-        sys_pn: `team-type-${tt.key}`,
-        partHandler: [ui],
-        service: 'select-team-type',
-        uiHandler: [ui],
-        state: isSelected ? 1 : 0,
-        dataset: {
-          state: isSelected ? 1 : 0,
-          value: tt.key,
-        },
+  return Skeletons.Box.Y({
+    className: `${pfx}__form-section`,
+    kids: [
+      Skeletons.Box.Y({
+        className: `${pfx}__input-group`,
         kids: [
-          Skeletons.Element({
-            className: `${pfx}-icon-wrap`,
-            content: `<span class="${pfx}-icon-inner">${tt.icon}</span>`,
-            active: 0,
-          }),
-          Skeletons.Box.Y({
-            className: `${pfx}-info`,
-            active: 0,
+          Skeletons.Box.X({
+            className: `${pfx}__input-row`,
             kids: [
-              Skeletons.Element({
-                className: `${pfx}-label`,
-                content: tt.label,
-                active: 0,
-              }),
-              Skeletons.Element({
-                className: `${pfx}-desc`,
-                content: tt.desc,
-                active: 0,
+              Skeletons.Entry({
+                className: `${pfx}__input-field`,
+                name: 'firstname',
+                value: val,
+                formItem: 'firstname',
+                innerClass: 'firstname',
+                mode: _a.interactive,
+                service: _a.input,
+                placeholder: loc.name_placeholder || 'Alex',
+                uiHandler: [ui],
+                state: 0,
+                radio: ui._id
               }),
             ]
-          }),
+          })
+        ]
+      })
+    ]
+  })
+}
+
+/**
+ * Step 1: "What kind of work do you do?" — 2-col industry grid
+ */
+export function industry_form(ui) {
+  const pfx = `${ui.fig.family}`;
+  const loc = locale();
+  let selected = ui._data.industry || '';
+
+  let kids = [];
+  let row = [];
+  const items = loc.industries || [];
+  for (let i = 0; i < items.length; i++) {
+    row.push(
+      Skeletons.Note({
+        className: `${pfx}__option-chip`,
+        name: items[i],
+        sys_pn: `industry-${i}`,
+        partHandler: [ui],
+        service: 'select-option',
+        uiHandler: [ui],
+        state: selected === items[i] ? 1 : 0,
+        dataset: {
+          state: selected === items[i] ? 1 : 0,
+          value: items[i],
+          field: 'industry',
+        },
+        content: items[i],
+      })
+    );
+    if (row.length === 2 || i === items.length - 1) {
+      kids.push(Skeletons.Box.X({
+        className: `${pfx}__option-row`,
+        kids: [...row],
+      }));
+      row = [];
+    }
+  }
+
+  return Skeletons.Box.Y({
+    className: `${pfx}__form-section`,
+    kids: [
+      Skeletons.Box.Y({
+        className: `${pfx}__option-grid`,
+        kids,
+      })
+    ]
+  })
+}
+
+/**
+ * Step 2: "What's your role?" — 2-col role grid + Tell me later
+ */
+export function role_form(ui) {
+  const pfx = `${ui.fig.family}`;
+  const loc = locale();
+  let selected = ui._data.role || '';
+
+  let kids = [];
+  let row = [];
+  const items = loc.roles || [];
+  for (let i = 0; i < items.length; i++) {
+    row.push(
+      Skeletons.Note({
+        className: `${pfx}__option-chip`,
+        name: items[i],
+        sys_pn: `role-${i}`,
+        partHandler: [ui],
+        service: 'select-option',
+        uiHandler: [ui],
+        state: selected === items[i] ? 1 : 0,
+        dataset: {
+          state: selected === items[i] ? 1 : 0,
+          value: items[i],
+          field: 'role',
+        },
+        content: items[i],
+      })
+    );
+    if (row.length === 2 || i === items.length - 1) {
+      kids.push(Skeletons.Box.X({
+        className: `${pfx}__option-row`,
+        kids: [...row],
+      }));
+      row = [];
+    }
+  }
+
+  return Skeletons.Box.Y({
+    className: `${pfx}__form-section`,
+    kids: [
+      Skeletons.Box.Y({
+        className: `${pfx}__option-grid`,
+        kids,
+      })
+    ]
+  })
+}
+
+/**
+ * Step 3: "How many people do you work with?" — 2-col team size grid
+ */
+export function team_size_form(ui) {
+  const pfx = `${ui.fig.family}`;
+  const loc = locale();
+  let selected = ui._data.team_size || '';
+
+  let kids = [];
+  let row = [];
+  const items = loc.team_sizes || [];
+  for (let i = 0; i < items.length; i++) {
+    row.push(
+      Skeletons.Note({
+        className: `${pfx}__option-chip`,
+        name: items[i],
+        sys_pn: `team-size-${i}`,
+        partHandler: [ui],
+        service: 'select-option',
+        uiHandler: [ui],
+        state: selected === items[i] ? 1 : 0,
+        dataset: {
+          state: selected === items[i] ? 1 : 0,
+          value: items[i],
+          field: 'team_size',
+        },
+        content: items[i],
+      })
+    );
+    if (row.length === 2 || i === items.length - 1) {
+      kids.push(Skeletons.Box.X({
+        className: `${pfx}__option-row`,
+        kids: [...row],
+      }));
+      row = [];
+    }
+  }
+
+  return Skeletons.Box.Y({
+    className: `${pfx}__form-section`,
+    kids: [
+      Skeletons.Box.Y({
+        className: `${pfx}__option-grid`,
+        kids,
+      })
+    ]
+  })
+}
+
+/**
+ * Step 4: "Help us tailor your workspace" — tool chips + challenge checkboxes
+ */
+export function tools_form(ui) {
+  const pfx = `${ui.fig.family}`;
+  const loc = locale();
+  let selectedTools = ui._data.tools || [];
+  let selectedChallenges = ui._data.challenges || [];
+
+  // Tool chips (multi-select, wrapped flex)
+  let toolChips = (loc.tools || []).map((t, i) => {
+    let isOn = selectedTools.includes(t);
+    return Skeletons.Note({
+      className: `${pfx}__tool-chip`,
+      name: t,
+      sys_pn: `tool-${i}`,
+      partHandler: [ui],
+      service: 'toggle-tool',
+      uiHandler: [ui],
+      state: isOn ? 1 : 0,
+      dataset: { state: isOn ? 1 : 0, value: t },
+      content: t,
+    });
+  });
+
+  // Challenge options (single col checkboxes)
+  let challengeKids = (loc.challenges || []).map((c, i) => {
+    let isOn = selectedChallenges.includes(c);
+    return Skeletons.Note({
+      className: `${pfx}__challenge-option`,
+      name: c,
+      sys_pn: `challenge-${i}`,
+      partHandler: [ui],
+      service: 'toggle-challenge',
+      uiHandler: [ui],
+      state: isOn ? 1 : 0,
+      dataset: { state: isOn ? 1 : 0, value: c },
+      content: c,
+    });
+  });
+
+  // Free text area for challenges
+  challengeKids.push(
+    Skeletons.Box.X({
+      className: `${pfx}__challenge-freetext`,
+      kids: [
+        Skeletons.Entry({
+          className: `${pfx}__input-field`,
+          name: 'challenge_text',
+          value: ui._data.challenge_text || '',
+          formItem: 'challenge_text',
+          innerClass: 'challenge_text',
+          mode: _a.interactive,
+          service: _a.input,
+          placeholder: loc.challenges_freetext || 'Tell me more about your challenge...',
+          uiHandler: [ui],
+          state: 0,
+          radio: ui._id
+        }),
+      ]
+    })
+  );
+
+  return Skeletons.Box.Y({
+    className: `${pfx}__form-section`,
+    kids: [
+      // Star title (rendered in form body, not header)
+      Skeletons.Box.X({
+        className: `${pfx}__tools-title`,
+        kids: [
           Skeletons.Element({
-            className: `${pfx}-arrow`,
-            content: `<svg width="8" height="14" viewBox="0 0 8 14" fill="none"><path d="M1 1L7 7L1 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+            className: `${pfx}__tools-star`,
+            content: `<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 1L13.5 8.5H21L15 13L17 21L11 16.5L5 21L7 13L1 8.5H8.5L11 1Z" fill="currentColor"/></svg>`,
+            active: 0,
+          }),
+          Skeletons.Note({
+            className: `${pfx}__tools-title-text`,
+            content: loc.steps[4].title || 'Help us tailor your workspace',
             active: 0,
           }),
         ]
-      })
-    )
-  }
-
-  return Skeletons.Box.Y({
-    className: `${pfx}-main`,
-    sys_pn: 'team-type-container',
-    partHandler: [ui],
-    kids
+      }),
+      // Tools section
+      Skeletons.Note({
+        className: `${pfx}__section-label`,
+        content: loc.tools_question || 'What tools are you using?',
+      }),
+      Skeletons.Box.X({
+        className: `${pfx}__tool-chips-wrap`,
+        kids: toolChips,
+      }),
+      // Challenges section
+      Skeletons.Note({
+        className: `${pfx}__section-label`,
+        content: loc.challenges_question || 'What challenges are you facing with your current setup?',
+      }),
+      Skeletons.Box.Y({
+        className: `${pfx}__challenge-list`,
+        kids: challengeKids,
+      }),
+    ]
   })
 }
 
 /**
- * Step 3: Invite Team - multiple email inputs + add another + copy shareable link
+ * Step 5: "What do you want to start with?" — single col radio with icons
  */
-export function invite_team_form(ui, opt) {
-  const pfx = `${ui.fig.family}__invite`;
+export function goals_form(ui) {
+  const pfx = `${ui.fig.family}`;
   const loc = locale();
-  let invites = (ui._data.invites || []);
+  let selected = ui._data.goal || '';
 
-  let emailKids = [];
+  const GOAL_ICONS = {
+    folder: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="2" y="4" width="16" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M2 6H8L9.5 4H18" stroke="currentColor" stroke-width="1.5"/></svg>`,
+    users: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="7" cy="7" r="3" stroke="currentColor" stroke-width="1.5"/><circle cx="14" cy="7" r="2" stroke="currentColor" stroke-width="1.5"/><path d="M1 17C1 14.2 3.2 12 6 12H8C10.8 12 13 14.2 13 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M13 12C15 12 17 13.8 17 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+    lock: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="4" y="9" width="12" height="8" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M7 9V6C7 4.3 8.3 3 10 3C11.7 3 13 4.3 13 6V9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+    settings: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M10 1V3M10 17V19M1 10H3M17 10H19M3.5 3.5L5 5M15 15L16.5 16.5M16.5 3.5L15 5M5 15L3.5 16.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+    file: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M5 2H12L16 6V18H5C3.9 18 3 17.1 3 16V4C3 2.9 3.9 2 5 2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 2V6H16" stroke="currentColor" stroke-width="1.5"/></svg>`,
+  };
 
-  // Pre-populated email fields
-  let placeholders = loc.invite_placeholders || ['alex@company.com', 'jordan@company.com'];
-  for (let i = 0; i < Math.max(placeholders.length, invites.length); i++) {
-    let val = invites[i] || '';
-    let ph = placeholders[i] || loc.invite_placeholder || 'colleague@company.com';
-    emailKids.push(
-      Skeletons.Box.X({
-        className: `${pfx}-input-row`,
-        kids: [
-          Skeletons.Button.Svg({
-            ico: "mail",
-            className: `${pfx}-input-ico`,
-          }),
-          Skeletons.Entry({
-            className: `${pfx}-input`,
-            name: `invite_email_${i}`,
-            value: val,
-            formItem: `invite_email_${i}`,
-            innerClass: `invite_email_${i}`,
-            mode: _a.interactive,
-            service: _a.input,
-            placeholder: ph,
-            uiHandler: [ui],
-            state: 0,
-            radio: ui._id
-          }),
-        ]
-      })
-    )
-  }
-
-  // "Add another" button
-  emailKids.push(
-    Skeletons.Box.X({
-      className: `${pfx}-add-row`,
-      service: 'add-invite',
+  let kids = (loc.goals || []).map((g, i) => {
+    let isOn = selected === g.key;
+    return Skeletons.Box.X({
+      className: `${pfx}__goal-option`,
+      name: g.key,
+      sys_pn: `goal-${i}`,
+      partHandler: [ui],
+      service: 'select-option',
       uiHandler: [ui],
+      state: isOn ? 1 : 0,
+      dataset: { state: isOn ? 1 : 0, value: g.key, field: 'goal' },
       kids: [
         Skeletons.Element({
-          className: `${pfx}-add-icon`,
+          className: `${pfx}__goal-icon`,
+          content: GOAL_ICONS[g.icon] || '',
           active: 0,
-          content: `<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M8 5V11M5 8H11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`,
         }),
         Skeletons.Element({
-          className: `${pfx}-add-text`,
+          className: `${pfx}__goal-label`,
+          content: g.label,
           active: 0,
-          content: LOCALE.ADD_ANOTHER || loc.add_another || "Add another",
-        })
+        }),
       ]
-    })
-  )
-
-  // Copy shareable link card
-  let shareLink = ui._shareLink || 'acme-agency.drumee.com/invite/xyz';
-  let shareLinkCard = Skeletons.Box.X({
-    className: `${pfx}-share-card`,
-    kids: [
-      Skeletons.Element({
-        className: `${pfx}-share-icon`,
-        content: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M8 12L12 8M7 9L5.5 10.5C4.1 11.9 4.1 14.1 5.5 15.5C6.9 16.9 9.1 16.9 10.5 15.5L12 14M13 11L14.5 9.5C15.9 8.1 15.9 5.9 14.5 4.5C13.1 3.1 10.9 3.1 9.5 4.5L8 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`,
-      }),
-      Skeletons.Box.Y({
-        className: `${pfx}-share-info`,
-        kids: [
-          Skeletons.Element({
-            className: `${pfx}-share-title`,
-            content: LOCALE.COPY_SHAREABLE_LINK || loc.copy_shareable_link || "Copy shareable link",
-          }),
-          Skeletons.Element({
-            className: `${pfx}-share-desc`,
-            content: LOCALE.SHARE_LINK_DESC || loc.share_link_desc || "Invite anyone with a private URL",
-          }),
-        ]
-      }),
-      Skeletons.Element({
-        className: `${pfx}-copy-btn`,
-        content: `<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="6" y="6" width="10" height="10" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M12 6V4C12 2.9 11.1 2 10 2H4C2.9 2 2 2.9 2 4V10C2 11.1 2.9 12 4 12H6" stroke="currentColor" stroke-width="1.5"/></svg>`,
-        service: 'copy-share-link',
-      }),
-    ]
-  })
+    });
+  });
 
   return Skeletons.Box.Y({
-    className: `${pfx}-main`,
+    className: `${pfx}__form-section`,
     kids: [
-      Skeletons.Note({
-        className: `${pfx}-section-label`,
-        content: LOCALE.TEAMMATE_EMAIL || loc.teammate_email_label || "TEAMMATE EMAIL",
-      }),
       Skeletons.Box.Y({
-        className: `${pfx}-emails`,
-        kids: emailKids,
-      }),
-      shareLinkCard,
+        className: `${pfx}__goal-list`,
+        kids,
+      })
     ]
   })
 }
 
 /**
- * Step 4: "You're all set!" - Confirmation with feature cards
+ * Step 6: "Invite your team members" — email + role dropdown + add
  */
-export function welcome_form(ui, opt) {
-  const pfx = `${ui.fig.family}__welcome`;
+export function invite_form(ui) {
+  const pfx = `${ui.fig.family}`;
+  const loc = locale();
+
+  // Info banner
+  let infoBanner = Skeletons.Note({
+    className: `${pfx}__invite-info`,
+    content: loc.invite_info || 'Invitees receive an email to join your workspace. Manage permissions anytime from settings.',
+  });
+
+  // Email input row with role + add button
+  let inputRow = Skeletons.Box.X({
+    className: `${pfx}__invite-input-row`,
+    kids: [
+      Skeletons.Entry({
+        className: `${pfx}__invite-email`,
+        name: 'invite_email',
+        value: '',
+        formItem: 'invite_email',
+        innerClass: 'invite_email',
+        mode: _a.interactive,
+        service: _a.input,
+        placeholder: loc.invite_placeholder || 'name@company.com',
+        uiHandler: [ui],
+        state: 0,
+        radio: ui._id
+      }),
+      Skeletons.Note({
+        className: `${pfx}__invite-role-btn`,
+        content: 'Admin',
+        service: 'toggle-role',
+        uiHandler: [ui],
+      }),
+      Skeletons.Note({
+        className: `${pfx}__invite-add-btn`,
+        content: loc.add || '+ Add',
+        service: 'add-invite',
+        uiHandler: [ui],
+      }),
+    ]
+  });
+
+  // Invited list
+  let invitedKids = (ui._data.invites || []).map((inv, i) => {
+    return Skeletons.Box.X({
+      className: `${pfx}__invited-row`,
+      kids: [
+        Skeletons.Element({
+          className: `${pfx}__invited-email`,
+          content: inv.email || inv,
+          active: 0,
+        }),
+        Skeletons.Element({
+          className: `${pfx}__invited-remove`,
+          content: `<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 4L12 12M12 4L4 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+          service: 'remove-invite',
+          dataset: { index: i },
+          active: 0,
+        }),
+      ]
+    });
+  });
+
+  let kids = [infoBanner, inputRow];
+  if (invitedKids.length) {
+    kids.push(Skeletons.Box.Y({
+      className: `${pfx}__invited-list`,
+      kids: invitedKids,
+    }));
+  }
+
+  return Skeletons.Box.Y({
+    className: `${pfx}__form-section`,
+    kids,
+  })
+}
+
+/**
+ * Step 7 (done): "You're all set!" — summary badges
+ */
+export function done_form(ui) {
+  const pfx = `${ui.fig.family}`;
   const loc = locale();
   let userName = ui._data.firstname || Visitor.get('firstname') || 'Alex';
 
+  // Collect summary badges from user's choices
+  let badges = [];
+  if (ui._data.industry) badges.push(ui._data.industry);
+  if (ui._data.team_size) badges.push(ui._data.team_size + ' member');
+  if (ui._data.goal) {
+    let g = (loc.goals || []).find(x => x.key === ui._data.goal);
+    if (g) badges.push(g.label);
+  }
+
+  let badgeKids = badges.map(b => {
+    return Skeletons.Element({
+      className: `${pfx}__summary-badge`,
+      content: b,
+      active: 0,
+    });
+  });
+
   return Skeletons.Box.Y({
-    className: `${pfx}-main`,
+    className: `${pfx}__done-section`,
     kids: [
-      // Hero image area
+      // Check circle icon
       Skeletons.Element({
-        className: `${pfx}-hero`,
-        content: `<div class="${pfx}-hero-bg"></div>`,
-      }),
-      // Success badge
-      Skeletons.Element({
-        className: `${pfx}-badge`,
-        content: `<svg width="32" height="32" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="14" fill="#6c5ce7"/><path d="M11 16L14.5 19.5L21 13" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+        className: `${pfx}__done-icon`,
+        content: `<svg width="39" height="39" viewBox="0 0 39 39" fill="none"><circle cx="19.5" cy="19.5" r="17" stroke="#54B684" stroke-width="2"/><path d="M12 19.5L17 24.5L27 14.5" stroke="#54B684" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
       }),
       // Title
       Skeletons.Note({
-        className: `${pfx}-title`,
-        content: (LOCALE.ALL_SET_TITLE || loc.all_set_title || "You're all set, {0}!").replace('{0}', userName),
+        className: `${pfx}__done-title`,
+        content: (loc.all_set_title || "You're all set, {0}").replace('{0}', userName),
       }),
-      // Description
+      // Tips
       Skeletons.Note({
-        className: `${pfx}-desc`,
-        content: LOCALE.ALL_SET_DESC || loc.all_set_desc || "Your personal DRUMEE workspace is ready. We've organized your tools and folders so you can start creating without the clutter.",
+        className: `${pfx}__done-tips`,
+        content: loc.all_set_tips || 'Your workspace is configured and ready to go.',
       }),
-      // Feature cards
+      // Badges
       Skeletons.Box.X({
-        className: `${pfx}-features`,
-        kids: [
-          Skeletons.Box.Y({
-            className: `${pfx}-feature-card`,
-            kids: [
-              Skeletons.Element({
-                className: `${pfx}-feature-icon`,
-                content: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" stroke-width="1.5"/><path d="M3 9H21M9 9V21" stroke="currentColor" stroke-width="1.5"/></svg>`,
-              }),
-              Skeletons.Element({
-                className: `${pfx}-feature-title`,
-                content: LOCALE.FEATURE_SMART_FOLDERS || loc.feature_smart_folders || "Smart Folders",
-              }),
-              Skeletons.Element({
-                className: `${pfx}-feature-desc`,
-                content: LOCALE.FEATURE_SMART_FOLDERS_DESC || loc.feature_smart_folders_desc || "Auto-organized assets",
-              }),
-            ]
-          }),
-          Skeletons.Box.Y({
-            className: `${pfx}-feature-card`,
-            kids: [
-              Skeletons.Element({
-                className: `${pfx}-feature-icon`,
-                content: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
-              }),
-              Skeletons.Element({
-                className: `${pfx}-feature-title`,
-                content: LOCALE.FEATURE_QUICK_ACCESS || loc.feature_quick_access || "Quick Access",
-              }),
-              Skeletons.Element({
-                className: `${pfx}-feature-desc`,
-                content: LOCALE.FEATURE_QUICK_ACCESS_DESC || loc.feature_quick_access_desc || "Universal file search",
-              }),
-            ]
-          }),
-        ]
+        className: `${pfx}__summary-badges`,
+        kids: badgeKids,
       }),
-    ]
-  })
-}
-
-/**
- * Step 5 (unused currently): See Drumee in action - demo folder view
- */
-export function see_action_form(ui, opt) {
-  const pfx = `${ui.fig.family}__action`;
-  const loc = locale();
-
-  return Skeletons.Box.Y({
-    className: `${pfx}-main`,
-    kids: [
-      Skeletons.Element({
-        className: `${pfx}-placeholder`,
-        content: loc.action_placeholder || "Explore your workspace",
-      })
     ]
   })
 }

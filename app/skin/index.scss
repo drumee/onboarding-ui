@@ -1,3 +1,4 @@
+@use "vars";
 @use "form";
 @use "done";
 
@@ -16,12 +17,26 @@
     align-items: center;
     height: 100vh;
     width: 100vw;
-    background-color: var(--neutral-950);
+    background-color: var(--ob-bg);
+    color: var(--ob-title);
     overflow: hidden;
     position: fixed;
     top: 0;
     left: 0;
     z-index: 9999;
+
+    &::before {
+      content: "";
+      position: absolute;
+      bottom: -200px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 885px;
+      height: 727px;
+      background: radial-gradient(ellipse at center, var(--ob-glow) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
   }
 
   &__main {
@@ -33,33 +48,31 @@
     padding: var(--spacer-10) var(--spacer-7);
     overflow-y: auto;
     gap: 0;
+    position: relative;
+    z-index: 1;
   }
 
   &__card {
-    background: var(--neutral-900);
-    border: 1px solid var(--neutral-800);
-    border-radius: var(--corner-radius-5);
-    padding: var(--spacer-10);
     width: 100%;
-    gap: var(--spacer-6);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    max-width: 520px;
+    gap: 48px;
+    padding: 24px;
   }
 
-  /* ============================================
-     Header: Logo + Progress Bar + Title + Tips
-     ============================================ */
   &__header {
     height: auto;
     width: 100%;
-    gap: var(--spacer-3);
+    gap: 32px;
   }
 
   &__header-top {
     width: 100%;
     align-items: center;
-    justify-content: space-between;
     gap: var(--spacer-5);
-    margin-bottom: var(--spacer-5);
+
+    &.centered {
+      justify-content: center;
+    }
   }
 
   &__logo-container {
@@ -71,7 +84,7 @@
   &__logo-content {
     width: 28px;
     height: 28px;
-    color: var(--primary-500);
+    color: var(--ob-logo-color);
 
     svg {
       width: 28px;
@@ -83,114 +96,56 @@
   &__logo-text {
     font-size: 20px;
     font-family: var(--font-bold);
-    color: var(--gray-white);
+    color: var(--ob-logo-color);
     letter-spacing: -0.3px;
   }
 
   &__progress-bar {
     display: flex;
     align-items: center;
-    gap: 6px;
-    flex: 1;
-    justify-content: flex-end;
+    gap: 8px;
+    width: 100%;
+    justify-content: flex-start;
   }
 
   &__progress-step {
-    width: 40px;
-    height: 4px;
-    border-radius: var(--corner-radius-max);
-    background: var(--primary-100-5);
+    flex: 1;
+    height: 6px;
+    max-width: 61px;
+    border-radius: 12px;
+    background: var(--ob-option-bg);
     transition: background 0.3s ease;
 
     &.active {
-      background: var(--primary-500);
+      background: var(--ob-accent);
     }
   }
 
-  /* ============================================
-     Title & Tips
-     ============================================ */
   &__title {
     font-family: var(--font-bold);
     font-size: 32px;
-    line-height: 40px;
-    color: var(--gray-white);
-    margin-top: var(--spacer-3);
+    line-height: 35px;
+    font-weight: 600;
+    color: var(--ob-title);
+    margin-top: 0;
   }
 
   &__tips {
     font-family: var(--font-main);
-    font-size: 15px;
+    font-size: 16px;
     line-height: 22px;
-    color: var(--neutral-600);
+    color: var(--ob-tips);
   }
 
-  /* ============================================
-     Step Indicator below the card
-     ============================================ */
-  &__step-indicator {
-    width: 100%;
-    justify-content: center;
-    align-items: center;
-    gap: var(--spacer-3);
-    padding: var(--spacer-9) 0;
-  }
-
-  &__step-dot {
-    font-size: 10px;
-    color: var(--primary-300);
-    line-height: 1;
-    text-shadow: 0 0 8px var(--primary-300);
-  }
-
-  &__step-text {
-    font-size: 12px;
-    font-family: var(--font-medium);
-    letter-spacing: 2px;
-    color: var(--neutral-600);
-    text-transform: uppercase;
-  }
-
-  /* ============================================
-     Footer: Buttons
-     ============================================ */
   &__footer {
     width: 100%;
     align-items: center;
-    gap: var(--spacer-4);
-    margin-top: var(--spacer-3);
+    gap: 2px;
+    margin-top: 0;
   }
 
   &__footer-empty {
     display: none;
-  }
-
-  &__back-btn {
-    cursor: pointer;
-    font-size: 14px;
-    font-family: var(--font-medium);
-    color: var(--neutral-600);
-    margin-right: auto;
-    padding: var(--spacer-3) 0;
-    transition: color 0.2s;
-
-    &:hover {
-      color: var(--gray-white);
-    }
-  }
-
-  &__skip-btn {
-    cursor: pointer;
-    font-size: 14px;
-    font-family: var(--font-medium);
-    color: var(--neutral-600);
-    padding: var(--spacer-3) var(--spacer-5);
-    transition: color 0.2s;
-    text-align: center;
-
-    &:hover {
-      color: var(--gray-white);
-    }
   }
 
   &__primary-btn {
@@ -199,22 +154,20 @@
     align-items: center;
     justify-content: center;
     width: 100%;
-    padding: var(--spacer-5) var(--spacer-6);
-    border-radius: var(--corner-radius-3);
+    height: 48px;
+    padding: 12px 24px;
+    border-radius: 4px;
     font-size: 16px;
+    font-weight: 600;
     font-family: var(--font-medium);
-    background: var(--primary-500);
-    color: var(--gray-white);
+    background: var(--ob-primary-inactive-bg);
+    color: var(--ob-primary-inactive-text);
     transition: all 0.2s ease;
     white-space: nowrap;
+    gap: 8px;
 
     &:hover {
-      background: var(--primary-400);
-      box-shadow: 0 4px 16px rgba(178, 81, 251, 0.4);
-    }
-
-    &:active {
-      background: var(--primary-600);
+      background: rgba(89, 80, 255, 0.15);
     }
 
     &[data-state="0"] {
@@ -223,19 +176,36 @@
     }
 
     &[data-state="1"] {
+      background: var(--ob-primary-bg);
+      color: var(--ob-primary-text);
       opacity: 1;
       pointer-events: auto;
+
+      &:hover {
+        background: var(--ob-accent);
+      }
     }
   }
 
-  &__primary-btn-label {
-    text-align: center;
-  }
-
-  &__primary-btn-icon {
+  &__secondary-btn {
+    cursor: pointer;
     display: inline-flex;
     align-items: center;
-    margin-left: var(--spacer-3);
-    flex-shrink: 0;
+    justify-content: center;
+    width: 100%;
+    height: 48px;
+    padding: 12px 24px;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: 600;
+    font-family: var(--font-medium);
+    background: transparent;
+    color: var(--ob-secondary-text);
+    transition: color 0.2s ease;
+    white-space: nowrap;
+
+    &:hover {
+      color: var(--ob-secondary-text-hover);
+    }
   }
 }

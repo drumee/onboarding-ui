@@ -1,77 +1,38 @@
-// Onboarding theme variables — dark and light modes from Figma
+// Onboarding theme variables — light mode (from Figma g5V3PjhNMf5bHlsHMvV17w)
 
 .onboarding-app__ui {
-  // Dark mode (default)
-  --ob-bg: rgb(11, 10, 33);
-  --ob-glow: rgba(89, 80, 255, 0.35);
-  --ob-title: rgb(230, 223, 250);
-  --ob-tips: rgb(199, 199, 204);
-  --ob-option-text: rgb(132, 132, 140);
+  --ob-bg: rgb(242, 242, 247);
+  --ob-glow: rgba(89, 80, 255, 0.12);
+  --ob-title: rgb(67, 60, 197);
+  --ob-tips: rgb(52, 52, 58);
+  --ob-option-text: rgb(101, 101, 108);
   --ob-option-bg: rgba(89, 80, 255, 0.1);
-  --ob-option-bg-hover: rgba(89, 80, 255, 0.18);
-  --ob-option-bg-active: rgba(89, 80, 255, 0.25);
-  --ob-option-text-active: rgb(230, 223, 250);
+  --ob-option-bg-hover: rgba(89, 80, 255, 0.15);
+  --ob-option-bg-active: rgba(89, 80, 255, 0.2);
+  --ob-option-text-active: rgb(67, 60, 197);
   --ob-section-label: rgb(177, 172, 255);
-  --ob-input-text: rgb(230, 223, 250);
-  --ob-input-placeholder: rgb(132, 132, 140);
+  --ob-input-text: rgb(52, 52, 58);
+  --ob-input-placeholder: rgb(101, 101, 108);
   --ob-input-bg: rgba(89, 80, 255, 0.1);
-  --ob-freetext-bg: rgba(0, 0, 0, 0.2);
+  --ob-freetext-bg: rgba(0, 0, 0, 0.05);
   --ob-primary-bg: rgb(67, 60, 197);
   --ob-primary-text: rgb(255, 255, 255);
-  --ob-primary-inactive-bg: rgba(255, 255, 255, 0.05);
-  --ob-primary-inactive-text: rgb(255, 255, 255);
-  --ob-secondary-text: rgb(174, 174, 178);
-  --ob-secondary-text-hover: rgb(230, 223, 250);
+  --ob-primary-inactive-bg: rgba(0, 0, 0, 0.05);
+  --ob-primary-inactive-text: rgb(101, 101, 108);
+  --ob-secondary-text: rgb(101, 101, 108);
+  --ob-secondary-text-hover: rgb(52, 52, 58);
   --ob-accent: rgb(89, 80, 255);
   --ob-accent-border: rgb(89, 80, 255);
-  --ob-logo-color: rgb(230, 223, 250);
-  --ob-info-bg: rgba(89, 80, 255, 0.1);
-  --ob-info-border: rgba(89, 80, 255, 0.3);
-  --ob-info-text: rgb(199, 199, 204);
-  --ob-invited-bg: rgba(89, 80, 255, 0.06);
-  --ob-invited-text: rgb(199, 199, 204);
-  --ob-remove-icon: rgb(132, 132, 140);
+  --ob-logo-color: rgb(67, 60, 197);
+  --ob-info-bg: rgba(89, 80, 255, 0.08);
+  --ob-info-border: rgba(89, 80, 255, 0.2);
+  --ob-info-text: rgb(52, 52, 58);
+  --ob-invited-bg: rgba(89, 80, 255, 0.05);
+  --ob-invited-text: rgb(52, 52, 58);
+  --ob-remove-icon: rgb(101, 101, 108);
   --ob-badge-bg: rgba(89, 80, 255, 0.1);
-  --ob-badge-text: rgb(199, 199, 204);
-  --ob-done-icon-bg: rgba(84, 182, 132, 0.15);
-  --ob-goal-icon: rgb(132, 132, 140);
-  --ob-goal-icon-active: rgb(177, 172, 255);
-
-  // Light mode
-  &[data-theme="light"] {
-    --ob-bg: rgb(242, 242, 247);
-    --ob-glow: rgba(89, 80, 255, 0.12);
-    --ob-title: rgb(67, 60, 197);
-    --ob-tips: rgb(52, 52, 58);
-    --ob-option-text: rgb(101, 101, 108);
-    --ob-option-bg: rgba(89, 80, 255, 0.1);
-    --ob-option-bg-hover: rgba(89, 80, 255, 0.15);
-    --ob-option-bg-active: rgba(89, 80, 255, 0.2);
-    --ob-option-text-active: rgb(67, 60, 197);
-    --ob-section-label: rgb(177, 172, 255);
-    --ob-input-text: rgb(52, 52, 58);
-    --ob-input-placeholder: rgb(101, 101, 108);
-    --ob-input-bg: rgba(89, 80, 255, 0.1);
-    --ob-freetext-bg: rgba(0, 0, 0, 0.05);
-    --ob-primary-bg: rgb(67, 60, 197);
-    --ob-primary-text: rgb(255, 255, 255);
-    --ob-primary-inactive-bg: rgba(0, 0, 0, 0.05);
-    --ob-primary-inactive-text: rgb(101, 101, 108);
-    --ob-secondary-text: rgb(101, 101, 108);
-    --ob-secondary-text-hover: rgb(52, 52, 58);
-    --ob-accent: rgb(89, 80, 255);
-    --ob-accent-border: rgb(89, 80, 255);
-    --ob-logo-color: rgb(67, 60, 197);
-    --ob-info-bg: rgba(89, 80, 255, 0.08);
-    --ob-info-border: rgba(89, 80, 255, 0.2);
-    --ob-info-text: rgb(52, 52, 58);
-    --ob-invited-bg: rgba(89, 80, 255, 0.05);
-    --ob-invited-text: rgb(52, 52, 58);
-    --ob-remove-icon: rgb(101, 101, 108);
-    --ob-badge-bg: rgba(89, 80, 255, 0.1);
-    --ob-badge-text: rgb(52, 52, 58);
-    --ob-done-icon-bg: rgba(84, 182, 132, 0.12);
-    --ob-goal-icon: rgb(101, 101, 108);
-    --ob-goal-icon-active: rgb(67, 60, 197);
-  }
+  --ob-badge-text: rgb(52, 52, 58);
+  --ob-done-icon-bg: rgba(84, 182, 132, 0.12);
+  --ob-goal-icon: rgb(101, 101, 108);
+  --ob-goal-icon-active: rgb(67, 60, 197);
 }

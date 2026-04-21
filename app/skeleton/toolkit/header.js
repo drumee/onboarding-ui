@@ -1,27 +1,40 @@
-const { locale } = require("../../locale")
+const STEP_TITLE_KEYS = [
+  'ONBOARDING_WHAT_SHOULD_WE_CALL_YOU',
+  'ONBOARDING_WHAT_KIND_OF_WORK',
+  'ONBOARDING_WHAT_YOUR_ROLE',
+  'ONBOARDING_HOW_MANY_PEOPLE',
+  'ONBOARDING_HELP_TAILOR',
+  'ONBOARDING_WHAT_TO_START_WITH',
+  'ONBOARDING_INVITE_TEAM',
+];
 
-/**
- * Header with drumee logo + progress bar (7 steps) + title + tips
- * Step 4 (tools): title is in the form body, header shows only logo + progress
- * Done step: logo centered, no progress bar
- */
+const STEP_TIPS_KEYS = [
+  'ONBOARDING_FIRST_NAME_TIP',
+  'ONBOARDING_PICK_BEST_FIT',
+  'ONBOARDING_PICK_BEST_FIT',
+  'ONBOARDING_PICK_BEST_FIT',
+  '',
+  'ONBOARDING_SHAPES_WORKSPACE',
+  'ONBOARDING_WORKSPACE_READY',
+];
+
+const TOTAL_STEPS = 7;
+
 export function header(ui) {
   const fig = ui.fig.family;
   let step = ui._step;
-  const loc = locale();
-  const isDone = step >= loc.steps.length;
+  const isDone = step >= TOTAL_STEPS;
   const isToolsStep = step === 4;
-  const currentStep = isDone ? {} : (loc.steps[step] || loc.steps[0]);
   const userName = ui._data.firstname || Visitor.get('firstname') || 'Alex';
 
-  let title = currentStep.title || '';
+  const titleKey = STEP_TITLE_KEYS[step];
+  const tipsKey = STEP_TIPS_KEYS[step];
+  let title = (titleKey && LOCALE[titleKey]) || '';
   title = title.replace('{0}', userName);
-  let tips = currentStep.tips || '';
+  let tips = (tipsKey && LOCALE[tipsKey]) || '';
 
-  // Build progress steps (7 segments)
   let progressKids = [];
-  const TOTAL_PROGRESS = 7;
-  for (let i = 0; i < TOTAL_PROGRESS; i++) {
+  for (let i = 0; i < TOTAL_STEPS; i++) {
     progressKids.push(
       Skeletons.Element({
         className: `${fig}__progress-step${i <= step ? ' active' : ''}`,
@@ -33,7 +46,6 @@ export function header(ui) {
   let headerKids = [];
 
   if (isDone) {
-    // Done: logo centered, no progress bar
     headerKids.push(
       Skeletons.Box.X({
         className: `${fig}__header-top centered`,
@@ -55,7 +67,6 @@ export function header(ui) {
       })
     );
   } else {
-    // Normal: logo + progress bar
     headerKids.push(
       Skeletons.Box.X({
         className: `${fig}__header-top`,
@@ -81,7 +92,6 @@ export function header(ui) {
       })
     );
 
-    // Title + tips (skip for tools step — it has its own title in the form)
     if (!isToolsStep) {
       headerKids.push(
         Skeletons.Note({

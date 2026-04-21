@@ -24,10 +24,6 @@ class onboarding_app extends LetcBox {
    *
    */
   async start() {
-    const theme = document.documentElement.dataset.theme
-      || localStorage.getItem('drumee.theme')
-      || 'dark';
-    this.el.dataset.theme = theme;
     this.loadForm();
   }
 

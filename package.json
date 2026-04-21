@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "drumee-ui-devel",
     "stage": "drumee-ui-devel stage",
+    "add-widget": "drumee-make-widget",
     "deploy": "drumee-ui-deploy"
   },
   "repository": {
@@ -19,7 +20,7 @@
   "devDependencies": {
     "@babel/core": "^7.19.1",
     "@babel/preset-env": "^7.19.1",
-    "@drumee/ui-dev-tools": "^1.0.20",
+    "@drumee/ui-dev-tools": "^1.0.26",
     "@unocss/preset-wind4": "^66.3.3",
     "@unocss/webpack": "^66.3.3",
     "autoprefixer": "^10.4.21",

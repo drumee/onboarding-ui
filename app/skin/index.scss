@@ -33,7 +33,11 @@
       transform: translateX(-50%);
       width: 885px;
       height: 727px;
-      background: radial-gradient(ellipse at center, var(--ob-glow) 0%, transparent 70%);
+      background: radial-gradient(
+        ellipse at center,
+        var(--ob-glow) 0%,
+        transparent 70%
+      );
       pointer-events: none;
       z-index: 0;
     }
@@ -50,6 +54,12 @@
     gap: 0;
     position: relative;
     z-index: 1;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
   }
 
   &__card {

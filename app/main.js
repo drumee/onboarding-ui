@@ -101,70 +101,95 @@ class onboarding_app extends LetcBox {
   }
 
   /**
-   *
+   * Persist the current step's data via its dedicated loby endpoint, then
+   * advance. We always advance — even on failure — so a transient network
+   * blip can't strand the user mid-wizard; the user's choice stays in
+   * `this._data` and is re-sent next time mark_complete validates the row.
    */
   commitForm() {
     let args = this.getData() || {};
     this.setItemState(_a.next, 0);
+    const advance = () => this._advance();
 
     switch (this._step) {
-      case 0: // Name
+      case 0: // Name → save_user_info(firstname)
         if (args.firstname) this._data.firstname = args.firstname.trim();
         this.postService(
-          SERVICE.onboarding.save_usage_plan,
-          { args: { firstname: this._data.firstname } },
+          SERVICE.onboarding.save_user_info,
+          { firstname: this._data.firstname },
           SVC_OPT
-        ).then(() => this._advance()).catch(() => this._advance());
+        ).then(advance).catch(advance);
         break;
 
       case 1: // Industry
         this.postService(
-          SERVICE.onboarding.save_usage_plan,
-          { args: { industry: this._data.industry } },
+          SERVICE.onboarding.save_industry,
+          { industry: this._data.industry },
           SVC_OPT
-        ).then(() => this._advance()).catch(() => this._advance());
+        ).then(advance).catch(advance);
         break;
 
       case 2: // Role
         this.postService(
-          SERVICE.onboarding.save_usage_plan,
-          { args: { role: this._data.role } },
+          SERVICE.onboarding.save_role,
+          { role: this._data.role },
           SVC_OPT
-        ).then(() => this._advance()).catch(() => this._advance());
+        ).then(advance).catch(advance);
         break;
 
       case 3: // Team size
         this.postService(
-          SERVICE.onboarding.save_usage_plan,
-          { args: { team_size: this._data.team_size } },
+          SERVICE.onboarding.save_team_size,
+          { team_size: this._data.team_size },
           SVC_OPT
-        ).then(() => this._advance()).catch(() => this._advance());
+        ).then(advance).catch(advance);
         break;
 
-      case 4: // Tools & challenges
-        this.postService(
-          SERVICE.onboarding.save_usage_plan,
-          { args: { tools: this._data.tools, challenges: this._data.challenges, challenge_text: this._data.challenge_text } },
-          SVC_OPT
-        ).then(() => this._advance()).catch(() => this._advance());
-        break;
-
-      case 5: // Goals
-        this.postService(
-          SERVICE.onboarding.save_usage_plan,
-          { args: { goal: this._data.goal } },
-          SVC_OPT
-        ).then(() => this._advance()).catch(() => this._advance());
-        break;
-
-      case 6: // Invite
+      case 4: // Tools + challenges. Free-text comes from the form via getData().
         {
-          let emails = (this._data.invites || []).map(inv => typeof inv === 'string' ? inv : inv.email).filter(e => e && e.trim());
-          const advance = () => this._advance();
-          if (emails.length > 0) {
+          if (args.challenge_text != null) {
+            this._data.challenge_text = args.challenge_text;
+          }
+          let tools = this._data.tools || [];
+          let challenges = this._data.challenges || [];
+          let note = this._data.challenge_text || '';
+          let saveTools = tools.length
+            ? this.postService(SERVICE.onboarding.save_tools, { args: tools }, SVC_OPT)
+            : Promise.resolve();
+          let saveChallenges = (challenges.length || note)
+            ? this.postService(
+                SERVICE.onboarding.save_challenges,
+                { challenges, note },
+                SVC_OPT
+              )
+            : Promise.resolve();
+          Promise.all([saveTools, saveChallenges]).then(advance).catch(advance);
+        }
+        break;
+
+      case 5: // Intent (the "What do you want to start with?" goals screen)
+        if (this._data.goal) {
+          this.postService(
+            SERVICE.onboarding.save_intent,
+            { intent: this._data.goal },
+            SVC_OPT
+          ).then(advance).catch(advance);
+        } else {
+          advance();
+        }
+        break;
+
+      case 6: // Invite team members
+        {
+          let invites = (this._data.invites || [])
+            .map(inv => typeof inv === 'string'
+              ? { email: inv.trim(), role: 'member' }
+              : { email: (inv.email || '').trim(), role: (inv.role || 'member').toLowerCase() })
+            .filter(i => i.email);
+          if (invites.length > 0) {
             this.postService(
               SERVICE.onboarding.send_onboarding_invites,
-              { emails },
+              { emails: invites },
               SVC_OPT
             ).then(advance).catch(advance);
           } else {
@@ -174,7 +199,7 @@ class onboarding_app extends LetcBox {
         break;
 
       default:
-        this._advance();
+        advance();
         break;
     }
   }
@@ -202,25 +227,6 @@ class onboarding_app extends LetcBox {
   }
 
   /**
-   * Update chip/option visual state
-   */
-  _updateOptionStates(prefix, count, field) {
-    const { locale } = require("./locale");
-    const loc = locale();
-    const items = loc[field] || [];
-    for (let i = 0; i < items.length; i++) {
-      let val = typeof items[i] === 'object' ? items[i].key : items[i];
-      let isOn = (Array.isArray(this._data[field]))
-        ? this._data[field].includes(val)
-        : this._data[field] === val;
-      this.ensurePart(`${prefix}-${i}`).then((p) => {
-        p.setState(isOn ? 1 : 0);
-        p.el.dataset.state = isOn ? 1 : 0;
-      }).catch(() => {});
-    }
-  }
-
-  /**
    * User Interaction Event Handler
    */
   async onUiEvent(cmd, args = {}) {
@@ -243,23 +249,19 @@ class onboarding_app extends LetcBox {
 
       case 'enter-workspace':
         localStorage.onboarding_step = "0";
-        this.postService(
-          SERVICE.drumate.mark_onboarding_complete,
-          { hub_id: Visitor.id },
-          SVC_OPT
-        ).then(() => {
-          if (this.mget(_a.type) == 'app') {
-            this.softDestroy();
-            return;
-          }
-          window.location.href = '/';
-        }).catch(() => {
-          if (this.mget(_a.type) == 'app') {
-            this.softDestroy();
-            return;
-          }
-          window.location.href = '/';
-        });
+        {
+          const exit = () => {
+            if (this.mget(_a.type) == 'app') {
+              this.softDestroy();
+              return;
+            }
+            window.location.href = '/';
+          };
+          this.postService(SERVICE.onboarding.mark_complete, {}, SVC_OPT)
+            .then(() => this.postService(SERVICE.onboarding.update_profile, {}, SVC_OPT))
+            .then(exit)
+            .catch(exit);
+        }
         break;
 
       case 'select-option':
@@ -299,7 +301,7 @@ class onboarding_app extends LetcBox {
           let email = formData.invite_email;
           if (email && email.trim()) {
             if (!this._data.invites) this._data.invites = [];
-            this._data.invites.push({ email: email.trim(), role: 'Admin' });
+            this._data.invites.push({ email: email.trim(), role: 'admin' });
             this.loadForm();
           }
         }

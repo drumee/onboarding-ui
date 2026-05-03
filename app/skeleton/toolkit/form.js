@@ -1,36 +1,61 @@
-const INDUSTRY_KEYS = [
-  'ONBOARDING_IND_TECH', 'ONBOARDING_IND_CREATIVE', 'ONBOARDING_IND_CONSULTING',
-  'ONBOARDING_IND_LEGAL', 'ONBOARDING_IND_FINANCE', 'ONBOARDING_IND_HEALTHCARE',
-  'ONBOARDING_IND_EDUCATION', 'ONBOARDING_IND_REAL_ESTATE', 'ONBOARDING_IND_ECOMMERCE',
-  'ONBOARDING_IND_MEDIA', 'ONBOARDING_IND_OPERATIONS', 'ONBOARDING_IND_OTHER',
+// Canonical wire keys must match the loby DB enum check constraints in
+// schemas/procedures/save_onboarding_*.sql — keep these arrays in sync.
+const INDUSTRY_OPTS = [
+  ['tech_software',       'ONBOARDING_IND_TECH'],
+  ['creative_marketing',  'ONBOARDING_IND_CREATIVE'],
+  ['consulting_agency',   'ONBOARDING_IND_CONSULTING'],
+  ['legal_compliance',    'ONBOARDING_IND_LEGAL'],
+  ['finance_accounting',  'ONBOARDING_IND_FINANCE'],
+  ['healthcare',          'ONBOARDING_IND_HEALTHCARE'],
+  ['education',           'ONBOARDING_IND_EDUCATION'],
+  ['real_estate',         'ONBOARDING_IND_REAL_ESTATE'],
+  ['ecommerce_retail',    'ONBOARDING_IND_ECOMMERCE'],
+  ['media_content',       'ONBOARDING_IND_MEDIA'],
+  ['operations',          'ONBOARDING_IND_OPERATIONS'],
+  ['other',               'ONBOARDING_IND_OTHER'],
 ];
 
-const ROLE_KEYS = [
-  'ONBOARDING_ROLE_FOUNDER', 'ONBOARDING_ROLE_MANAGER', 'ONBOARDING_ROLE_EXECUTIVE',
-  'ONBOARDING_ROLE_FREELANCER', 'ONBOARDING_ROLE_OTHER',
+const ROLE_OPTS = [
+  ['founder_ceo',           'ONBOARDING_ROLE_FOUNDER'],
+  ['manager_team_lead',     'ONBOARDING_ROLE_MANAGER'],
+  ['executive_associate',   'ONBOARDING_ROLE_EXECUTIVE'],
+  ['freelancer_consultant', 'ONBOARDING_ROLE_FREELANCER'],
+  ['other',                 'ONBOARDING_ROLE_OTHER'],
 ];
 
-const TEAM_SIZE_KEYS = [
-  'ONBOARDING_TEAM_JUST_ME', 'ONBOARDING_TEAM_2_10', 'ONBOARDING_TEAM_10_50', 'ONBOARDING_TEAM_50_PLUS',
+const TEAM_SIZE_OPTS = [
+  ['just_me', 'ONBOARDING_TEAM_JUST_ME'],
+  ['2_10',    'ONBOARDING_TEAM_2_10'],
+  ['10_50',   'ONBOARDING_TEAM_10_50'],
+  ['50_plus', 'ONBOARDING_TEAM_50_PLUS'],
 ];
 
-const TOOL_KEYS = [
-  'ONBOARDING_TOOL_GOOGLE_DRIVE', 'ONBOARDING_TOOL_NOTION', 'ONBOARDING_TOOL_SLACK',
-  'ONBOARDING_TOOL_DROPBOX', 'ONBOARDING_TOOL_CLICKUP', 'ONBOARDING_TOOL_TRELLO',
-  'ONBOARDING_TOOL_JIRA', 'ONBOARDING_TOOL_OTHER',
+const TOOL_OPTS = [
+  ['google_drive', 'ONBOARDING_TOOL_GOOGLE_DRIVE'],
+  ['notion',       'ONBOARDING_TOOL_NOTION'],
+  ['slack',        'ONBOARDING_TOOL_SLACK'],
+  ['dropbox',      'ONBOARDING_TOOL_DROPBOX'],
+  ['clickup',      'ONBOARDING_TOOL_CLICKUP'],
+  ['trello',       'ONBOARDING_TOOL_TRELLO'],
+  ['jira',         'ONBOARDING_TOOL_JIRA'],
+  ['other',        'ONBOARDING_TOOL_OTHER'],
 ];
 
-const CHALLENGE_KEYS = [
-  'ONBOARDING_CHAL_FILES_SCATTERED', 'ONBOARDING_CHAL_DISCONNECTED', 'ONBOARDING_CHAL_SECURITY',
-  'ONBOARDING_CHAL_COSTS', 'ONBOARDING_CHAL_PERMISSIONS', 'ONBOARDING_CHAL_VISIBILITY',
+const CHALLENGE_OPTS = [
+  ['files_scattered', 'ONBOARDING_CHAL_FILES_SCATTERED'],
+  ['disconnected',    'ONBOARDING_CHAL_DISCONNECTED'],
+  ['security',        'ONBOARDING_CHAL_SECURITY'],
+  ['costs',           'ONBOARDING_CHAL_COSTS'],
+  ['permissions',     'ONBOARDING_CHAL_PERMISSIONS'],
+  ['visibility',      'ONBOARDING_CHAL_VISIBILITY'],
 ];
 
 const GOAL_DEFS = [
-  { key: 'manage_projects', localeKey: 'ONBOARDING_GOAL_MANAGE', icon: 'folder' },
-  { key: 'work_clients', localeKey: 'ONBOARDING_GOAL_CLIENTS', icon: 'users' },
-  { key: 'store_data', localeKey: 'ONBOARDING_GOAL_STORE', icon: 'lock' },
-  { key: 'build_workflows', localeKey: 'ONBOARDING_GOAL_WORKFLOWS', icon: 'settings' },
-  { key: 'personal_files', localeKey: 'ONBOARDING_GOAL_PERSONAL', icon: 'file' },
+  { key: 'manage_projects',   localeKey: 'ONBOARDING_GOAL_MANAGE',    icon: 'folder' },
+  { key: 'work_with_clients', localeKey: 'ONBOARDING_GOAL_CLIENTS',   icon: 'users' },
+  { key: 'store_sensitive',   localeKey: 'ONBOARDING_GOAL_STORE',     icon: 'lock' },
+  { key: 'build_workflows',   localeKey: 'ONBOARDING_GOAL_WORKFLOWS', icon: 'settings' },
+  { key: 'personal_files',    localeKey: 'ONBOARDING_GOAL_PERSONAL',  icon: 'file' },
 ];
 
 const GOAL_ICONS = {
@@ -41,13 +66,15 @@ const GOAL_ICONS = {
   file: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M5 2H12L16 6V18H5C3.9 18 3 17.1 3 16V4C3 2.9 3.9 2 5 2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 2V6H16" stroke="currentColor" stroke-width="1.5"/></svg>`,
 };
 
-function buildOptionGrid(ui, keys, field) {
+function buildOptionGrid(ui, opts, field) {
   const pfx = ui.fig.family;
   let selected = ui._data[field] || '';
   let kids = [];
   let row = [];
-  for (let i = 0; i < keys.length; i++) {
-    let label = LOCALE[keys[i]] || keys[i];
+  for (let i = 0; i < opts.length; i++) {
+    let [key, localeKey] = opts[i];
+    let label = LOCALE[localeKey] || key;
+    let isOn = selected === key;
     row.push(
       Skeletons.Note({
         className: `${pfx}__option-chip`,
@@ -56,12 +83,12 @@ function buildOptionGrid(ui, keys, field) {
         partHandler: [ui],
         service: 'select-option',
         uiHandler: [ui],
-        state: selected === label ? 1 : 0,
-        dataset: { state: selected === label ? 1 : 0, value: label, field },
+        state: isOn ? 1 : 0,
+        dataset: { state: isOn ? 1 : 0, value: key, field },
         content: label,
       })
     );
-    if (row.length === 2 || i === keys.length - 1) {
+    if (row.length === 2 || i === opts.length - 1) {
       kids.push(Skeletons.Box.X({ className: `${pfx}__option-row`, kids: [...row] }));
       row = [];
     }
@@ -105,18 +132,18 @@ export function name_form(ui) {
   });
 }
 
-export function industry_form(ui) { return buildOptionGrid(ui, INDUSTRY_KEYS, 'industry'); }
-export function role_form(ui) { return buildOptionGrid(ui, ROLE_KEYS, 'role'); }
-export function team_size_form(ui) { return buildOptionGrid(ui, TEAM_SIZE_KEYS, 'team_size'); }
+export function industry_form(ui) { return buildOptionGrid(ui, INDUSTRY_OPTS, 'industry'); }
+export function role_form(ui) { return buildOptionGrid(ui, ROLE_OPTS, 'role'); }
+export function team_size_form(ui) { return buildOptionGrid(ui, TEAM_SIZE_OPTS, 'team_size'); }
 
 export function tools_form(ui) {
   const pfx = ui.fig.family;
   let selectedTools = ui._data.tools || [];
   let selectedChallenges = ui._data.challenges || [];
 
-  let toolChips = TOOL_KEYS.map((k, i) => {
-    let label = LOCALE[k] || k;
-    let isOn = selectedTools.includes(label);
+  let toolChips = TOOL_OPTS.map(([key, localeKey], i) => {
+    let label = LOCALE[localeKey] || key;
+    let isOn = selectedTools.includes(key);
     return Skeletons.Note({
       className: `${pfx}__tool-chip`,
       name: label,
@@ -125,14 +152,14 @@ export function tools_form(ui) {
       service: 'toggle-tool',
       uiHandler: [ui],
       state: isOn ? 1 : 0,
-      dataset: { state: isOn ? 1 : 0, value: label },
+      dataset: { state: isOn ? 1 : 0, value: key },
       content: label,
     });
   });
 
-  let challengeKids = CHALLENGE_KEYS.map((k, i) => {
-    let label = LOCALE[k] || k;
-    let isOn = selectedChallenges.includes(label);
+  let challengeKids = CHALLENGE_OPTS.map(([key, localeKey], i) => {
+    let label = LOCALE[localeKey] || key;
+    let isOn = selectedChallenges.includes(key);
     return Skeletons.Note({
       className: `${pfx}__challenge-option`,
       name: label,
@@ -141,7 +168,7 @@ export function tools_form(ui) {
       service: 'toggle-challenge',
       uiHandler: [ui],
       state: isOn ? 1 : 0,
-      dataset: { state: isOn ? 1 : 0, value: label },
+      dataset: { state: isOn ? 1 : 0, value: key },
       content: label,
     });
   });
@@ -309,13 +336,22 @@ export function invite_form(ui) {
   return Skeletons.Box.Y({ className: `${pfx}__form-section`, kids });
 }
 
+function _labelFor(opts, key) {
+  if (!key) return null;
+  let entry = opts.find(([k]) => k === key);
+  if (!entry) return null;
+  return LOCALE[entry[1]] || entry[0];
+}
+
 export function done_form(ui) {
   const pfx = ui.fig.family;
   let userName = ui._data.firstname || Visitor.get('firstname') || 'Alex';
 
   let badges = [];
-  if (ui._data.industry) badges.push(ui._data.industry);
-  if (ui._data.team_size) badges.push(ui._data.team_size + ' member');
+  let industry = _labelFor(INDUSTRY_OPTS, ui._data.industry);
+  if (industry) badges.push(industry);
+  let teamSize = _labelFor(TEAM_SIZE_OPTS, ui._data.team_size);
+  if (teamSize) badges.push(teamSize);
   if (ui._data.goal) {
     let g = GOAL_DEFS.find(x => x.key === ui._data.goal);
     if (g) badges.push(LOCALE[g.localeKey] || g.key);

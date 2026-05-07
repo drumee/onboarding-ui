@@ -154,7 +154,7 @@ class onboarding_app extends LetcBox {
           let challenges = this._data.challenges || [];
           let note = this._data.challenge_text || '';
           let saveTools = tools.length
-            ? this.postService(SERVICE.onboarding.save_tools, { args: tools }, SVC_OPT)
+            ? this.postService(SERVICE.onboarding.save_tools, { tools }, SVC_OPT)
             : Promise.resolve();
           let saveChallenges = (challenges.length || note)
             ? this.postService(
@@ -183,8 +183,8 @@ class onboarding_app extends LetcBox {
         {
           let invites = (this._data.invites || [])
             .map(inv => typeof inv === 'string'
-              ? { email: inv.trim(), role: 'member' }
-              : { email: (inv.email || '').trim(), role: (inv.role || 'member').toLowerCase() })
+              ? { email: inv.trim(), role: 'read' }
+              : { email: (inv.email || '').trim(), role: (inv.role || 'read').toLowerCase() })
             .filter(i => i.email);
           if (invites.length > 0) {
             this.postService(

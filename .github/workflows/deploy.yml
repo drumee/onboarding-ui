@@ -48,12 +48,22 @@ jobs:
 
       - name: Setup deploy env
         run: |
-          node node_modules/@drumee/ui-dev-tools/env/write-env.js \
-            --type plugin --plugin onboarding \
-            --output deploy --base-dir="$(pwd)" \
-            --endpoint=${{ steps.ep.outputs.endpoint }} \
-            --user=${{ steps.ep.outputs.endpoint }} \
-            --build-mode=production
+          mkdir -p .dev-tools.rc
+          EP="${{ steps.ep.outputs.endpoint }}"
+          if [ "$EP" = "main" ]; then
+            PUBLIC_PATH="/-/plugins/onboarding/"
+          else
+            PUBLIC_PATH="/-/$EP/plugins/onboarding/"
+          fi
+          cat > .dev-tools.rc/deploy.sh <<EOF
+          export ENDPOINT=$EP
+          export BUILD_TARGET=onboarding
+          export UI_BUILD_PATH=\$HOME/build/$EP/plugins/onboarding
+          export UI_BUILD_MODE=production
+          export OUTPUT_FILENAME="[name]-[fullhash].js"
+          export PUBLIC_PATH=$PUBLIC_PATH
+          EOF
+          cat .dev-tools.rc/deploy.sh
 
       - name: Webpack build
         run: npm run deploy

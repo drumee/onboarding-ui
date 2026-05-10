@@ -58,7 +58,7 @@ jobs:
           cat > .dev-tools.rc/deploy.sh <<EOF
           export ENDPOINT=$EP
           export BUILD_TARGET=onboarding
-          export UI_BUILD_PATH=\/tmp/drumee-build/$EP/plugins/onboarding
+          export UI_BUILD_PATH=/tmp/drumee-build/$EP/plugins/onboarding
           export UI_BUILD_MODE=production
           export OUTPUT_FILENAME="[name]-[fullhash].js"
           export PUBLIC_PATH=$PUBLIC_PATH

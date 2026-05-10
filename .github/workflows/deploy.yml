@@ -1,0 +1,125 @@
+name: CD - deploy onboarding-ui
+
+on:
+  push:
+    branches: [preview, ci/setup-deploy]
+  workflow_dispatch:
+
+concurrency:
+  group: cd-onboarding-ui-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build
+    runs-on: self-hosted
+    timeout-minutes: 15
+    outputs:
+      endpoint: ${{ steps.ep.outputs.endpoint }}
+      verify_url: ${{ steps.ep.outputs.verify_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve endpoint
+        id: ep
+        run: |
+          if [ "${{ github.ref_name }}" = "ci/setup-deploy" ]; then
+            EP="liam"
+          else
+            EP="main"
+          fi
+          echo "endpoint=$EP" >> $GITHUB_OUTPUT
+          if [ "$EP" = "main" ]; then
+            echo "verify_url=https://${{ vars.DRUMEE_DOMAIN }}/-/plugins/onboarding/index.json" >> $GITHUB_OUTPUT
+          else
+            echo "verify_url=https://${{ vars.DRUMEE_DOMAIN }}/-/$EP/plugins/onboarding/index.json" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Show env
+        run: |
+          echo "Endpoint: ${{ steps.ep.outputs.endpoint }}"
+          echo "Verify URL: ${{ steps.ep.outputs.verify_url }}"
+          node --version
+          npm --version
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-${{ github.repository }}-node-${{ hashFiles('package.json') }}
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Setup deploy env
+        run: |
+          mkdir -p .dev-tools.rc
+          EP="${{ steps.ep.outputs.endpoint }}"
+          if [ "$EP" = "main" ]; then
+            PUBLIC_PATH="/-/plugins/onboarding/"
+          else
+            PUBLIC_PATH="/-/$EP/plugins/onboarding/"
+          fi
+          cat > .dev-tools.rc/deploy.sh <<EOF
+          export ENDPOINT=$EP
+          export BUILD_TARGET=onboarding
+          export UI_BUILD_PATH=${{ vars.DRUMEE_BUILD_TMP }}/$EP/plugins/onboarding
+          export UI_BUILD_MODE=production
+          export OUTPUT_FILENAME="[name]-[fullhash].js"
+          export PUBLIC_PATH=$PUBLIC_PATH
+          EOF
+          cat .dev-tools.rc/deploy.sh
+
+      - name: Webpack build
+        run: npm run deploy
+
+  deploy:
+    name: Deploy
+    needs: build
+    runs-on: self-hosted
+    timeout-minutes: 10
+    env:
+      EP: ${{ needs.build.outputs.endpoint }}
+      RUNTIME_DIR: ${{ vars.DRUMEE_RUNTIME_BASE }}/plugins/ui
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Backup current state
+        run: sudo rsync -a --delete $RUNTIME_DIR/$EP/onboarding/ $RUNTIME_DIR/$EP/onboarding.backup/
+
+      - name: Sync to runtime dir
+        run: sudo rsync -a --delete ${{ vars.DRUMEE_BUILD_TMP }}/$EP/plugins/onboarding/onboarding/ $RUNTIME_DIR/$EP/onboarding/
+
+      - name: Restart endpoint
+        run: |
+          sudo /usr/sbin/drumee restart $EP > /dev/null
+          sudo /usr/sbin/drumee restart $EP/service > /dev/null
+          echo "Restarted endpoint"
+
+      - name: Verify deployed commit matches
+        run: |
+          sleep 5
+          deployed=$(curl -sk ${{ needs.build.outputs.verify_url }} \
+            | python3 -c "import sys,json; print(json.load(sys.stdin)['head'])")
+          local=$(git log -1 --pretty=format:'%h')
+          echo "deployed head: $deployed"
+          echo "local    head: $local"
+          [ "$deployed" = "$local" ] && exit 0 || exit 1
+
+      - name: Rollback on failure
+        if: failure()
+        run: |
+          echo "Rolling back to previous version..."
+          sudo rsync -a --delete $RUNTIME_DIR/$EP/onboarding.backup/ $RUNTIME_DIR/$EP/onboarding/
+          sudo /usr/sbin/drumee restart $EP > /dev/null
+          sudo /usr/sbin/drumee restart $EP/service > /dev/null
+          echo "Rolled back"
+
+      - name: Cleanup
+        if: always()
+        continue-on-error: true
+        run: |
+          sudo rm -rf $RUNTIME_DIR/$EP/onboarding.backup/
+          rm -rf ${{ vars.DRUMEE_BUILD_TMP }}/$EP/plugins/onboarding/

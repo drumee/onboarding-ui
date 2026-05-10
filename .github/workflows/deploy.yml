@@ -58,7 +58,7 @@ jobs:
           cat > .dev-tools.rc/deploy.sh <<EOF
           export ENDPOINT=$EP
           export BUILD_TARGET=onboarding
-          export UI_BUILD_PATH=\$HOME/build/$EP/plugins/onboarding
+          export UI_BUILD_PATH=\/tmp/drumee-build/$EP/plugins/onboarding
           export UI_BUILD_MODE=production
           export OUTPUT_FILENAME="[name]-[fullhash].js"
           export PUBLIC_PATH=$PUBLIC_PATH
@@ -75,7 +75,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Sync to runtime dir
-        run: sudo rsync -a --delete $HOME/build/${{ needs.build.outputs.endpoint }}/plugins/onboarding/onboarding/ /srv/drumee/runtime/plugins/ui/${{ needs.build.outputs.endpoint }}/onboarding/
+        run: sudo rsync -a --delete /tmp/drumee-build/${{ needs.build.outputs.endpoint }}/plugins/onboarding/onboarding/ /srv/drumee/runtime/plugins/ui/${{ needs.build.outputs.endpoint }}/onboarding/
 
       - name: Restart endpoint
         run: |
@@ -105,4 +105,4 @@ jobs:
       - name: Cleanup tmp build dir
         if: always()
         continue-on-error: true
-        run: rm -rf $HOME/build/${{ needs.build.outputs.endpoint }}/plugins/onboarding/
+        run: rm -rf /tmp/drumee-build/${{ needs.build.outputs.endpoint }}/plugins/onboarding/

@@ -31,9 +31,9 @@ jobs:
           fi
           echo "endpoint=$EP" >> $GITHUB_OUTPUT
           if [ "$EP" = "main" ]; then
-            echo "verify_url=https://drumee.in/-/plugins/onboarding/index.json" >> $GITHUB_OUTPUT
+            echo "verify_url=https://${{ vars.DRUMEE_DOMAIN }}/-/plugins/onboarding/index.json" >> $GITHUB_OUTPUT
           else
-            echo "verify_url=https://drumee.in/-/$EP/plugins/onboarding/index.json" >> $GITHUB_OUTPUT
+            echo "verify_url=https://${{ vars.DRUMEE_DOMAIN }}/-/$EP/plugins/onboarding/index.json" >> $GITHUB_OUTPUT
           fi
 
       - name: Show env
@@ -42,6 +42,12 @@ jobs:
           echo "Verify URL: ${{ steps.ep.outputs.verify_url }}"
           node --version
           npm --version
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-${{ github.repository }}-node-${{ hashFiles('package.json') }}
 
       - name: Install dependencies
         run: npm install --no-audit --no-fund
@@ -58,7 +64,7 @@ jobs:
           cat > .dev-tools.rc/deploy.sh <<EOF
           export ENDPOINT=$EP
           export BUILD_TARGET=onboarding
-          export UI_BUILD_PATH=/tmp/drumee-build/$EP/plugins/onboarding
+          export UI_BUILD_PATH=${{ vars.DRUMEE_BUILD_TMP }}/$EP/plugins/onboarding
           export UI_BUILD_MODE=production
           export OUTPUT_FILENAME="[name]-[fullhash].js"
           export PUBLIC_PATH=$PUBLIC_PATH
@@ -84,7 +90,7 @@ jobs:
         run: sudo rsync -a --delete $RUNTIME_DIR/$EP/onboarding/ $RUNTIME_DIR/$EP/onboarding.backup/
 
       - name: Sync to runtime dir
-        run: sudo rsync -a --delete /tmp/drumee-build/$EP/plugins/onboarding/onboarding/ $RUNTIME_DIR/$EP/onboarding/
+        run: sudo rsync -a --delete ${{ vars.DRUMEE_BUILD_TMP }}/$EP/plugins/onboarding/onboarding/ $RUNTIME_DIR/$EP/onboarding/
 
       - name: Restart endpoint
         run: |
@@ -116,4 +122,4 @@ jobs:
         continue-on-error: true
         run: |
           sudo rm -rf $RUNTIME_DIR/$EP/onboarding.backup/
-          rm -rf /tmp/drumee-build/$EP/plugins/onboarding/
+          rm -rf ${{ vars.DRUMEE_BUILD_TMP }}/$EP/plugins/onboarding/

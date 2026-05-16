@@ -295,7 +295,7 @@ export function invite_form(ui) {
       }),
       Skeletons.Note({
         className: `${pfx}__invite-role-btn`,
-        content: 'Admin',
+        content: LOCALE.ROLE_ADMIN || 'Admin',
         service: 'toggle-role',
         uiHandler: [ui],
       }),

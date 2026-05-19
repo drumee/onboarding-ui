@@ -68,7 +68,7 @@ export function header(ui) {
     );
   } else {
     headerKids.push(
-      Skeletons.Box.Y({
+      Skeletons.Box.X({
         className: `${fig}__header-top`,
         kids: [
           Skeletons.Box.X({
@@ -84,11 +84,13 @@ export function header(ui) {
               })
             ]
           }),
-          Skeletons.Box.X({
-            className: `${fig}__progress-bar`,
-            kids: progressKids
-          })
         ]
+      })
+    );
+    headerKids.push(
+      Skeletons.Box.X({
+        className: `${fig}__progress-bar`,
+        kids: progressKids
       })
     );
 

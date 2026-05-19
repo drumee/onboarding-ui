@@ -72,7 +72,7 @@
   &__header {
     height: auto;
     width: 100%;
-    gap: 32px;
+    gap: 48px;
   }
 
   &__header-top {
@@ -106,7 +106,7 @@
   &__logo-text {
     font-size: 20px;
     font-family: var(--font-bold);
-    color: var(--ob-logo-color);
+    color: var(--ob-logo-text-color);
     letter-spacing: -0.3px;
   }
 

@@ -68,7 +68,7 @@ export function header(ui) {
     );
   } else {
     headerKids.push(
-      Skeletons.Box.X({
+      Skeletons.Box.Y({
         className: `${fig}__header-top`,
         kids: [
           Skeletons.Box.X({

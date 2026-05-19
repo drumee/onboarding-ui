@@ -44,7 +44,6 @@
   }
 
   &__main {
-    justify-content: center;
     align-items: center;
     height: 100%;
     width: 100%;
@@ -67,6 +66,7 @@
     max-width: 520px;
     gap: 48px;
     padding: 24px;
+    margin: auto;
   }
 
   &__header {
@@ -92,19 +92,19 @@
   }
 
   &__logo-content {
-    width: 28px;
-    height: 28px;
+    width: 38px;
+    height: 38px;
     color: var(--ob-logo-color);
 
     svg {
-      width: 28px;
-      height: 28px;
+      width: 38px;
+      height: 38px;
       fill: currentColor;
     }
   }
 
   &__logo-text {
-    font-size: 20px;
+    font-size: 32px;
     font-family: var(--font-bold);
     color: var(--ob-logo-text-color);
     letter-spacing: -0.3px;

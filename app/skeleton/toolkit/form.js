@@ -220,6 +220,10 @@ export function tools_form(ui) {
         className: `${pfx}__tool-chips-wrap`,
         kids: toolChips,
       }),
+      Skeletons.Element({
+        className: `${pfx}__tools-divider`,
+        active: 0,
+      }),
       Skeletons.Note({
         className: `${pfx}__section-label`,
         content: LOCALE.ONBOARDING_CHALLENGES_QUESTION || 'What challenges are you facing with your current setup?',

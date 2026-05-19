@@ -136,7 +136,7 @@
 .onboarding-app__tool-chips-wrap {
   width: 100%;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 12px;
 }
 
 .onboarding-app__tool-chip {
@@ -165,9 +165,16 @@
 /* ============================================
    Challenge options (single col)
    ============================================ */
+.onboarding-app__tools-divider {
+  width: 100%;
+  height: 1px;
+  background: rgba(52, 52, 58, 0.2);
+  flex-shrink: 0;
+}
+
 .onboarding-app__challenge-list {
   width: 100%;
-  gap: 8px;
+  gap: 12px;
 }
 
 .onboarding-app__challenge-option {
@@ -207,7 +214,7 @@
    ============================================ */
 .onboarding-app__goal-list {
   width: 100%;
-  gap: 8px;
+  gap: 12px;
 }
 
 .onboarding-app__goal-option {
@@ -217,6 +224,7 @@
   align-items: center;
   gap: 12px;
   padding: 10px 12px;
+  min-height: 45px;
   background: var(--ob-option-bg);
   border: 1px solid transparent;
   border-radius: 4px;
@@ -281,6 +289,7 @@
 
 .onboarding-app__invite-input-row {
   width: 100%;
+  min-height: 49px;
   align-items: center;
   gap: 0;
   background: var(--ob-input-bg);
@@ -309,12 +318,12 @@
 
 .onboarding-app__invite-role-btn {
   cursor: pointer;
-  padding: 8px 12px;
+  padding: 5px 12px;
   background: var(--ob-option-bg-hover);
   border-radius: 4px;
   font-size: 13px;
   font-family: var(--font-medium);
-  color: var(--ob-tips);
+  color: var(--ob-secondary-text);
   margin-right: 4px;
   transition: background 0.2s;
 
@@ -328,7 +337,10 @@
   padding: 8px 16px;
   font-size: 14px;
   font-family: var(--font-medium);
-  color: var(--ob-section-label);
+  color: var(--ob-tips);
+  align-self: stretch;
+  display: flex;
+  align-items: center;
   transition: color 0.2s;
 
   &:hover {
@@ -338,7 +350,8 @@
 
 .onboarding-app__invited-list {
   width: 100%;
-  gap: 4px;
+  gap: 8px;
+  margin-top: -8px;
 }
 
 .onboarding-app__invited-row {
@@ -346,7 +359,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 12px;
+  padding: 4px 12px;
   background: var(--ob-invited-bg);
   border-radius: 4px;
 }
@@ -390,7 +403,6 @@
   height: 70px;
   background: var(--ob-done-icon-bg);
   border-radius: 50%;
-  margin-bottom: 8px;
 
   svg {
     display: block;
@@ -403,6 +415,7 @@
   color: var(--ob-title);
   line-height: 35px;
   text-align: center;
+  margin-bottom: 24px;
 }
 
 .onboarding-app__done-tips {
@@ -415,9 +428,8 @@
 
 .onboarding-app__summary-badges {
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 12px;
   justify-content: center;
-  margin-top: 8px;
 }
 
 .onboarding-app__summary-badge {

@@ -5,9 +5,16 @@
 
 class ruler_slider extends LetcBox {
 
+  /**
+   * Pin the BEM family so production minification (which mangles
+   * `constructor.name`) keeps the `ruler-slider` prefix instead of a stray letter.
+   */
+  static initClass() {
+    this.prototype.figName = "ruler_slider";
+  }
 
   /**
-   * 
+   *
    */
   initialize(opt = {}) {
     require('./skin');
@@ -138,5 +145,7 @@ class ruler_slider extends LetcBox {
 
 
 }
+
+ruler_slider.initClass();
 
 module.exports = ruler_slider

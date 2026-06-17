@@ -5,6 +5,15 @@ const MAX_STEP = 7;
 class onboarding_app extends LetcBox {
 
   /**
+   * Pin the BEM family explicitly. The framework otherwise derives `fig.family`
+   * from `this.constructor.name`, which Terser mangles to a single letter (e.g.
+   * `e`) in production builds — yielding `e__main` instead of `onboarding-app__main`.
+   */
+  static initClass() {
+    this.prototype.figName = "onboarding_app";
+  }
+
+  /**
    *
    */
   initialize(opt = {}) {
@@ -350,5 +359,7 @@ class onboarding_app extends LetcBox {
     this.debug("AAA: ", sender, service, data, options.service, options)
   }
 }
+
+onboarding_app.initClass();
 
 module.exports = onboarding_app

@@ -9,9 +9,16 @@ class __onboard_form extends LetcBox{
   //  super(...args);
   //}
 
+  /**
+   * Pin the BEM family so production minification (which mangles
+   * `constructor.name`) keeps the `onboard-form` prefix instead of a stray letter.
+   */
+  static initClass() {
+    this.prototype.figName = "__onboard_form";
+  }
 
   /**
-   * 
+   *
    */
   initialize (opt={}){
     require('./skin');
@@ -84,5 +91,7 @@ class __onboard_form extends LetcBox{
   //  }
   //}
 }
+
+__onboard_form.initClass();
 
 module.exports = __onboard_form

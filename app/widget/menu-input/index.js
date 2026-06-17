@@ -3,7 +3,15 @@ const emojiFlags = require('emoji-flags');
 class __menu_input extends LetcBox {
 
   /**
-   * 
+   * Pin the BEM family so production minification (which mangles
+   * `constructor.name`) keeps the `menu-input` prefix instead of a stray letter.
+   */
+  static initClass() {
+    this.prototype.figName = "__menu_input";
+  }
+
+  /**
+   *
    */
   initialize(opt = {}) {
     require('./skin');
@@ -279,5 +287,7 @@ class __menu_input extends LetcBox {
 
 
 }
+
+__menu_input.initClass();
 
 module.exports = __menu_input

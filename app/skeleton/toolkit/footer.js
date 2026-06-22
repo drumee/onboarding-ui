@@ -1,3 +1,13 @@
+function backBtn(ui) {
+  const fig = ui.fig.family;
+  return Skeletons.Note({
+    className: `${fig}__back-btn`,
+    content: LOCALE.BACK || "Back",
+    service: _a.back,
+    uiHandler: [ui],
+  });
+}
+
 export function footer(ui) {
   const fig = ui.fig.family;
   let step = ui._step;
@@ -105,6 +115,20 @@ export function footer(ui) {
         })
       );
       break;
+  }
+
+  // On every step except the first (0) and the final "done" screen, pair the
+  // primary button with a Back button to its left (Back stays smaller, the
+  // primary button grows to fill the row). Secondary buttons (skip / tell me
+  // later), if any, stay stacked below.
+  if (step > 0 && step < 7 && kids.length) {
+    let primary = kids.shift();
+    kids.unshift(
+      Skeletons.Box.X({
+        className: `${fig}__btn-row`,
+        kids: [backBtn(ui), primary],
+      })
+    );
   }
 
   if (!kids.length) return Skeletons.Element({ className: `${fig}__footer-empty`, content: '' });

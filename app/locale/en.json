@@ -30,6 +30,7 @@
     }
   ],
   "total_steps": 7,
+  "back": "← Back",
   "continue": "Continue",
   "tell_me_later": "Tell me later ->",
   "skip_this_step": "Skip this step ->",

@@ -223,6 +223,42 @@ class onboarding_app extends LetcBox {
   }
 
   /**
+   * Highlight the chosen chip in a single-select group and clear the others,
+   * in place — no form rebuild. Selection styling is driven purely by the
+   * [data-state] attribute (see app/skin/form.scss).
+   */
+  _selectOption(field, value) {
+    if (!this.el) return;
+    let chips = this.el.querySelectorAll(`[data-field="${field}"]`);
+    for (let chip of chips) {
+      chip.setAttribute('data-state', chip.dataset.value === value ? '1' : '0');
+    }
+  }
+
+  /**
+   * Toggle a single multi-select chip's selected state in place.
+   */
+  _toggleChip(cmd, on) {
+    if (cmd && cmd.el) cmd.el.setAttribute('data-state', on ? '1' : '0');
+  }
+
+  /**
+   * Snapshot the current step's free-text inputs into this._data so they
+   * survive backward navigation and re-render. Single/multi-select values are
+   * already committed to this._data as the user clicks, so only text entries
+   * (firstname, challenge_text) need capturing here.
+   */
+  _captureStep() {
+    let data = this.getData() || {};
+    if (data.firstname != null && data.firstname.trim()) {
+      this._data.firstname = data.firstname.trim();
+    }
+    if (data.challenge_text != null) {
+      this._data.challenge_text = data.challenge_text;
+    }
+  }
+
+  /**
    * Toggle a multi-select array field (tools, challenges)
    */
   _toggleArrayField(field, value) {
@@ -247,6 +283,11 @@ class onboarding_app extends LetcBox {
         break;
 
       case _a.back:
+        // Preserve what's on the current step before leaving it, so values
+        // are restored when the user navigates forward again. Selections
+        // already live in this._data (written on select/toggle); only the
+        // free-text fields still sit in the rendered Entries.
+        this._captureStep();
         this._step--;
         if (this._step < 0) this._step = 0;
         this.loadForm();
@@ -279,7 +320,13 @@ class onboarding_app extends LetcBox {
           let value = cmd.el ? cmd.el.dataset.value : (args.value || '');
           if (field && value) {
             this._data[field] = value;
-            this.loadForm();
+            // Reflect the selection in place rather than rebuilding the whole
+            // form. The selected look is CSS-driven via [data-state="1"]
+            // (see app/skin/form.scss), so toggling the attribute on the chips
+            // in this field group avoids the visible flash / scroll reset that
+            // a full loadForm() re-feed causes.
+            this._selectOption(field, value);
+            this.checkForm();
           }
         }
         break;
@@ -289,7 +336,7 @@ class onboarding_app extends LetcBox {
           let value = cmd.el ? cmd.el.dataset.value : '';
           if (value) {
             this._toggleArrayField('tools', value);
-            this.loadForm();
+            this._toggleChip(cmd, (this._data.tools || []).includes(value));
           }
         }
         break;
@@ -299,7 +346,7 @@ class onboarding_app extends LetcBox {
           let value = cmd.el ? cmd.el.dataset.value : '';
           if (value) {
             this._toggleArrayField('challenges', value);
-            this.loadForm();
+            this._toggleChip(cmd, (this._data.challenges || []).includes(value));
           }
         }
         break;

@@ -35,6 +35,7 @@
   "tell_me_later": "Tell me later ->",
   "skip_this_step": "Skip this step ->",
   "send_invites": "Send invites",
+  "invites_sent": "{0} invite(s) sent",
   "open_workspace": "Open workspace ->",
   "add": "+ Add",
   "name_placeholder": "Alex",

@@ -278,7 +278,7 @@ export function invite_form(ui) {
 
   let infoBanner = Skeletons.Note({
     className: `${pfx}__invite-info`,
-    content: LOCALE.ONBOARDING_INVITE_INFO || 'Invitees receive an email to join your workspace.',
+    content: LOCALE.ONBOARDING_INVITE_INFO || 'Add team member as contact.',
   });
 
   let inputRow = Skeletons.Box.X({
@@ -298,12 +298,6 @@ export function invite_form(ui) {
         radio: ui._id
       }),
       Skeletons.Note({
-        className: `${pfx}__invite-role-btn`,
-        content: LOCALE.ROLE_ADMIN || 'Admin',
-        service: 'toggle-role',
-        uiHandler: [ui],
-      }),
-      Skeletons.Note({
         className: `${pfx}__invite-add-btn`,
         content: LOCALE.ONBOARDING_ADD || '+ Add',
         service: 'add-invite',
@@ -311,6 +305,14 @@ export function invite_form(ui) {
       }),
     ]
   });
+
+  let errorRow = ui._inviteError
+    ? Skeletons.Element({
+        className: `${pfx}__invite-error`,
+        content: ui._inviteError,
+        active: 0,
+      })
+    : null;
 
   let invitedKids = (ui._data.invites || []).map((inv, i) => {
     return Skeletons.Box.X({
@@ -333,6 +335,7 @@ export function invite_form(ui) {
   });
 
   let kids = [infoBanner, inputRow];
+  if (errorRow) kids.push(errorRow);
   if (invitedKids.length) {
     kids.push(Skeletons.Box.Y({ className: `${pfx}__invited-list`, kids: invitedKids }));
   }

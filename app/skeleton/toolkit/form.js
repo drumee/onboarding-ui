@@ -323,12 +323,12 @@ export function invite_form(ui) {
           content: inv.email || inv,
           active: 0,
         }),
-        Skeletons.Element({
+        Skeletons.Note({
           className: `${pfx}__invited-remove`,
           content: `<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 4L12 12M12 4L4 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`,
           service: 'remove-invite',
           dataset: { index: i },
-          active: 0,
+          uiHandler: [ui],
         }),
       ]
     });

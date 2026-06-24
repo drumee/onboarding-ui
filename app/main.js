@@ -189,22 +189,36 @@ class onboarding_app extends LetcBox {
         }
         break;
 
-      case 6: // Invite team members
+      case 6: // Invite team members — each becomes a contact via contact/invite
         {
-          let invites = (this._data.invites || [])
-            .map(inv => typeof inv === 'string'
-              ? { email: inv.trim(), role: 'read' }
-              : { email: (inv.email || '').trim(), role: (inv.role || 'read').toLowerCase() })
-            .filter(i => i.email);
-          if (invites.length > 0) {
-            this.postService(
-              SERVICE.onboarding.send_onboarding_invites,
-              { emails: invites },
-              SVC_OPT
-            ).then(advance).catch(advance);
-          } else {
+          let emails = (this._data.invites || [])
+            .map(inv => (typeof inv === 'string' ? inv : inv.email) || '')
+            .map(e => e.trim())
+            .filter(Boolean);
+
+          if (!emails.length) {
             advance();
+            break;
           }
+
+          let calls = emails.map(email =>
+            this.postService(
+              SERVICE.contact.invite,
+              { email, hub_id: Visitor.id },
+              SVC_OPT
+            ).then(res => ({ email, res }))
+             .catch(() => ({ email, res: { status: 'SERVICE_ERROR' } }))
+          );
+
+          Promise.all(calls).then(results => {
+            // Treat a response without a known error status as success.
+            const FAIL = ['INVALID_DATA', 'SERVICE_ERROR'];
+            let sent = results.filter(r => !FAIL.includes(r.res && r.res.status)).length;
+            let msg = (LOCALE.ONBOARDING_INVITES_SENT || '{0} invite(s) sent')
+              .replace('{0}', String(sent));
+            try { Butler.say(msg); } catch (e) { /* toast is best-effort */ }
+            advance();
+          }).catch(advance);
         }
         break;
 

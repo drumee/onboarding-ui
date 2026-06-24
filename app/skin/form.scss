@@ -287,6 +287,13 @@
   line-height: 1.5;
 }
 
+.onboarding-app__invite-error {
+  color: var(--ob-error, #d74e49);
+  font-size: 13px;
+  font-family: var(--font-medium);
+  margin-top: 4px;
+}
+
 .onboarding-app__invite-input-row {
   width: 100%;
   min-height: 49px;

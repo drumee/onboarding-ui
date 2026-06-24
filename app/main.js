@@ -105,6 +105,7 @@ class onboarding_app extends LetcBox {
    *
    */
   _advance() {
+    this._inviteError = null;
     this._step++;
     if (this._step > MAX_STEP) this._step = MAX_STEP;
     this.loadForm();
@@ -303,6 +304,7 @@ class onboarding_app extends LetcBox {
         // already live in this._data (written on select/toggle); only the
         // free-text fields still sit in the rendered Entries.
         this._captureStep();
+        this._inviteError = null;
         this._step--;
         if (this._step < 0) this._step = 0;
         this.loadForm();
@@ -396,6 +398,7 @@ class onboarding_app extends LetcBox {
           let index = parseInt(cmd.el ? cmd.el.dataset.index : -1);
           if (index >= 0 && this._data.invites) {
             this._data.invites.splice(index, 1);
+            this._inviteError = null;
             this.loadForm();
           }
         }

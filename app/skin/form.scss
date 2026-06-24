@@ -287,6 +287,13 @@
   line-height: 1.5;
 }
 
+.onboarding-app__invite-error {
+  color: var(--ob-error, #d74e49);
+  font-size: 13px;
+  font-family: var(--font-medium);
+  margin-top: 4px;
+}
+
 .onboarding-app__invite-input-row {
   width: 100%;
   min-height: 49px;
@@ -313,22 +320,6 @@
     &::placeholder {
       color: var(--ob-input-placeholder);
     }
-  }
-}
-
-.onboarding-app__invite-role-btn {
-  cursor: pointer;
-  padding: 5px 12px;
-  background: var(--ob-option-bg-hover);
-  border-radius: 4px;
-  font-size: 13px;
-  font-family: var(--font-medium);
-  color: var(--ob-secondary-text);
-  margin-right: 4px;
-  transition: background 0.2s;
-
-  &:hover {
-    background: var(--ob-option-bg-active);
   }
 }
 
@@ -359,7 +350,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 4px 12px;
+  padding: 12px;
   background: var(--ob-invited-bg);
   border-radius: 4px;
 }
@@ -371,6 +362,8 @@
 }
 
 .onboarding-app__invited-remove {
+  width: 16px;
+  height: 16px;
   cursor: pointer;
   color: var(--ob-remove-icon);
   display: flex;

@@ -1,6 +1,7 @@
 
 const SVC_OPT = { async: 1 };
 const MAX_STEP = 7;
+const { isValidEmail, normalizeEmail } = require('./lib/email');
 
 class onboarding_app extends LetcBox {
 
@@ -104,6 +105,7 @@ class onboarding_app extends LetcBox {
    *
    */
   _advance() {
+    this._inviteError = null;
     this._step++;
     if (this._step > MAX_STEP) this._step = MAX_STEP;
     this.loadForm();
@@ -188,22 +190,36 @@ class onboarding_app extends LetcBox {
         }
         break;
 
-      case 6: // Invite team members
+      case 6: // Invite team members — each becomes a contact via contact/invite
         {
-          let invites = (this._data.invites || [])
-            .map(inv => typeof inv === 'string'
-              ? { email: inv.trim(), role: 'read' }
-              : { email: (inv.email || '').trim(), role: (inv.role || 'read').toLowerCase() })
-            .filter(i => i.email);
-          if (invites.length > 0) {
-            this.postService(
-              SERVICE.onboarding.send_onboarding_invites,
-              { emails: invites },
-              SVC_OPT
-            ).then(advance).catch(advance);
-          } else {
+          let emails = (this._data.invites || [])
+            .map(inv => (typeof inv === 'string' ? inv : inv.email) || '')
+            .map(e => e.trim())
+            .filter(Boolean);
+
+          if (!emails.length) {
             advance();
+            break;
           }
+
+          let calls = emails.map(email =>
+            this.postService(
+              SERVICE.contact.invite,
+              { email, hub_id: Visitor.id },
+              SVC_OPT
+            ).then(res => ({ email, res }))
+             .catch(() => ({ email, res: { status: 'SERVICE_ERROR' } }))
+          );
+
+          Promise.all(calls).then(results => {
+            // Treat a response without a known error status as success.
+            const FAIL = ['INVALID_DATA', 'SERVICE_ERROR'];
+            let sent = results.filter(r => !FAIL.includes(r.res && r.res.status)).length;
+            let msg = (LOCALE.ONBOARDING_INVITES_SENT || '{0} invite(s) sent')
+              .replace('{0}', String(sent));
+            try { Butler.say(msg); } catch (e) { /* toast is best-effort */ }
+            advance();
+          }).catch(advance);
         }
         break;
 
@@ -288,6 +304,7 @@ class onboarding_app extends LetcBox {
         // already live in this._data (written on select/toggle); only the
         // free-text fields still sit in the rendered Entries.
         this._captureStep();
+        this._inviteError = null;
         this._step--;
         if (this._step < 0) this._step = 0;
         this.loadForm();
@@ -354,12 +371,25 @@ class onboarding_app extends LetcBox {
       case 'add-invite':
         {
           let formData = this.getData() || {};
-          let email = formData.invite_email;
-          if (email && email.trim()) {
+          let email = normalizeEmail(formData.invite_email || '');
+          this._inviteError = null;
+
+          if (!email) {
+            this._inviteError = LOCALE.EMAIL_REQUIRED || 'Please enter an email address.';
+          } else if (!isValidEmail(email)) {
+            this._inviteError = LOCALE.INVALID_EMAIL_FORMAT || 'Please enter a valid email address.';
+          } else if (email === normalizeEmail((Visitor.profile && Visitor.profile().email) || '')) {
+            this._inviteError = LOCALE.CANNOT_ADD_SELF_AS_CONTACT || 'You cannot add yourself.';
+          } else {
             if (!this._data.invites) this._data.invites = [];
-            this._data.invites.push({ email: email.trim(), role: 'admin' });
-            this.loadForm();
+            let dup = this._data.invites.some(inv => normalizeEmail(inv.email || inv) === email);
+            if (dup) {
+              this._inviteError = LOCALE.ALREADY_IN_LIST || 'That email is already in the list.';
+            } else {
+              this._data.invites.push({ email });
+            }
           }
+          this.loadForm();
         }
         break;
 
@@ -368,6 +398,7 @@ class onboarding_app extends LetcBox {
           let index = parseInt(cmd.el ? cmd.el.dataset.index : -1);
           if (index >= 0 && this._data.invites) {
             this._data.invites.splice(index, 1);
+            this._inviteError = null;
             this.loadForm();
           }
         }

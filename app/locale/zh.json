@@ -31,6 +31,7 @@
   "next_see_live": "下一步：实时查看 →",
   "enter_workspace": "进入工作空间 🚀",
   "add": "添加",
+  "invites_sent": "已发送 {0} 个邀请",
   "add_another": "再添加一个",
   "send": "发送",
   "invite_placeholder": "同事@公司.com",

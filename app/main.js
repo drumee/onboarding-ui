@@ -47,6 +47,52 @@ class onboarding_app extends LetcBox {
   }
 
   /**
+   * Re-render only the step-6 invite list region (validation error + staged
+   * chips) in place, instead of re-feeding the whole step via loadForm().
+   * Avoids the flash / scroll-reset of a full rebuild and keeps the email
+   * input (which lives outside this part) untouched.
+   */
+  _refreshInviteList() {
+    const { invite_list } = require('./skeleton/toolkit');
+    this.ensurePart('invite-list').then((p) => {
+      p.clear();
+      p.feed(invite_list(this));
+    });
+  }
+
+  /**
+   * Clear and refocus the invite email input after a successful add, without
+   * rebuilding it.
+   */
+  _clearInviteInput() {
+    if (!this.el) return;
+    let input = this.el.querySelector('[name="invite_email"]');
+    if (input) {
+      input.value = '';
+      input.focus();
+    }
+  }
+
+  /**
+   * Toggle a loading state on the step-6 primary ("Send invites") button while
+   * the contact/invite calls are in flight. `is-loading` shows a spinner and
+   * blocks clicks (see app/skin/index.scss). No explicit reset is needed on
+   * success/failure because the flow advances and re-feeds the footer, but we
+   * expose `off` for safety.
+   */
+  _setSubmitLoading(on) {
+    if (!this.el) return;
+    let btn = this.el.querySelector(`.${this.fig.family}__primary-btn`);
+    if (!btn) return;
+    if (on) {
+      btn.classList.add('is-loading');
+      btn.setAttribute('data-state', '1'); // keep the active look; is-loading blocks clicks
+    } else {
+      btn.classList.remove('is-loading');
+    }
+  }
+
+  /**
    *
    */
   setItemState(pn, s = 0) {
@@ -202,6 +248,8 @@ class onboarding_app extends LetcBox {
             break;
           }
 
+          this._setSubmitLoading(true);
+
           let calls = emails.map(email =>
             this.postService(
               SERVICE.contact.invite,
@@ -215,8 +263,12 @@ class onboarding_app extends LetcBox {
             // Treat a response without a known error status as success.
             const FAIL = ['INVALID_DATA', 'SERVICE_ERROR'];
             let sent = results.filter(r => !FAIL.includes(r.res && r.res.status)).length;
-            let msg = (LOCALE.ONBOARDING_INVITES_SENT || '{0} invite(s) sent')
-              .replace('{0}', String(sent));
+            // LOCALE returns the key name itself for an unset key, so guard
+            // against that (not just undefined) before falling back, otherwise
+            // the toast shows the literal "ONBOARDING_INVITES_SENT".
+            let tpl = LOCALE.ONBOARDING_INVITES_SENT;
+            if (!tpl || tpl === 'ONBOARDING_INVITES_SENT') tpl = '{0} invite(s) sent';
+            let msg = tpl.replace('{0}', String(sent));
             try { Butler.say(msg); } catch (e) { /* toast is best-effort */ }
             advance();
           }).catch(advance);
@@ -373,6 +425,7 @@ class onboarding_app extends LetcBox {
           let formData = this.getData() || {};
           let email = normalizeEmail(formData.invite_email || '');
           this._inviteError = null;
+          let added = false;
 
           if (!email) {
             this._inviteError = LOCALE.EMAIL_REQUIRED || 'Please enter an email address.';
@@ -387,9 +440,14 @@ class onboarding_app extends LetcBox {
               this._inviteError = LOCALE.ALREADY_IN_LIST || 'That email is already in the list.';
             } else {
               this._data.invites.push({ email });
+              added = true;
             }
           }
-          this.loadForm();
+          // Re-render only the invite-list region (error + chips) in place,
+          // not the whole step — no flash / scroll reset. Clear the input only
+          // on a successful add so a rejected entry stays editable.
+          this._refreshInviteList();
+          if (added) this._clearInviteInput();
         }
         break;
 
@@ -399,7 +457,7 @@ class onboarding_app extends LetcBox {
           if (index >= 0 && this._data.invites) {
             this._data.invites.splice(index, 1);
             this._inviteError = null;
-            this.loadForm();
+            this._refreshInviteList();
           }
         }
         break;

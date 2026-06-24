@@ -306,13 +306,37 @@ export function invite_form(ui) {
     ]
   });
 
-  let errorRow = ui._inviteError
-    ? Skeletons.Element({
-        className: `${pfx}__invite-error`,
-        content: ui._inviteError,
-        active: 0,
-      })
-    : null;
+  // The dynamic region (validation error + staged chips) lives in its own
+  // "invite-list" part so add/remove can re-feed just this region in place
+  // (see main.js _refreshInviteList) instead of re-feeding the whole step.
+  return Skeletons.Box.Y({
+    className: `${pfx}__form-section`,
+    kids: [
+      infoBanner,
+      inputRow,
+      Skeletons.Box.Y({
+        className: `${pfx}__invite-list-region`,
+        sys_pn: 'invite-list',
+        kids: invite_list(ui),
+      }),
+    ]
+  });
+}
+
+// Contents of the "invite-list" part: an optional inline validation error
+// followed by the staged-invitee chips. Returned as an array so it can be fed
+// directly into the part (Skeletons accepts an array of kids).
+export function invite_list(ui) {
+  const pfx = ui.fig.family;
+  let kids = [];
+
+  if (ui._inviteError) {
+    kids.push(Skeletons.Element({
+      className: `${pfx}__invite-error`,
+      content: ui._inviteError,
+      active: 0,
+    }));
+  }
 
   let invitedKids = (ui._data.invites || []).map((inv, i) => {
     return Skeletons.Box.X({
@@ -334,13 +358,11 @@ export function invite_form(ui) {
     });
   });
 
-  let kids = [infoBanner, inputRow];
-  if (errorRow) kids.push(errorRow);
   if (invitedKids.length) {
     kids.push(Skeletons.Box.Y({ className: `${pfx}__invited-list`, kids: invitedKids }));
   }
 
-  return Skeletons.Box.Y({ className: `${pfx}__form-section`, kids });
+  return kids;
 }
 
 function _labelFor(opts, key) {

@@ -1,6 +1,7 @@
 
 const SVC_OPT = { async: 1 };
 const MAX_STEP = 7;
+const { isValidEmail, normalizeEmail } = require('./lib/email');
 
 class onboarding_app extends LetcBox {
 
@@ -354,12 +355,25 @@ class onboarding_app extends LetcBox {
       case 'add-invite':
         {
           let formData = this.getData() || {};
-          let email = formData.invite_email;
-          if (email && email.trim()) {
+          let email = normalizeEmail(formData.invite_email || '');
+          this._inviteError = null;
+
+          if (!email) {
+            this._inviteError = LOCALE.EMAIL_REQUIRED || 'Please enter an email address.';
+          } else if (!isValidEmail(email)) {
+            this._inviteError = LOCALE.INVALID_EMAIL_FORMAT || 'Please enter a valid email address.';
+          } else if (email === normalizeEmail((Visitor.profile && Visitor.profile().email) || '')) {
+            this._inviteError = LOCALE.CANNOT_ADD_SELF_AS_CONTACT || 'You cannot add yourself.';
+          } else {
             if (!this._data.invites) this._data.invites = [];
-            this._data.invites.push({ email: email.trim(), role: 'admin' });
-            this.loadForm();
+            let dup = this._data.invites.some(inv => normalizeEmail(inv.email || inv) === email);
+            if (dup) {
+              this._inviteError = LOCALE.ALREADY_IN_LIST || 'That email is already in the list.';
+            } else {
+              this._data.invites.push({ email });
+            }
           }
+          this.loadForm();
         }
         break;
 

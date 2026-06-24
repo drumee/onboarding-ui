@@ -196,7 +196,29 @@
         background: var(--ob-accent);
       }
     }
+
+    // Loading state while invites are being sent: keep the active look, block
+    // clicks, and append a spinner next to the label (the button's gap:8px
+    // spaces it). Placed after the data-state rules so it wins on source order.
+    &.is-loading {
+      background: var(--ob-primary-bg);
+      color: var(--ob-primary-text);
+      opacity: 1;
+      pointer-events: none;
+      cursor: wait;
+
+      &::after {
+        content: "";
+        width: 16px;
+        height: 16px;
+        border: 2px solid currentColor;
+        border-top-color: transparent;
+        border-radius: 50%;
+        animation: ob-btn-spin 0.6s linear infinite;
+      }
+    }
   }
+
 
   &__secondary-btn {
     cursor: pointer;
@@ -263,4 +285,8 @@
       border-color: var(--ob-secondary-text-hover);
     }
   }
+}
+
+@keyframes ob-btn-spin {
+  to { transform: rotate(360deg); }
 }

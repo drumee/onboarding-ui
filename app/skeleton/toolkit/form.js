@@ -278,7 +278,7 @@ export function invite_form(ui) {
 
   let infoBanner = Skeletons.Note({
     className: `${pfx}__invite-info`,
-    content: LOCALE.ONBOARDING_INVITE_INFO || 'Invitees receive an email to join your workspace.',
+    content: LOCALE.ONBOARDING_INVITE_INFO || 'Add team member as contact.',
   });
 
   let inputRow = Skeletons.Box.X({
@@ -298,12 +298,6 @@ export function invite_form(ui) {
         radio: ui._id
       }),
       Skeletons.Note({
-        className: `${pfx}__invite-role-btn`,
-        content: LOCALE.ROLE_ADMIN || 'Admin',
-        service: 'toggle-role',
-        uiHandler: [ui],
-      }),
-      Skeletons.Note({
         className: `${pfx}__invite-add-btn`,
         content: LOCALE.ONBOARDING_ADD || '+ Add',
         service: 'add-invite',
@@ -311,6 +305,38 @@ export function invite_form(ui) {
       }),
     ]
   });
+
+  // The dynamic region (validation error + staged chips) lives in its own
+  // "invite-list" part so add/remove can re-feed just this region in place
+  // (see main.js _refreshInviteList) instead of re-feeding the whole step.
+  return Skeletons.Box.Y({
+    className: `${pfx}__form-section`,
+    kids: [
+      infoBanner,
+      inputRow,
+      Skeletons.Box.Y({
+        className: `${pfx}__invite-list-region`,
+        sys_pn: 'invite-list',
+        kids: invite_list(ui),
+      }),
+    ]
+  });
+}
+
+// Contents of the "invite-list" part: an optional inline validation error
+// followed by the staged-invitee chips. Returned as an array so it can be fed
+// directly into the part (Skeletons accepts an array of kids).
+export function invite_list(ui) {
+  const pfx = ui.fig.family;
+  let kids = [];
+
+  if (ui._inviteError) {
+    kids.push(Skeletons.Element({
+      className: `${pfx}__invite-error`,
+      content: ui._inviteError,
+      active: 0,
+    }));
+  }
 
   let invitedKids = (ui._data.invites || []).map((inv, i) => {
     return Skeletons.Box.X({
@@ -321,23 +347,22 @@ export function invite_form(ui) {
           content: inv.email || inv,
           active: 0,
         }),
-        Skeletons.Element({
+        Skeletons.Button.Svg({
+          ico: "cross",
           className: `${pfx}__invited-remove`,
-          content: `<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 4L12 12M12 4L4 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`,
           service: 'remove-invite',
           dataset: { index: i },
-          active: 0,
+          uiHandler: [ui],
         }),
       ]
     });
   });
 
-  let kids = [infoBanner, inputRow];
   if (invitedKids.length) {
     kids.push(Skeletons.Box.Y({ className: `${pfx}__invited-list`, kids: invitedKids }));
   }
 
-  return Skeletons.Box.Y({ className: `${pfx}__form-section`, kids });
+  return kids;
 }
 
 function _labelFor(opts, key) {

@@ -118,6 +118,7 @@ function buildKeyMap(locales) {
     'ONBOARDING_NEXT_SEE_LIVE': 'next_see_live',
     'ENTER_WORKSPACE': 'enter_workspace',
     'ONBOARDING_ADD': 'add',
+    'ONBOARDING_INVITES_SENT': 'invites_sent',
     'ADD_ANOTHER': 'add_another',
     'ONBOARDING_SEND': 'send',
     'ONBOARDING_INVITE_PLACEHOLDER': 'invite_placeholder',

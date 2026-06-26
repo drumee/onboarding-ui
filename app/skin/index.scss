@@ -86,25 +86,26 @@
   }
 
   &__logo-container {
-    align-items: center;
+    align-items: end;
     gap: var(--spacer-3);
     flex-shrink: 0;
   }
 
   &__logo-content {
-    width: 38px;
-    height: 38px;
+    width: 48px;
+    height: 48px;
     color: var(--ob-logo-color);
 
     svg {
-      width: 38px;
-      height: 38px;
+      width: 100%;
+      height: 100%;
       fill: currentColor;
     }
   }
 
   &__logo-text {
     font-size: 32px;
+    font-weight: 600;
     font-family: var(--font-bold);
     color: var(--ob-logo-text-color);
     letter-spacing: -0.3px;
@@ -195,7 +196,29 @@
         background: var(--ob-accent);
       }
     }
+
+    // Loading state while invites are being sent: keep the active look, block
+    // clicks, and append a spinner next to the label (the button's gap:8px
+    // spaces it). Placed after the data-state rules so it wins on source order.
+    &.is-loading {
+      background: var(--ob-primary-bg);
+      color: var(--ob-primary-text);
+      opacity: 1;
+      pointer-events: none;
+      cursor: wait;
+
+      &::after {
+        content: "";
+        width: 16px;
+        height: 16px;
+        border: 2px solid currentColor;
+        border-top-color: transparent;
+        border-radius: 50%;
+        animation: ob-btn-spin 0.6s linear infinite;
+      }
+    }
   }
+
 
   &__secondary-btn {
     cursor: pointer;
@@ -218,4 +241,52 @@
       color: var(--ob-secondary-text-hover);
     }
   }
+
+  &__btn-row {
+    width: 100%;
+    display: flex;
+    align-items: stretch;
+    gap: 12px;
+
+    // Continue (or Send invites) grows to fill the row; Back stays compact on
+    // the left so the primary action reads as the larger, dominant button.
+    .onboarding-app__primary-btn {
+      flex: 1 1 auto;
+      width: auto;
+    }
+
+    .onboarding-app__back-btn {
+      flex: 0 0 auto;
+      width: auto;
+      min-width: 96px;
+    }
+  }
+
+  &__back-btn {
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 48px;
+    padding: 12px 20px;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: 600;
+    font-family: var(--font-medium);
+    background: transparent;
+    color: var(--ob-secondary-text);
+    border: 1px solid var(--ob-option-bg);
+    transition: color 0.2s ease, border-color 0.2s ease;
+    white-space: nowrap;
+
+    &:hover {
+      color: var(--ob-secondary-text-hover);
+      border-color: var(--ob-secondary-text-hover);
+    }
+  }
+}
+
+@keyframes ob-btn-spin {
+  to { transform: rotate(360deg); }
 }

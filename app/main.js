@@ -1,6 +1,7 @@
 
 const SVC_OPT = { async: 1 };
 const MAX_STEP = 7;
+const { isValidEmail, normalizeEmail } = require('./lib/email');
 
 class onboarding_app extends LetcBox {
 
@@ -43,6 +44,52 @@ class onboarding_app extends LetcBox {
     localStorage.onboarding_step = this._step;
     this.feed(require('./skeleton')(this))
     this.checkForm()
+  }
+
+  /**
+   * Re-render only the step-6 invite list region (validation error + staged
+   * chips) in place, instead of re-feeding the whole step via loadForm().
+   * Avoids the flash / scroll-reset of a full rebuild and keeps the email
+   * input (which lives outside this part) untouched.
+   */
+  _refreshInviteList() {
+    const { invite_list } = require('./skeleton/toolkit');
+    this.ensurePart('invite-list').then((p) => {
+      p.clear();
+      p.feed(invite_list(this));
+    });
+  }
+
+  /**
+   * Clear and refocus the invite email input after a successful add, without
+   * rebuilding it.
+   */
+  _clearInviteInput() {
+    if (!this.el) return;
+    let input = this.el.querySelector('[name="invite_email"]');
+    if (input) {
+      input.value = '';
+      input.focus();
+    }
+  }
+
+  /**
+   * Toggle a loading state on the step-6 primary ("Send invites") button while
+   * the contact/invite calls are in flight. `is-loading` shows a spinner and
+   * blocks clicks (see app/skin/index.scss). No explicit reset is needed on
+   * success/failure because the flow advances and re-feeds the footer, but we
+   * expose `off` for safety.
+   */
+  _setSubmitLoading(on) {
+    if (!this.el) return;
+    let btn = this.el.querySelector(`.${this.fig.family}__primary-btn`);
+    if (!btn) return;
+    if (on) {
+      btn.classList.add('is-loading');
+      btn.setAttribute('data-state', '1'); // keep the active look; is-loading blocks clicks
+    } else {
+      btn.classList.remove('is-loading');
+    }
   }
 
   /**
@@ -104,6 +151,7 @@ class onboarding_app extends LetcBox {
    *
    */
   _advance() {
+    this._inviteError = null;
     this._step++;
     if (this._step > MAX_STEP) this._step = MAX_STEP;
     this.loadForm();
@@ -188,22 +236,42 @@ class onboarding_app extends LetcBox {
         }
         break;
 
-      case 6: // Invite team members
+      case 6: // Invite team members — each becomes a contact via contact/invite
         {
-          let invites = (this._data.invites || [])
-            .map(inv => typeof inv === 'string'
-              ? { email: inv.trim(), role: 'read' }
-              : { email: (inv.email || '').trim(), role: (inv.role || 'read').toLowerCase() })
-            .filter(i => i.email);
-          if (invites.length > 0) {
-            this.postService(
-              SERVICE.onboarding.send_onboarding_invites,
-              { emails: invites },
-              SVC_OPT
-            ).then(advance).catch(advance);
-          } else {
+          let emails = (this._data.invites || [])
+            .map(inv => (typeof inv === 'string' ? inv : inv.email) || '')
+            .map(e => e.trim())
+            .filter(Boolean);
+
+          if (!emails.length) {
             advance();
+            break;
           }
+
+          this._setSubmitLoading(true);
+
+          let calls = emails.map(email =>
+            this.postService(
+              SERVICE.contact.invite,
+              { email, hub_id: Visitor.id },
+              SVC_OPT
+            ).then(res => ({ email, res }))
+             .catch(() => ({ email, res: { status: 'SERVICE_ERROR' } }))
+          );
+
+          Promise.all(calls).then(results => {
+            // Treat a response without a known error status as success.
+            const FAIL = ['INVALID_DATA', 'SERVICE_ERROR'];
+            let sent = results.filter(r => !FAIL.includes(r.res && r.res.status)).length;
+            // LOCALE returns the key name itself for an unset key, so guard
+            // against that (not just undefined) before falling back, otherwise
+            // the toast shows the literal "ONBOARDING_INVITES_SENT".
+            let tpl = LOCALE.ONBOARDING_INVITES_SENT;
+            if (!tpl || tpl === 'ONBOARDING_INVITES_SENT') tpl = '{0} invite(s) sent';
+            let msg = tpl.replace('{0}', String(sent));
+            try { Butler.say(msg); } catch (e) { /* toast is best-effort */ }
+            advance();
+          }).catch(advance);
         }
         break;
 
@@ -220,6 +288,42 @@ class onboarding_app extends LetcBox {
   onServerComplain(err) {
     this.warn("[onServerComplain]", err)
     Butler.say(LOCALE.INTERNAL_ERROR)
+  }
+
+  /**
+   * Highlight the chosen chip in a single-select group and clear the others,
+   * in place — no form rebuild. Selection styling is driven purely by the
+   * [data-state] attribute (see app/skin/form.scss).
+   */
+  _selectOption(field, value) {
+    if (!this.el) return;
+    let chips = this.el.querySelectorAll(`[data-field="${field}"]`);
+    for (let chip of chips) {
+      chip.setAttribute('data-state', chip.dataset.value === value ? '1' : '0');
+    }
+  }
+
+  /**
+   * Toggle a single multi-select chip's selected state in place.
+   */
+  _toggleChip(cmd, on) {
+    if (cmd && cmd.el) cmd.el.setAttribute('data-state', on ? '1' : '0');
+  }
+
+  /**
+   * Snapshot the current step's free-text inputs into this._data so they
+   * survive backward navigation and re-render. Single/multi-select values are
+   * already committed to this._data as the user clicks, so only text entries
+   * (firstname, challenge_text) need capturing here.
+   */
+  _captureStep() {
+    let data = this.getData() || {};
+    if (data.firstname != null && data.firstname.trim()) {
+      this._data.firstname = data.firstname.trim();
+    }
+    if (data.challenge_text != null) {
+      this._data.challenge_text = data.challenge_text;
+    }
   }
 
   /**
@@ -247,6 +351,12 @@ class onboarding_app extends LetcBox {
         break;
 
       case _a.back:
+        // Preserve what's on the current step before leaving it, so values
+        // are restored when the user navigates forward again. Selections
+        // already live in this._data (written on select/toggle); only the
+        // free-text fields still sit in the rendered Entries.
+        this._captureStep();
+        this._inviteError = null;
         this._step--;
         if (this._step < 0) this._step = 0;
         this.loadForm();
@@ -279,7 +389,13 @@ class onboarding_app extends LetcBox {
           let value = cmd.el ? cmd.el.dataset.value : (args.value || '');
           if (field && value) {
             this._data[field] = value;
-            this.loadForm();
+            // Reflect the selection in place rather than rebuilding the whole
+            // form. The selected look is CSS-driven via [data-state="1"]
+            // (see app/skin/form.scss), so toggling the attribute on the chips
+            // in this field group avoids the visible flash / scroll reset that
+            // a full loadForm() re-feed causes.
+            this._selectOption(field, value);
+            this.checkForm();
           }
         }
         break;
@@ -289,7 +405,7 @@ class onboarding_app extends LetcBox {
           let value = cmd.el ? cmd.el.dataset.value : '';
           if (value) {
             this._toggleArrayField('tools', value);
-            this.loadForm();
+            this._toggleChip(cmd, (this._data.tools || []).includes(value));
           }
         }
         break;
@@ -299,7 +415,7 @@ class onboarding_app extends LetcBox {
           let value = cmd.el ? cmd.el.dataset.value : '';
           if (value) {
             this._toggleArrayField('challenges', value);
-            this.loadForm();
+            this._toggleChip(cmd, (this._data.challenges || []).includes(value));
           }
         }
         break;
@@ -307,12 +423,31 @@ class onboarding_app extends LetcBox {
       case 'add-invite':
         {
           let formData = this.getData() || {};
-          let email = formData.invite_email;
-          if (email && email.trim()) {
+          let email = normalizeEmail(formData.invite_email || '');
+          this._inviteError = null;
+          let added = false;
+
+          if (!email) {
+            this._inviteError = LOCALE.EMAIL_REQUIRED || 'Please enter an email address.';
+          } else if (!isValidEmail(email)) {
+            this._inviteError = LOCALE.INVALID_EMAIL_FORMAT || 'Please enter a valid email address.';
+          } else if (email === normalizeEmail((Visitor.profile && Visitor.profile().email) || '')) {
+            this._inviteError = LOCALE.CANNOT_ADD_SELF_AS_CONTACT || 'You cannot add yourself.';
+          } else {
             if (!this._data.invites) this._data.invites = [];
-            this._data.invites.push({ email: email.trim(), role: 'admin' });
-            this.loadForm();
+            let dup = this._data.invites.some(inv => normalizeEmail(inv.email || inv) === email);
+            if (dup) {
+              this._inviteError = LOCALE.ALREADY_IN_LIST || 'That email is already in the list.';
+            } else {
+              this._data.invites.push({ email });
+              added = true;
+            }
           }
+          // Re-render only the invite-list region (error + chips) in place,
+          // not the whole step — no flash / scroll reset. Clear the input only
+          // on a successful add so a rejected entry stays editable.
+          this._refreshInviteList();
+          if (added) this._clearInviteInput();
         }
         break;
 
@@ -321,7 +456,8 @@ class onboarding_app extends LetcBox {
           let index = parseInt(cmd.el ? cmd.el.dataset.index : -1);
           if (index >= 0 && this._data.invites) {
             this._data.invites.splice(index, 1);
-            this.loadForm();
+            this._inviteError = null;
+            this._refreshInviteList();
           }
         }
         break;

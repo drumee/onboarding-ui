@@ -185,6 +185,9 @@ class onboarding_app extends LetcBox {
   commitForm() {
     let args = this.getData() || {};
     this.setItemState(_a.next, 0);
+    // Show the spinner on the primary button while the step's save is in flight.
+    // No explicit reset needed: advancing re-feeds the footer (see loadForm).
+    this._setSubmitLoading(true);
     const advance = () => this._advance();
 
     switch (this._step) {
@@ -279,8 +282,6 @@ class onboarding_app extends LetcBox {
             advance();
             break;
           }
-
-          this._setSubmitLoading(true);
 
           let calls = emails.map(email =>
             this.postService(
@@ -403,6 +404,7 @@ class onboarding_app extends LetcBox {
 
       case 'enter-workspace':
         localStorage.onboarding_step = "0";
+        this._setSubmitLoading(true);
         {
           const exit = () => {
             if (this.mget(_a.type) == 'app') {

@@ -99,7 +99,7 @@ export function tools_other_region(ui) {
   return (ui._data.tools || []).includes('other') ? [other_input(ui, 'tools')] : [];
 }
 
-function buildOptionGrid(ui, opts, field) {
+function buildOptionGrid(ui, opts, field, perRow = 2) {
   const pfx = ui.fig.family;
   let selected = ui._data[field] || '';
   let kids = [];
@@ -121,15 +121,16 @@ function buildOptionGrid(ui, opts, field) {
         content: label,
       })
     );
-    if (row.length === 2 || i === opts.length - 1) {
+    if (row.length === perRow || i === opts.length - 1) {
       kids.push(Skeletons.Box.X({ className: `${pfx}__option-row`, kids: [...row] }));
       row = [];
     }
   }
+  let gridClass = `${pfx}__option-grid${perRow !== 2 ? ` cols-${perRow}` : ''}`;
   return Skeletons.Box.Y({
     className: `${pfx}__form-section`,
     kids: [
-      Skeletons.Box.Y({ className: `${pfx}__option-grid`, kids }),
+      Skeletons.Box.Y({ className: gridClass, kids }),
       Skeletons.Box.Y({
         className: `${pfx}__other-region`,
         sys_pn: `${field}-other`,
@@ -172,7 +173,7 @@ export function name_form(ui) {
   });
 }
 
-export function industry_form(ui) { return buildOptionGrid(ui, INDUSTRY_OPTS, 'industry'); }
+export function industry_form(ui) { return buildOptionGrid(ui, INDUSTRY_OPTS, 'industry', 3); }
 export function role_form(ui) { return buildOptionGrid(ui, ROLE_OPTS, 'role'); }
 export function team_size_form(ui) { return buildOptionGrid(ui, TEAM_SIZE_OPTS, 'team_size'); }
 

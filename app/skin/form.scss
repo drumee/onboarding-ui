@@ -57,6 +57,14 @@
   }
 }
 
+/* 3-up option grid (industry): narrower slots, so let long labels wrap
+   instead of overflowing, and keep clear of the selected-state checkmark. */
+.onboarding-app__option-grid.cols-3 .onboarding-app__option-chip {
+  white-space: normal;
+  text-align: center;
+  padding: 8px 28px 8px 8px;
+}
+
 /* ============================================
    Input fields
    ============================================ */

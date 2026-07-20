@@ -83,6 +83,16 @@
     gap: 20px;
   }
 
+  // Logo + progress bar grouped and centered as a unit. Capped at the normal
+  // card content width (520 - 24*2 padding) so on is-wide steps it stays
+  // consistent and centered while the content below uses the full width.
+  &__header-lead {
+    width: 100%;
+    max-width: 472px;
+    align-self: center;
+    gap: 20px;
+  }
+
   &__header-top {
     width: 100%;
     align-items: center;

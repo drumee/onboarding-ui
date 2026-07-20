@@ -59,6 +59,10 @@
     &::-webkit-scrollbar {
       display: none;
     }
+
+    &.is-wide {
+      max-width: 800px;
+    }
   }
 
   &__card {
@@ -67,6 +71,10 @@
     gap: 48px;
     padding: 24px;
     margin: auto;
+
+    &.is-wide {
+      max-width: 800px;
+    }
   }
 
   &__header {

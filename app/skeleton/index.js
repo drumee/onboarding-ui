@@ -39,9 +39,12 @@ module.exports = function (ui, opt = {}) {
       content = done_form(ui);
   }
 
+  // Step 2 (Industry) uses a 3-up option grid, which needs a wider shell.
+  const wide = ui._step === 1 ? ' is-wide' : '';
+
   let kids = [
     Skeletons.Box.Y({
-      className: `${ui.fig.family}__card`,
+      className: `${ui.fig.family}__card${wide}`,
       kids: [
         header(ui),
         content,
@@ -51,7 +54,7 @@ module.exports = function (ui, opt = {}) {
   ];
 
   return Skeletons.Box.Y({
-    className: `${ui.fig.family}__main`,
+    className: `${ui.fig.family}__main${wide}`,
     kids
   })
 }

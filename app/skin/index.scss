@@ -48,7 +48,7 @@
     height: 100%;
     width: 100%;
     max-width: 620px;
-    padding: var(--spacer-10) var(--spacer-7);
+    padding: 0 var(--spacer-7);
     overflow-y: auto;
     gap: 0;
     position: relative;
@@ -59,20 +59,38 @@
     &::-webkit-scrollbar {
       display: none;
     }
+
+    &.is-wide {
+      max-width: 800px;
+    }
   }
 
   &__card {
     width: 100%;
     max-width: 520px;
-    gap: 48px;
+    gap: 20px;
     padding: 24px;
     margin: auto;
+
+    &.is-wide {
+      max-width: 800px;
+    }
   }
 
   &__header {
     height: auto;
     width: 100%;
-    gap: 48px;
+    gap: 20px;
+  }
+
+  // Logo + progress bar grouped and centered as a unit. Capped at the normal
+  // card content width (520 - 24*2 padding) so on is-wide steps it stays
+  // consistent and centered while the content below uses the full width.
+  &__header-lead {
+    width: 100%;
+    max-width: 472px;
+    align-self: center;
+    gap: 20px;
   }
 
   &__header-top {

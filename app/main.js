@@ -2,6 +2,7 @@
 const SVC_OPT = { async: 1 };
 const MAX_STEP = 7;
 const { isValidEmail, normalizeEmail } = require('./lib/email');
+const { isOtherComplete, buildToolsPayload } = require('./lib/other-option');
 
 class onboarding_app extends LetcBox {
 
@@ -57,6 +58,24 @@ class onboarding_app extends LetcBox {
     this.ensurePart('invite-list').then((p) => {
       p.clear();
       p.feed(invite_list(this));
+    });
+  }
+
+  /**
+   * Re-render only the "<field>-other" reveal region in place after a
+   * selection/toggle change, and focus the input when it appears. Mirrors
+   * _refreshInviteList — avoids a full-form rebuild / scroll reset.
+   */
+  _refreshOtherInput(field) {
+    const { other_region, tools_other_region } = require('./skeleton/toolkit');
+    this.ensurePart(`${field}-other`).then((p) => {
+      p.clear();
+      let kids = field === 'tools' ? tools_other_region(this) : other_region(this, field);
+      p.feed(kids);
+      if (kids.length && this.el) {
+        let input = this.el.querySelector(`[name="${field}_other"]`);
+        if (input) input.focus();
+      }
     });
   }
 
@@ -120,10 +139,10 @@ class onboarding_app extends LetcBox {
         }
         break;
       case 1: // Industry
-        if (this._data.industry) completed = 1;
+        if (isOtherComplete(this._data.industry, this._data.industry_other)) completed = 1;
         break;
       case 2: // Role
-        if (this._data.role) completed = 1;
+        if (isOtherComplete(this._data.role, this._data.role_other)) completed = 1;
         break;
       case 3: // Team size
         if (this._data.team_size) completed = 1;
@@ -166,6 +185,9 @@ class onboarding_app extends LetcBox {
   commitForm() {
     let args = this.getData() || {};
     this.setItemState(_a.next, 0);
+    // Show the spinner on the primary button while the step's save is in flight.
+    // No explicit reset needed: advancing re-feeds the footer (see loadForm).
+    this._setSubmitLoading(true);
     const advance = () => this._advance();
 
     switch (this._step) {
@@ -179,19 +201,29 @@ class onboarding_app extends LetcBox {
         break;
 
       case 1: // Industry
-        this.postService(
-          SERVICE.onboarding.save_industry,
-          { industry: this._data.industry },
-          SVC_OPT
-        ).then(advance).catch(advance);
+        {
+          if (args.industry_other != null) this._data.industry_other = args.industry_other;
+          let payload = { industry: this._data.industry };
+          if (this._data.industry === 'other') {
+            payload.industry_other = (this._data.industry_other || '').trim();
+          }
+          this.postService(
+            SERVICE.onboarding.save_industry, payload, SVC_OPT
+          ).then(advance).catch(advance);
+        }
         break;
 
       case 2: // Role
-        this.postService(
-          SERVICE.onboarding.save_role,
-          { role: this._data.role },
-          SVC_OPT
-        ).then(advance).catch(advance);
+        {
+          if (args.role_other != null) this._data.role_other = args.role_other;
+          let payload = { role: this._data.role };
+          if (this._data.role === 'other') {
+            payload.role_other = (this._data.role_other || '').trim();
+          }
+          this.postService(
+            SERVICE.onboarding.save_role, payload, SVC_OPT
+          ).then(advance).catch(advance);
+        }
         break;
 
       case 3: // Team size
@@ -207,7 +239,10 @@ class onboarding_app extends LetcBox {
           if (args.challenge_text != null) {
             this._data.challenge_text = args.challenge_text;
           }
-          let tools = this._data.tools || [];
+          if (args.tools_other != null) {
+            this._data.tools_other = args.tools_other;
+          }
+          let tools = buildToolsPayload(this._data.tools || [], this._data.tools_other);
           let challenges = this._data.challenges || [];
           let note = this._data.challenge_text || '';
           let saveTools = tools.length
@@ -247,8 +282,6 @@ class onboarding_app extends LetcBox {
             advance();
             break;
           }
-
-          this._setSubmitLoading(true);
 
           let calls = emails.map(email =>
             this.postService(
@@ -324,6 +357,9 @@ class onboarding_app extends LetcBox {
     if (data.challenge_text != null) {
       this._data.challenge_text = data.challenge_text;
     }
+    if (data.industry_other != null) this._data.industry_other = data.industry_other;
+    if (data.role_other != null) this._data.role_other = data.role_other;
+    if (data.tools_other != null) this._data.tools_other = data.tools_other;
   }
 
   /**
@@ -368,6 +404,7 @@ class onboarding_app extends LetcBox {
 
       case 'enter-workspace':
         localStorage.onboarding_step = "0";
+        this._setSubmitLoading(true);
         {
           const exit = () => {
             if (this.mget(_a.type) == 'app') {
@@ -389,12 +426,10 @@ class onboarding_app extends LetcBox {
           let value = cmd.el ? cmd.el.dataset.value : (args.value || '');
           if (field && value) {
             this._data[field] = value;
-            // Reflect the selection in place rather than rebuilding the whole
-            // form. The selected look is CSS-driven via [data-state="1"]
-            // (see app/skin/form.scss), so toggling the attribute on the chips
-            // in this field group avoids the visible flash / scroll reset that
-            // a full loadForm() re-feed causes.
             this._selectOption(field, value);
+            if (field === 'industry' || field === 'role') {
+              this._refreshOtherInput(field);
+            }
             this.checkForm();
           }
         }
@@ -406,6 +441,7 @@ class onboarding_app extends LetcBox {
           if (value) {
             this._toggleArrayField('tools', value);
             this._toggleChip(cmd, (this._data.tools || []).includes(value));
+            if (value === 'other') this._refreshOtherInput('tools');
           }
         }
         break;
@@ -463,6 +499,7 @@ class onboarding_app extends LetcBox {
         break;
 
       case _a.input:
+        this._captureStep();
         this.checkForm();
         break;
 

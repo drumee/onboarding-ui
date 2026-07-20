@@ -39,9 +39,13 @@ module.exports = function (ui, opt = {}) {
       content = done_form(ui);
   }
 
+  // Wider shell for steps that need horizontal room: step 2 (Industry, index 1)
+  // uses a 3-up option grid; step 5 (Tools, index 4) uses a two-column split.
+  const wide = (ui._step === 1 || ui._step === 4) ? ' is-wide' : '';
+
   let kids = [
     Skeletons.Box.Y({
-      className: `${ui.fig.family}__card`,
+      className: `${ui.fig.family}__card${wide}`,
       kids: [
         header(ui),
         content,
@@ -51,7 +55,7 @@ module.exports = function (ui, opt = {}) {
   ];
 
   return Skeletons.Box.Y({
-    className: `${ui.fig.family}__main`,
+    className: `${ui.fig.family}__main${wide}`,
     kids
   })
 }

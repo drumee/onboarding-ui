@@ -39,8 +39,9 @@ module.exports = function (ui, opt = {}) {
       content = done_form(ui);
   }
 
-  // Step 2 (Industry) uses a 3-up option grid, which needs a wider shell.
-  const wide = ui._step === 1 ? ' is-wide' : '';
+  // Wider shell for steps that need horizontal room: step 2 (Industry, index 1)
+  // uses a 3-up option grid; step 5 (Tools, index 4) uses a two-column split.
+  const wide = (ui._step === 1 || ui._step === 4) ? ' is-wide' : '';
 
   let kids = [
     Skeletons.Box.Y({

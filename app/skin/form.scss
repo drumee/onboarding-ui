@@ -65,6 +65,13 @@
   padding: 8px 28px 8px 8px;
 }
 
+/* Invisible filler that keeps a trailing partial row's chips at single-column
+   width (e.g. Role's lone "Other" chip) instead of stretching to fill. */
+.onboarding-app__option-spacer {
+  flex: 1;
+  visibility: hidden;
+}
+
 /* ============================================
    Input fields
    ============================================ */
@@ -147,6 +154,20 @@
   line-height: 20px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+}
+
+/* Tools step: two side-by-side parts (part 1 = tools + "other"; part 2 =
+   challenges). The shell is widened for this step (see skeleton/index.js). */
+.onboarding-app__tools-split {
+  width: 100%;
+  align-items: flex-start;
+  gap: 32px;
+}
+
+.onboarding-app__tools-part {
+  flex: 1;
+  min-width: 0;
+  gap: 16px;
 }
 
 /* ============================================

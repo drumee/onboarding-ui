@@ -122,7 +122,14 @@ function buildOptionGrid(ui, opts, field, perRow = 2) {
       })
     );
     if (row.length === perRow || i === opts.length - 1) {
-      kids.push(Skeletons.Box.X({ className: `${pfx}__option-row`, kids: [...row] }));
+      // Pad a trailing partial row with empty spacers so its chips keep a
+      // single column's width instead of stretching (e.g. Role's lone "Other"
+      // chip stays one-item wide rather than filling the whole row).
+      let cells = [...row];
+      while (cells.length < perRow) {
+        cells.push(Skeletons.Element({ className: `${pfx}__option-spacer`, content: ' ', active: 0 }));
+      }
+      kids.push(Skeletons.Box.X({ className: `${pfx}__option-row`, kids: cells }));
       row = [];
     }
   }
@@ -235,8 +242,11 @@ export function tools_form(ui) {
     })
   );
 
-  return Skeletons.Box.Y({
-    className: `${pfx}__form-section`,
+  // Split the tools step into two side-by-side parts (the shell is widened for
+  // this step, see skeleton/index.js): part 1 runs from the title through the
+  // tools "other" reveal region; part 2 is the challenges question to the end.
+  let part1 = Skeletons.Box.Y({
+    className: `${pfx}__tools-part`,
     kids: [
       Skeletons.Box.X({
         className: `${pfx}__tools-title`,
@@ -266,10 +276,12 @@ export function tools_form(ui) {
         sys_pn: 'tools-other',
         kids: tools_other_region(ui),
       }),
-      Skeletons.Element({
-        className: `${pfx}__tools-divider`,
-        active: 0,
-      }),
+    ]
+  });
+
+  let part2 = Skeletons.Box.Y({
+    className: `${pfx}__tools-part`,
+    kids: [
       Skeletons.Note({
         className: `${pfx}__section-label`,
         content: LOCALE.ONBOARDING_CHALLENGES_QUESTION || 'What challenges are you facing with your current setup?',
@@ -277,6 +289,16 @@ export function tools_form(ui) {
       Skeletons.Box.Y({
         className: `${pfx}__challenge-list`,
         kids: challengeKids,
+      }),
+    ]
+  });
+
+  return Skeletons.Box.Y({
+    className: `${pfx}__form-section`,
+    kids: [
+      Skeletons.Box.X({
+        className: `${pfx}__tools-split`,
+        kids: [part1, part2],
       }),
     ]
   });

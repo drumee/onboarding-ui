@@ -66,6 +66,39 @@ const GOAL_ICONS = {
   file: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M5 2H12L16 6V18H5C3.9 18 3 17.1 3 16V4C3 2.9 3.9 2 5 2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 2V6H16" stroke="currentColor" stroke-width="1.5"/></svg>`,
 };
 
+// The free-text input revealed when an "Other" option is active. Reuses the
+// __input-field styling; name is "<field>_other" so getData() surfaces it.
+function other_input(ui, field) {
+  const pfx = ui.fig.family;
+  const otherField = `${field}_other`;
+  return Skeletons.Entry({
+    className: `${pfx}__input-field ${pfx}__other-input`,
+    name: otherField,
+    value: ui._data[otherField] || '',
+    formItem: otherField,
+    innerClass: otherField,
+    mode: _a.interactive,
+    service: _a.input,
+    placeholder: LOCALE.ONBOARDING_OTHER_PLACEHOLDER || 'Please specify…',
+    uiHandler: [ui],
+    state: 0,
+    radio: ui._id,
+  });
+}
+
+// Contents of the "<field>-other" part for single-select steps (industry,
+// role): the reveal input when "other" is selected, else empty. Returned as an
+// array so main.js can re-feed just this region in place.
+export function other_region(ui, field) {
+  return (ui._data[field] || '') === 'other' ? [other_input(ui, field)] : [];
+}
+
+// Contents of the "tools-other" part for the multi-select tools step: revealed
+// when the "other" chip is toggled on.
+export function tools_other_region(ui) {
+  return (ui._data.tools || []).includes('other') ? [other_input(ui, 'tools')] : [];
+}
+
 function buildOptionGrid(ui, opts, field) {
   const pfx = ui.fig.family;
   let selected = ui._data[field] || '';
@@ -95,7 +128,14 @@ function buildOptionGrid(ui, opts, field) {
   }
   return Skeletons.Box.Y({
     className: `${pfx}__form-section`,
-    kids: [Skeletons.Box.Y({ className: `${pfx}__option-grid`, kids })]
+    kids: [
+      Skeletons.Box.Y({ className: `${pfx}__option-grid`, kids }),
+      Skeletons.Box.Y({
+        className: `${pfx}__other-region`,
+        sys_pn: `${field}-other`,
+        kids: other_region(ui, field),
+      }),
+    ]
   });
 }
 
@@ -219,6 +259,11 @@ export function tools_form(ui) {
       Skeletons.Box.X({
         className: `${pfx}__tool-chips-wrap`,
         kids: toolChips,
+      }),
+      Skeletons.Box.Y({
+        className: `${pfx}__other-region`,
+        sys_pn: 'tools-other',
+        kids: tools_other_region(ui),
       }),
       Skeletons.Element({
         className: `${pfx}__tools-divider`,

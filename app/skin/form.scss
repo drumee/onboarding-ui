@@ -17,7 +17,11 @@
 }
 
 .onboarding-app__option-chip {
-  flex: 1;
+  // Fixed one-column width (row gap is 16px, 2 per row) so every chip is the
+  // same size regardless of how many sit in its row — a lone trailing chip
+  // (e.g. Role's "Other") stays one column wide, left-aligned.
+  flex: 0 0 calc((100% - 16px) / 2);
+  min-width: 0;
   cursor: pointer;
   position: relative;
   padding: 8px 12px;
@@ -60,16 +64,11 @@
 /* 3-up option grid (industry): narrower slots, so let long labels wrap
    instead of overflowing, and keep clear of the selected-state checkmark. */
 .onboarding-app__option-grid.cols-3 .onboarding-app__option-chip {
+  // 3 per row: two 16px gaps → fixed third-column width.
+  flex-basis: calc((100% - 32px) / 3);
   white-space: normal;
   text-align: center;
   padding: 8px 28px 8px 8px;
-}
-
-/* Invisible filler that keeps a trailing partial row's chips at single-column
-   width (e.g. Role's lone "Other" chip) instead of stretching to fill. */
-.onboarding-app__option-spacer {
-  flex: 1;
-  visibility: hidden;
 }
 
 /* ============================================

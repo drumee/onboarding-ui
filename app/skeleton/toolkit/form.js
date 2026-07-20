@@ -122,14 +122,7 @@ function buildOptionGrid(ui, opts, field, perRow = 2) {
       })
     );
     if (row.length === perRow || i === opts.length - 1) {
-      // Pad a trailing partial row with empty spacers so its chips keep a
-      // single column's width instead of stretching (e.g. Role's lone "Other"
-      // chip stays one-item wide rather than filling the whole row).
-      let cells = [...row];
-      while (cells.length < perRow) {
-        cells.push(Skeletons.Element({ className: `${pfx}__option-spacer`, content: ' ', active: 0 }));
-      }
-      kids.push(Skeletons.Box.X({ className: `${pfx}__option-row`, kids: cells }));
+      kids.push(Skeletons.Box.X({ className: `${pfx}__option-row`, kids: [...row] }));
       row = [];
     }
   }

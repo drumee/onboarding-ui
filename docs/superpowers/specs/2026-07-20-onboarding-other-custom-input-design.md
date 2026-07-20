@@ -23,7 +23,7 @@ value. The custom value is persisted to the backend.
 - Tools is optional: an empty "Other" custom field is simply ignored.
 - Reveal/hide happens **in place** via a dedicated part (no full form rebuild,
   no scroll reset) — mirroring the existing invite-list partial-refresh pattern.
-- Values survive Back-navigation and re-render.
+- Values survive Back/forward navigation within a session (held in memory in this._data). Note: they do NOT survive a full page reload — the client does not hydrate from get_onboarding_response (a pre-existing resume gap that affects all onboarding fields, not just these). The new *_other columns are surfaced by get_onboarding_response for forward compatibility when server-side resume is wired.
 
 ## Data / DB layer (loby)
 

@@ -48,7 +48,7 @@
     height: 100%;
     width: 100%;
     max-width: 620px;
-    padding: var(--spacer-10) var(--spacer-7);
+    padding: 0 var(--spacer-7);
     overflow-y: auto;
     gap: 0;
     position: relative;
@@ -68,7 +68,7 @@
   &__card {
     width: 100%;
     max-width: 520px;
-    gap: 48px;
+    gap: 20px;
     padding: 24px;
     margin: auto;
 
@@ -80,7 +80,7 @@
   &__header {
     height: auto;
     width: 100%;
-    gap: 48px;
+    gap: 20px;
   }
 
   &__header-top {

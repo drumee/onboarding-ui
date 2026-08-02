@@ -16,8 +16,27 @@
   gap: 16px;
 }
 
+/* Selected-state check badge, reused across option chips, tool chips and
+   challenge options. The host element must be position: relative. */
+%onboarding-checked-badge {
+  content: '';
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='7' fill='%235950FF'/%3E%3Cpath d='M5 8l2.5 2.5L11 5.5' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
 .onboarding-app__option-chip {
-  flex: 1;
+  // Fixed one-column width (row gap is 16px, 2 per row) so every chip is the
+  // same size regardless of how many sit in its row — a lone trailing chip
+  // (e.g. Role's "Other") stays one column wide, left-aligned.
+  flex: 0 0 calc((100% - 16px) / 2);
+  min-width: 0;
   cursor: pointer;
   position: relative;
   padding: 8px 12px;
@@ -42,19 +61,18 @@
     border-color: var(--ob-accent-border);
     color: var(--ob-option-text-active);
 
-    &::after {
-      content: '';
-      position: absolute;
-      right: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 16px;
-      height: 16px;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='7' fill='%235950FF'/%3E%3Cpath d='M5 8l2.5 2.5L11 5.5' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-size: contain;
-    }
+    &::after { @extend %onboarding-checked-badge; }
   }
+}
+
+/* 3-up option grid (industry): narrower slots, so let long labels wrap
+   instead of overflowing, and keep clear of the selected-state checkmark. */
+.onboarding-app__option-grid.cols-3 .onboarding-app__option-chip {
+  // 3 per row: two 16px gaps → fixed third-column width.
+  flex-basis: calc((100% - 32px) / 3);
+  white-space: normal;
+  text-align: center;
+  padding: 8px 28px 8px 8px;
 }
 
 /* ============================================
@@ -88,6 +106,17 @@
       color: var(--ob-input-placeholder);
     }
   }
+}
+
+/* ============================================
+   "Other" free-text reveal (industry / role / tools)
+   ============================================ */
+.onboarding-app__other-region {
+  width: 100%;
+}
+
+.onboarding-app__other-input {
+  margin-top: 12px;
 }
 
 /* ============================================
@@ -130,6 +159,20 @@
   letter-spacing: 0.5px;
 }
 
+/* Tools step: two side-by-side parts (part 1 = tools + "other"; part 2 =
+   challenges). The shell is widened for this step (see skeleton/index.js). */
+.onboarding-app__tools-split {
+  width: 100%;
+  align-items: flex-start;
+  gap: 32px;
+}
+
+.onboarding-app__tools-part {
+  flex: 1;
+  min-width: 0;
+  gap: 16px;
+}
+
 /* ============================================
    Tool chips (wrapped flex, multi-select)
    ============================================ */
@@ -141,6 +184,7 @@
 
 .onboarding-app__tool-chip {
   cursor: pointer;
+  position: relative;
   padding: 8px 20px;
   background: var(--ob-option-bg);
   border: 1px solid transparent;
@@ -159,6 +203,13 @@
     background: var(--ob-option-bg-active);
     border-color: var(--ob-accent-border);
     color: var(--ob-option-text-active);
+    // room for the badge (compact chip, right-aligned check)
+    padding-right: 40px;
+
+    &::after {
+      @extend %onboarding-checked-badge;
+      right: 16px;
+    }
   }
 }
 
@@ -180,7 +231,9 @@
 .onboarding-app__challenge-option {
   width: 100%;
   cursor: pointer;
-  padding: 8px 12px;
+  position: relative;
+  // reserve room on the right for the selected badge (avoids a shift on select)
+  padding: 8px 40px 8px 12px;
   background: var(--ob-option-bg);
   border: 1px solid transparent;
   border-radius: 4px;
@@ -197,6 +250,8 @@
     background: var(--ob-option-bg-active);
     border-color: var(--ob-accent-border);
     color: var(--ob-option-text-active);
+
+    &::after { @extend %onboarding-checked-badge; }
   }
 }
 
@@ -220,10 +275,12 @@
 .onboarding-app__goal-option {
   width: 100%;
   cursor: pointer;
+  position: relative;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 12px;
+  // reserve room on the right for the selected badge (avoids a shift on select)
+  padding: 10px 40px 10px 12px;
   min-height: 45px;
   background: var(--ob-option-bg);
   border: 1px solid transparent;
@@ -241,6 +298,8 @@
   &[data-state="1"] {
     background: var(--ob-option-bg-active);
     border-color: var(--ob-accent-border);
+
+    &::after { @extend %onboarding-checked-badge; }
   }
 }
 

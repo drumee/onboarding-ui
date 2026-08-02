@@ -67,30 +67,36 @@ export function header(ui) {
       })
     );
   } else {
+    // Wrap the logo row and the progress bar in one lead container so it can be
+    // centered as a unit (esp. on the wider is-wide steps) while the progress
+    // bar keeps its own justify-content: flex-start.
     headerKids.push(
-      Skeletons.Box.X({
-        className: `${fig}__header-top`,
+      Skeletons.Box.Y({
+        className: `${fig}__header-lead`,
         kids: [
           Skeletons.Box.X({
-            className: `${fig}__logo-container`,
+            className: `${fig}__header-top`,
             kids: [
-              Skeletons.Button.Svg({
-                ico: "raw-logo-drumee-icon",
-                className: `${fig}__logo-content`,
+              Skeletons.Box.X({
+                className: `${fig}__logo-container`,
+                kids: [
+                  Skeletons.Button.Svg({
+                    ico: "raw-logo-drumee-icon",
+                    className: `${fig}__logo-content`,
+                  }),
+                  Skeletons.Element({
+                    className: `${fig}__logo-text`,
+                    content: "drumee",
+                  })
+                ]
               }),
-              Skeletons.Element({
-                className: `${fig}__logo-text`,
-                content: "drumee",
-              })
             ]
           }),
+          Skeletons.Box.X({
+            className: `${fig}__progress-bar`,
+            kids: progressKids
+          }),
         ]
-      })
-    );
-    headerKids.push(
-      Skeletons.Box.X({
-        className: `${fig}__progress-bar`,
-        kids: progressKids
       })
     );
 

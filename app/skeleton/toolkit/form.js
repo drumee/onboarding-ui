@@ -66,7 +66,40 @@ const GOAL_ICONS = {
   file: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M5 2H12L16 6V18H5C3.9 18 3 17.1 3 16V4C3 2.9 3.9 2 5 2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 2V6H16" stroke="currentColor" stroke-width="1.5"/></svg>`,
 };
 
-function buildOptionGrid(ui, opts, field) {
+// The free-text input revealed when an "Other" option is active. Reuses the
+// __input-field styling; name is "<field>_other" so getData() surfaces it.
+function other_input(ui, field) {
+  const pfx = ui.fig.family;
+  const otherField = `${field}_other`;
+  return Skeletons.Entry({
+    className: `${pfx}__input-field ${pfx}__other-input`,
+    name: otherField,
+    value: ui._data[otherField] || '',
+    formItem: otherField,
+    innerClass: otherField,
+    mode: _a.interactive,
+    service: _a.input,
+    placeholder: LOCALE.ONBOARDING_OTHER_PLACEHOLDER || 'Please specify…',
+    uiHandler: [ui],
+    state: 0,
+    radio: ui._id,
+  });
+}
+
+// Contents of the "<field>-other" part for single-select steps (industry,
+// role): the reveal input when "other" is selected, else empty. Returned as an
+// array so main.js can re-feed just this region in place.
+export function other_region(ui, field) {
+  return (ui._data[field] || '') === 'other' ? [other_input(ui, field)] : [];
+}
+
+// Contents of the "tools-other" part for the multi-select tools step: revealed
+// when the "other" chip is toggled on.
+export function tools_other_region(ui) {
+  return (ui._data.tools || []).includes('other') ? [other_input(ui, 'tools')] : [];
+}
+
+function buildOptionGrid(ui, opts, field, perRow = 2) {
   const pfx = ui.fig.family;
   let selected = ui._data[field] || '';
   let kids = [];
@@ -88,14 +121,22 @@ function buildOptionGrid(ui, opts, field) {
         content: label,
       })
     );
-    if (row.length === 2 || i === opts.length - 1) {
+    if (row.length === perRow || i === opts.length - 1) {
       kids.push(Skeletons.Box.X({ className: `${pfx}__option-row`, kids: [...row] }));
       row = [];
     }
   }
+  let gridClass = `${pfx}__option-grid${perRow !== 2 ? ` cols-${perRow}` : ''}`;
   return Skeletons.Box.Y({
     className: `${pfx}__form-section`,
-    kids: [Skeletons.Box.Y({ className: `${pfx}__option-grid`, kids })]
+    kids: [
+      Skeletons.Box.Y({ className: gridClass, kids }),
+      Skeletons.Box.Y({
+        className: `${pfx}__other-region`,
+        sys_pn: `${field}-other`,
+        kids: other_region(ui, field),
+      }),
+    ]
   });
 }
 
@@ -132,7 +173,7 @@ export function name_form(ui) {
   });
 }
 
-export function industry_form(ui) { return buildOptionGrid(ui, INDUSTRY_OPTS, 'industry'); }
+export function industry_form(ui) { return buildOptionGrid(ui, INDUSTRY_OPTS, 'industry', 3); }
 export function role_form(ui) { return buildOptionGrid(ui, ROLE_OPTS, 'role'); }
 export function team_size_form(ui) { return buildOptionGrid(ui, TEAM_SIZE_OPTS, 'team_size'); }
 
@@ -194,8 +235,11 @@ export function tools_form(ui) {
     })
   );
 
-  return Skeletons.Box.Y({
-    className: `${pfx}__form-section`,
+  // Split the tools step into two side-by-side parts (the shell is widened for
+  // this step, see skeleton/index.js): part 1 runs from the title through the
+  // tools "other" reveal region; part 2 is the challenges question to the end.
+  let part1 = Skeletons.Box.Y({
+    className: `${pfx}__tools-part`,
     kids: [
       Skeletons.Box.X({
         className: `${pfx}__tools-title`,
@@ -220,10 +264,17 @@ export function tools_form(ui) {
         className: `${pfx}__tool-chips-wrap`,
         kids: toolChips,
       }),
-      Skeletons.Element({
-        className: `${pfx}__tools-divider`,
-        active: 0,
+      Skeletons.Box.Y({
+        className: `${pfx}__other-region`,
+        sys_pn: 'tools-other',
+        kids: tools_other_region(ui),
       }),
+    ]
+  });
+
+  let part2 = Skeletons.Box.Y({
+    className: `${pfx}__tools-part`,
+    kids: [
       Skeletons.Note({
         className: `${pfx}__section-label`,
         content: LOCALE.ONBOARDING_CHALLENGES_QUESTION || 'What challenges are you facing with your current setup?',
@@ -231,6 +282,16 @@ export function tools_form(ui) {
       Skeletons.Box.Y({
         className: `${pfx}__challenge-list`,
         kids: challengeKids,
+      }),
+    ]
+  });
+
+  return Skeletons.Box.Y({
+    className: `${pfx}__form-section`,
+    kids: [
+      Skeletons.Box.X({
+        className: `${pfx}__tools-split`,
+        kids: [part1, part2],
       }),
     ]
   });

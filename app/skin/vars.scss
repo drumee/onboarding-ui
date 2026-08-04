@@ -36,4 +36,10 @@
   --ob-done-icon-bg: rgba(84, 182, 132, 0.15);
   --ob-goal-icon: rgb(89, 80, 255);
   --ob-goal-icon-active: rgb(89, 80, 255);
+  // Failure states. --ob-error was already referenced (with an inline
+  // fallback) by .onboarding-app__invite-error; define it here so the inline
+  // save-error banner and the invite validation message stay in step.
+  --ob-error: rgb(215, 78, 73);
+  --ob-error-bg: rgba(215, 78, 73, 0.08);
+  --ob-error-border: rgba(215, 78, 73, 0.28);
 }

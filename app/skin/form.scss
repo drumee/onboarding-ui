@@ -353,6 +353,46 @@
   margin-top: 4px;
 }
 
+// Inline save-failure banner. Lives between the form and the footer buttons on
+// every step (see skeleton/index.js) and collapses to nothing when there is no
+// error, so it takes no vertical space in the normal case.
+.onboarding-app__error-region {
+  width: 100%;
+
+  &:empty {
+    display: none;
+  }
+}
+
+.onboarding-app__save-error {
+  width: 100%;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 4px 0 12px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: var(--ob-error-bg);
+  border: 1px solid var(--ob-error-border);
+  color: var(--ob-error);
+  font-size: 13px;
+  font-family: var(--font-medium);
+  line-height: 1.45;
+}
+
+.onboarding-app__save-error-icon {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  height: 19px; // match the first line-box so the icon sits on the first line
+  color: var(--ob-error);
+}
+
+.onboarding-app__save-error-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  word-break: break-word;
+}
+
 .onboarding-app__invite-input-row {
   width: 100%;
   min-height: 49px;

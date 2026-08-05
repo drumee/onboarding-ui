@@ -8,6 +8,7 @@ const {
   goals_form,
   invite_form,
   done_form,
+  error_region,
   footer,
 } = require('./toolkit')
 
@@ -49,6 +50,16 @@ module.exports = function (ui, opt = {}) {
       kids: [
         header(ui),
         content,
+        // Inline save-failure banner, sits between the form and its buttons so
+        // the message is next to the action that failed. Its own part, so
+        // main.js can re-feed only this region and leave the user's inputs
+        // (and scroll position) alone. Empty on every step until something
+        // actually fails.
+        Skeletons.Box.Y({
+          className: `${ui.fig.family}__error-region`,
+          sys_pn: 'save-error',
+          kids: error_region(ui),
+        }),
         footer(ui),
       ]
     }),

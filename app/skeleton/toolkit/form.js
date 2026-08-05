@@ -99,6 +99,33 @@ export function tools_other_region(ui) {
   return (ui._data.tools || []).includes('other') ? [other_input(ui, 'tools')] : [];
 }
 
+// Contents of the "save-error" part, present on every step (see
+// skeleton/index.js). Renders the inline banner shown when a step failed to
+// persist. Returned as an array so main.js can re-feed just this region in
+// place — a failed save must not rebuild the form and discard what the user
+// typed. Empty when there is nothing to report, so it costs nothing normally.
+export function error_region(ui) {
+  if (!ui._saveError) return [];
+  const pfx = ui.fig.family;
+  return [
+    Skeletons.Box.X({
+      className: `${pfx}__save-error`,
+      kids: [
+        Skeletons.Element({
+          className: `${pfx}__save-error-icon`,
+          content: `<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M8 4.5V9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="8" cy="11.5" r="0.9" fill="currentColor"/></svg>`,
+          active: 0,
+        }),
+        Skeletons.Element({
+          className: `${pfx}__save-error-text`,
+          content: ui._saveError,
+          active: 0,
+        }),
+      ]
+    }),
+  ];
+}
+
 function buildOptionGrid(ui, opts, field, perRow = 2) {
   const pfx = ui.fig.family;
   let selected = ui._data[field] || '';

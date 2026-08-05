@@ -3,7 +3,7 @@ const SVC_OPT = { async: 1 };
 const { isValidEmail, normalizeEmail } = require('./lib/email');
 const { isOtherComplete, buildToolsSelection } = require('./lib/other-option');
 const { classifyResponse, errorText } = require('./lib/service-result');
-const { hydrate, resumeStep, MAX_STEP } = require('./lib/resume');
+const { hydrate, resumeStep, firstIncompleteStep, MAX_STEP } = require('./lib/resume');
 
 class onboarding_app extends LetcBox {
 
@@ -565,7 +565,18 @@ class onboarding_app extends LetcBox {
       res = await this._call(SERVICE.onboarding.update_profile, {});
     }
     if (!res.ok) {
-      this._failStep(res.error);
+      // mark_complete refuses with "Step N is incomplete" when a mandatory
+      // answer never reached the server. The done screen carries no Back
+      // button, so simply reporting the error here would trap the user on a
+      // screen with one button that can only fail again. Send them to the step
+      // that needs fixing, with the reason shown there.
+      const gap = firstIncompleteStep(this._data);
+      this._setSubmitLoading(false);
+      this._saveError = res.error;
+      if (gap >= 0) {
+        this._step = gap;
+      }
+      this.loadForm();
       return;
     }
 

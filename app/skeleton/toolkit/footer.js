@@ -31,7 +31,29 @@ export function footer(ui) {
       );
       break;
 
+    // Step 2 (Role) sits with the mandatory steps, NOT with the skippable
+    // ones. It used to fall through to case 5 and so offered "Tell me later",
+    // but mark_onboarding_complete treats role as required (its own comment
+    // claims "no Tell me later in UI for these steps" — which this footer
+    // contradicted). Skipping it produced a wizard that could be walked to the
+    // end and then refused to complete:
+    //   mark_onboarding_complete -> SIGNAL 'Step 3 (role) is incomplete.'
+    // and the done screen has no Back button, so the user was stuck.
     case 2:
+      kids.push(
+        Skeletons.Note({
+          className: `${fig}__primary-btn`,
+          sys_pn: _a.next,
+          partHandler: [ui],
+          content: LOCALE.CONTINUE || "Continue",
+          service: _a.next,
+          state: 0,
+          reference: _a.state,
+          dataset: { state: 0 },
+        })
+      );
+      break;
+
     case 5:
       kids.push(
         Skeletons.Note({

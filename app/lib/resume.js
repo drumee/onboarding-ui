@@ -89,6 +89,21 @@ function isStepAnswered(data, step) {
 }
 
 /**
+ * The first mandatory step with no stored answer, or -1 when all are answered.
+ *
+ * Used to recover from a mark_onboarding_complete refusal ("Step N is
+ * incomplete"): the done screen has no Back button, so without this the user
+ * is simply stuck there. Sending them to the offending step is the only exit
+ * that also fixes the cause.
+ */
+function firstIncompleteStep(data) {
+  for (const s of MANDATORY_STEPS) {
+    if (!isStepAnswered(data, s)) return s;
+  }
+  return -1;
+}
+
+/**
  * Which step to show on resume: the stored index, clamped into range, and
  * pulled back to the first mandatory step that has no answer.
  */
@@ -103,4 +118,7 @@ function resumeStep(storedStep, data) {
   return stored;
 }
 
-module.exports = { hydrate, isStepAnswered, resumeStep, toList, MAX_STEP, MANDATORY_STEPS };
+module.exports = {
+  hydrate, isStepAnswered, firstIncompleteStep, resumeStep, toList,
+  MAX_STEP, MANDATORY_STEPS,
+};

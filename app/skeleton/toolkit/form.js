@@ -66,18 +66,10 @@ const GOAL_ICONS = {
   file: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M5 2H12L16 6V18H5C3.9 18 3 17.1 3 16V4C3 2.9 3.9 2 5 2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 2V6H16" stroke="currentColor" stroke-width="1.5"/></svg>`,
 };
 
-// A localised string, or the fallback.
-//
-// `LOCALE[key] || fallback` is not enough: for a key with no row in yp.languages
-// LOCALE hands back the KEY NAME, which is truthy — so the plain `||` renders
-// the literal "ONBOARDING_NAME_PLACEHOLDER" in the input instead of any human
-// text. main.js hits the same trap with ONBOARDING_INVITES_SENT and guards it
-// the same way.
-function loc(key, fallback) {
-  const v = LOCALE[key];
-  if (!v || v === key) return fallback;
-  return v;
-}
+// Shared guard against LOCALE echoing an unset key back — see lib/locale-text.js
+// for what that costs when it is missed (a red "ALREADY_IN_LIST" on the invite
+// step, where a sentence belonged).
+const { loc } = require('../../lib/locale-text');
 
 // The free-text input revealed when an "Other" option is active. Reuses the
 // __input-field styling; name is "<field>_other" so getData() surfaces it.

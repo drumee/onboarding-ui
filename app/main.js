@@ -42,6 +42,11 @@ class onboarding_app extends LetcBox {
     // handler, which finishes onboarding rather than discarding it from that
     // point on.
     this._invitesSent = false;
+    // Every address contact/invite has accepted this session. Accumulated
+    // rather than replaced, because the staged list is emptied after each send
+    // and the user can add more — save_onboarding_invites stores the whole set,
+    // not a delta.
+    this._sentInvites = [];
   }
 
   /**
@@ -541,10 +546,17 @@ class onboarding_app extends LetcBox {
         break;
 
       case 7:
-        // Invites live in contacts, not in onboarding_responses: there is no
-        // stored answer to clear, so dropping the staged addresses is the whole
-        // of "later" here. Nothing to save, nothing that can fail.
+        // Drop the staged addresses — they were typed but never sent.
         this._data.invites = [];
+        // Record "invited nobody", like every other skipped step. But ONLY if
+        // nothing has actually gone out: once contact/invite has accepted an
+        // address, that invitation exists and cannot be recalled, so writing an
+        // empty list over it would leave the record denying something that
+        // really happened. Skipping after a send just means "no more".
+        if (!this._invitesSent) {
+          res = await this._call(SERVICE.onboarding.save_invites, { invites: [] });
+          break;
+        }
         this._advance();
         return;
 
@@ -625,6 +637,34 @@ class onboarding_app extends LetcBox {
     this._setSubmitLoading(false);
     this._refreshInviteList();
     this.checkForm();
+  }
+
+  /**
+   * Record the invite step's answer on the onboarding row.
+   *
+   * Every other step persists what the user said; this one used to persist
+   * nothing — the addresses went out through contact/invite and left no trace
+   * on onboarding_responses, so a stored response could not tell "invited
+   * nobody" from "invited four people".
+   *
+   * BEST EFFORT, DELIBERATELY. The invitations have already been sent by the
+   * time this runs, and they cannot be recalled. Failing the step over a failed
+   * bookkeeping write would tell the user their invites did not go out — which
+   * is false — and invite a retry that would send them a second time. So the
+   * failure is warned about and swallowed; every other save in this wizard
+   * reports and holds, and the difference is that all of those own the answer
+   * they are writing, while this one is a record of something that already
+   * happened elsewhere.
+   */
+  async _saveInvites() {
+    let res = await this._call(
+      SERVICE.onboarding.save_invites,
+      { invites: this._sentInvites }
+    );
+    if (!res.ok) {
+      this.warn('[onboarding] invites sent but not recorded on the response', res.error);
+    }
+    return res;
   }
 
   /**
@@ -728,6 +768,8 @@ class onboarding_app extends LetcBox {
       // recalled, so closing must not discard the onboarding row from this
       // point either.
       this._invitesSent = true;
+      this._sentInvites.push(...sent);
+      await this._saveInvites();
       // loct() carries the guard this used to spell out inline: LOCALE echoes
       // an unset key back, so a plain `||` would put the literal
       // "ONBOARDING_INVITES_SENT" in the notice.

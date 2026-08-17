@@ -37,6 +37,10 @@ class onboarding_app extends LetcBox {
     this._serverError = null;
     // Inline "we could not save that" banner text for the current step.
     this._saveError = null;
+    // Set once at least one invite has actually gone out. Read by the close
+    // handler, which finishes onboarding rather than discarding it from that
+    // point on.
+    this._invitesSent = false;
   }
 
   /**
@@ -434,6 +438,17 @@ class onboarding_app extends LetcBox {
 
       case 7: // Invite team members — each becomes a contact via contact/invite
         res = await this._commitInvites();
+        // Sending does NOT leave the step. It used to advance to the done
+        // screen, which threw the user off the list they were working on the
+        // instant it succeeded — and took the "N invite(s) sent" toast with it,
+        // since the toast lands on whatever screen is showing by the time it
+        // paints. Staying put means the confirmation appears where the action
+        // was, and a second and third teammate can be invited without walking
+        // back. "Skip this step" is the way on.
+        if (res && res.ok) {
+          this._afterInvitesSent();
+          return;
+        }
         break;
 
       default:
@@ -573,6 +588,94 @@ class onboarding_app extends LetcBox {
   }
 
   /**
+   * Reset the invite step after a successful send, without leaving it.
+   *
+   * The sent addresses are dropped from the staged list for the same reason
+   * _commitInvites drops them on a partial failure: they have gone out, and a
+   * second press of the button must not send them again. That empties the list,
+   * so checkForm() puts "Send invites" back to disabled until another address
+   * is added — the toast raised by _commitInvites is what reports the result.
+   */
+  _afterInvitesSent() {
+    this._data.invites = [];
+    this._inviteError = null;
+    this._setSubmitLoading(false);
+    this._refreshInviteList();
+    this.checkForm();
+  }
+
+  /**
+   * The "N invite(s) sent" notice (router-butler__main.notice).
+   *
+   * When everything went out, closing that notice IS the way on: its primary
+   * button carries the user to the done screen — "Open workspace" — instead of
+   * dropping them back on an invite step they have finished with. The header X
+   * is dropped for the same reason (Butler.say's third argument): it fires the
+   * very same _e.close, so it only offered a second, less obvious spelling of
+   * the same action.
+   *
+   * When some addresses failed, the notice stays an ordinary dismissible one —
+   * the failures are still on screen behind it, with the error banner and a
+   * button that retries exactly those, and navigating away from that would lose
+   * them.
+   *
+   * @param {String}  text
+   * @param {Boolean} complete  true when nothing failed
+   */
+  _sayInvitesSent(text, complete) {
+    const advance = () => {
+      // Butler keeps _onClose armed after firing it, so an unrelated dialog
+      // closed later can re-invoke this. Fixed in ui-team, but the deployed
+      // bundle there may not carry the fix yet, and a stale callback that
+      // silently advances the wizard is worse than a missing one. Only act
+      // while the invite step is still the one on screen.
+      if (this._step !== 7) return;
+      this._advance();
+    };
+    try {
+      // Third argument is ignored by an older Butler, which then simply keeps
+      // its X — and since the X fires _e.close too, the navigation still works.
+      Butler.say(text, complete ? advance : null, { closable: !complete });
+      if (complete) this._dropNoticeClose();
+    } catch (e) { /* best effort: the notice is not worth failing the send */ }
+  }
+
+  /**
+   * Take the X off the "N invite(s) sent" notice.
+   *
+   * Belongs in Butler, and is there — header.js drops it for `closable: false`.
+   * But that lives in ui-team, which deploys as the whole application, while
+   * this plugin deploys on its own; the endpoint currently serving this wizard
+   * is running an app build from before that option existed, so the X is still
+   * rendered and the option is silently ignored.
+   *
+   * So the node is removed here as well. It is deliberately narrow: it runs
+   * only for the notice this view just raised, and only on the complete-send
+   * path where closing means "go to the workspace" rather than "dismiss". Once
+   * a ui-team build carrying the option is deployed the element is never
+   * created and this quietly finds nothing.
+   *
+   * Polled because feed() paints the notice asynchronously; bounded so a butler
+   * that legitimately has no X costs half a second of cheap timers, not a
+   * permanent one.
+   */
+  _dropNoticeClose(attempt = 0) {
+    let el = null;
+    try {
+      el = document.querySelector('.router-butler__main.notice .router-butler__close');
+    } catch (e) {
+      return;
+    }
+    if (el) {
+      el.remove();
+      return;
+    }
+    if (attempt < 10) {
+      setTimeout(() => this._dropNoticeClose(attempt + 1), 50);
+    }
+  }
+
+  /**
    * Step 8 (index 7). Invites are optional, but a failure is still reported rather than
    * swallowed: addresses that went out are dropped from the staged list (so a
    * retry cannot double-send) and the ones that failed stay put with an error.
@@ -597,12 +700,17 @@ class onboarding_app extends LetcBox {
     }
 
     if (sent.length) {
+      // Recorded here rather than on the all-succeeded path, because a PARTIAL
+      // send still put real invitations out: those contacts exist and cannot be
+      // recalled, so closing must not discard the onboarding row from this
+      // point either.
+      this._invitesSent = true;
       // LOCALE returns the key name itself for an unset key, so guard against
       // that (not just undefined) before falling back, otherwise the toast
       // shows the literal "ONBOARDING_INVITES_SENT".
       let tpl = LOCALE.ONBOARDING_INVITES_SENT;
       if (!tpl || tpl === 'ONBOARDING_INVITES_SENT') tpl = '{0} invite(s) sent';
-      try { Butler.say(tpl.replace('{0}', String(sent.length))); } catch (e) { /* best effort */ }
+      this._sayInvitesSent(tpl.replace('{0}', String(sent.length)), !failed.length);
     }
 
     if (!failed.length) return { ok: true };
@@ -898,6 +1006,19 @@ class onboarding_app extends LetcBox {
         break;
 
       case _e.close:
+        // Once invites have gone out, closing FINISHES onboarding instead of
+        // discarding it: it moves to the done screen, where "Open workspace"
+        // runs mark_complete + update_profile.
+        //
+        // The alternative was destructive and silently so. _reset() wipes the
+        // stored answers (reset_onboarding_response DELETEs the row), so a user
+        // who had just invited their team and pressed X lost every answer they
+        // had given — while the invites themselves, already sent as contacts,
+        // could not be taken back. Nothing about "close" said that.
+        if (this._step === 7 && this._invitesSent) {
+          this._advance();
+          break;
+        }
         await this._reset();
         break;
 

@@ -154,10 +154,33 @@ class onboarding_app extends LetcBox {
    */
   _refreshInviteList() {
     const { invite_list } = require('./skeleton/toolkit');
-    this.ensurePart('invite-list').then((p) => {
+    // Returns the promise so a caller can act once the region has actually been
+    // re-fed — the add handler scrolls the new chip into view that way.
+    return this.ensurePart('invite-list').then((p) => {
       p.clear();
       p.feed(invite_list(this));
     });
+  }
+
+  /**
+   * Keep the newest invitee in view.
+   *
+   * The staged list scrolls once it passes about four entries (see
+   * __invited-list in skin/form.scss). A chip appended below the fold is
+   * indistinguishable from an add that did nothing, and the input has been
+   * cleared by then, so there is not even the typed address left as evidence.
+   */
+  _scrollInviteListToEnd() {
+    const run = () => {
+      if (!this.el) return;
+      let list = this.el.querySelector(`.${this.fig.family}__invited-list`);
+      if (list) list.scrollTop = list.scrollHeight;
+    };
+    // After paint: feed() has returned by the time this is called, but the rows
+    // it queued are not necessarily laid out, and scrollHeight before layout is
+    // the height without them.
+    if (typeof requestAnimationFrame === 'function') requestAnimationFrame(run);
+    else setTimeout(run, 0);
   }
 
   /**
@@ -980,7 +1003,9 @@ class onboarding_app extends LetcBox {
           // Re-render only the invite-list region (error + chips) in place,
           // not the whole step — no flash / scroll reset. Clear the input only
           // on a successful add so a rejected entry stays editable.
-          this._refreshInviteList();
+          this._refreshInviteList().then(() => {
+            if (added) this._scrollInviteListToEnd();
+          });
           if (added) this._clearInviteInput();
           // "Send invites" is gated on the list being non-empty.
           this.checkForm();

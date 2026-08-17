@@ -445,6 +445,41 @@
   width: 100%;
   gap: 8px;
   margin-top: -8px;
+  // Cap the staged list and scroll it rather than letting it grow. The card is
+  // a fixed dialog on a centred shell, so an unbounded list pushed "Send
+  // invites" and "Skip this step" off the bottom once a handful of teammates
+  // had been added — the step then looked like it had no way out.
+  //
+  // ~4 rows (44px each) plus their gaps, which is enough to read the list as a
+  // list while leaving the footer where it was.
+  max-height: 200px;
+  overflow-y: auto;
+  // Do not chain to the card / page once the list hits its end: scrolling the
+  // invitees should never scroll the wizard underneath them.
+  overscroll-behavior: contain;
+
+  // Visible, unlike the shell's hidden scrollbar (__main sets
+  // scrollbar-width: none): here it is the only cue that there is more list
+  // below the fold.
+  scrollbar-width: thin;
+  scrollbar-color: rgba(89, 80, 255, 0.35) transparent;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(89, 80, 255, 0.35);
+    border-radius: 3px;
+  }
+
+  &:hover::-webkit-scrollbar-thumb {
+    background: rgba(89, 80, 255, 0.55);
+  }
 }
 
 .onboarding-app__invited-row {
@@ -455,6 +490,9 @@
   padding: 12px;
   background: var(--ob-invited-bg);
   border-radius: 4px;
+  // The list is a flex column with a max-height, so without this the rows
+  // squash to fit instead of overflowing — and nothing scrolls.
+  flex-shrink: 0;
 }
 
 .onboarding-app__invited-email {

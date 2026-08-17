@@ -349,11 +349,41 @@
   line-height: 1.5;
 }
 
+/* Inline validation for the invite email box ("already in the list", "not a
+   valid address"). It belongs to the input ABOVE it, so it is pulled up tight
+   against that box and given room before the staged list below — it used to
+   sit with 4px above and nothing below, which put it hard against the first
+   chip and read as a label for the list rather than a complaint about the
+   input. */
 .onboarding-app__invite-error {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
   color: var(--ob-error, #d74e49);
   font-size: 13px;
   font-family: var(--font-medium);
-  margin-top: 4px;
+  line-height: 1.45;
+  margin: -8px 0 4px;
+  word-break: break-word;
+
+  /* A marker, so the line reads as an error at a glance and not as red copy. */
+  &::before {
+    content: '';
+    flex: 0 0 auto;
+    width: 14px;
+    height: 14px;
+    margin-top: 1px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='7' fill='none' stroke='%23D74E49' stroke-width='1.5'/%3E%3Cpath d='M8 4.5V9' stroke='%23D74E49' stroke-width='1.5' stroke-linecap='round'/%3E%3Ccircle cx='8' cy='11.5' r='0.9' fill='%23D74E49'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-size: contain;
+  }
+}
+
+/* The list's -8px normally tucks it up under the input row. With an error
+   between the two, that pull would drag the chips onto the message. */
+.onboarding-app__invite-error + .onboarding-app__invited-list {
+  margin-top: 0;
 }
 
 // Inline save-failure banner. Lives between the form and the footer buttons on
@@ -445,6 +475,44 @@
   width: 100%;
   gap: 8px;
   margin-top: -8px;
+  // Cap the staged list and scroll it rather than letting it grow. The card is
+  // a fixed dialog on a centred shell, so an unbounded list pushed "Send
+  // invites" and "Skip this step" off the bottom once a handful of teammates
+  // had been added — the step then looked like it had no way out.
+  //
+  // Two rows (44px each) and a gap. Deliberately short: on this card the space
+  // between the input and the footer is what the cap is really rationing, and
+  // two visible rows plus a scrollbar already say "there is a list here" —
+  // which is all the height has to do, since the newest entry is scrolled into
+  // view on every add.
+  max-height: 100px;
+  overflow-y: auto;
+  // Do not chain to the card / page once the list hits its end: scrolling the
+  // invitees should never scroll the wizard underneath them.
+  overscroll-behavior: contain;
+
+  // Visible, unlike the shell's hidden scrollbar (__main sets
+  // scrollbar-width: none): here it is the only cue that there is more list
+  // below the fold.
+  scrollbar-width: thin;
+  scrollbar-color: rgba(89, 80, 255, 0.35) transparent;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(89, 80, 255, 0.35);
+    border-radius: 3px;
+  }
+
+  &:hover::-webkit-scrollbar-thumb {
+    background: rgba(89, 80, 255, 0.55);
+  }
 }
 
 .onboarding-app__invited-row {
@@ -455,6 +523,9 @@
   padding: 12px;
   background: var(--ob-invited-bg);
   border-radius: 4px;
+  // The list is a flex column with a max-height, so without this the rows
+  // squash to fit instead of overflowing — and nothing scrolls.
+  flex-shrink: 0;
 }
 
 .onboarding-app__invited-email {

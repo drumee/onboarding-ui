@@ -4,6 +4,7 @@ const { isValidEmail, normalizeEmail } = require('./lib/email');
 const { isOtherComplete, buildToolsSelection } = require('./lib/other-option');
 const { classifyResponse, errorText } = require('./lib/service-result');
 const { hydrate, resumeStep, firstIncompleteStep, MAX_STEP } = require('./lib/resume');
+const { loc, loct } = require('./lib/locale-text');
 
 class onboarding_app extends LetcBox {
 
@@ -128,9 +129,8 @@ class onboarding_app extends LetcBox {
    * Localised fallback for failures the server did not name.
    */
   _fallbackError() {
-    return LOCALE.ONBOARDING_SAVE_FAILED
-      || LOCALE.INTERNAL_ERROR
-      || 'We could not save your answer. Please try again.';
+    const generic = loc('INTERNAL_ERROR', 'We could not save your answer. Please try again.');
+    return loc('ONBOARDING_SAVE_FAILED', generic);
   }
 
   _errorText(e) {
@@ -154,10 +154,33 @@ class onboarding_app extends LetcBox {
    */
   _refreshInviteList() {
     const { invite_list } = require('./skeleton/toolkit');
-    this.ensurePart('invite-list').then((p) => {
+    // Returns the promise so a caller can act once the region has actually been
+    // re-fed — the add handler scrolls the new chip into view that way.
+    return this.ensurePart('invite-list').then((p) => {
       p.clear();
       p.feed(invite_list(this));
     });
+  }
+
+  /**
+   * Keep the newest invitee in view.
+   *
+   * The staged list scrolls once it passes about four entries (see
+   * __invited-list in skin/form.scss). A chip appended below the fold is
+   * indistinguishable from an add that did nothing, and the input has been
+   * cleared by then, so there is not even the typed address left as evidence.
+   */
+  _scrollInviteListToEnd() {
+    const run = () => {
+      if (!this.el) return;
+      let list = this.el.querySelector(`.${this.fig.family}__invited-list`);
+      if (list) list.scrollTop = list.scrollHeight;
+    };
+    // After paint: feed() has returned by the time this is called, but the rows
+    // it queued are not necessarily laid out, and scrollHeight before layout is
+    // the height without them.
+    if (typeof requestAnimationFrame === 'function') requestAnimationFrame(run);
+    else setTimeout(run, 0);
   }
 
   /**
@@ -705,12 +728,13 @@ class onboarding_app extends LetcBox {
       // recalled, so closing must not discard the onboarding row from this
       // point either.
       this._invitesSent = true;
-      // LOCALE returns the key name itself for an unset key, so guard against
-      // that (not just undefined) before falling back, otherwise the toast
-      // shows the literal "ONBOARDING_INVITES_SENT".
-      let tpl = LOCALE.ONBOARDING_INVITES_SENT;
-      if (!tpl || tpl === 'ONBOARDING_INVITES_SENT') tpl = '{0} invite(s) sent';
-      this._sayInvitesSent(tpl.replace('{0}', String(sent.length)), !failed.length);
+      // loct() carries the guard this used to spell out inline: LOCALE echoes
+      // an unset key back, so a plain `||` would put the literal
+      // "ONBOARDING_INVITES_SENT" in the notice.
+      this._sayInvitesSent(
+        loct('ONBOARDING_INVITES_SENT', '{0} invite(s) sent', sent.length),
+        !failed.length
+      );
     }
 
     if (!failed.length) return { ok: true };
@@ -723,9 +747,10 @@ class onboarding_app extends LetcBox {
     });
     this._refreshInviteList();
 
-    let tpl = LOCALE.ONBOARDING_INVITES_FAILED;
-    if (!tpl || tpl === 'ONBOARDING_INVITES_FAILED') tpl = 'Could not invite: {0}';
-    return { ok: false, error: tpl.replace('{0}', failed.join(', ')) };
+    return {
+      ok: false,
+      error: loct('ONBOARDING_INVITES_FAILED', 'Could not invite: {0}', failed.join(', ')),
+    };
   }
 
   /**
@@ -962,16 +987,16 @@ class onboarding_app extends LetcBox {
           let added = false;
 
           if (!email) {
-            this._inviteError = LOCALE.EMAIL_REQUIRED || 'Please enter an email address.';
+            this._inviteError = loc('EMAIL_REQUIRED', 'Please enter an email address');
           } else if (!isValidEmail(email)) {
-            this._inviteError = LOCALE.INVALID_EMAIL_FORMAT || 'Please enter a valid email address.';
+            this._inviteError = loc('INVALID_EMAIL_FORMAT', 'Please enter a valid email address');
           } else if (email === normalizeEmail((Visitor.profile && Visitor.profile().email) || '')) {
-            this._inviteError = LOCALE.CANNOT_ADD_SELF_AS_CONTACT || 'You cannot add yourself.';
+            this._inviteError = loc('CANNOT_ADD_SELF_AS_CONTACT', 'You cannot add yourself');
           } else {
             if (!this._data.invites) this._data.invites = [];
             let dup = this._data.invites.some(inv => normalizeEmail(inv.email || inv) === email);
             if (dup) {
-              this._inviteError = LOCALE.ALREADY_IN_LIST || 'That email is already in the list.';
+              this._inviteError = loc('ALREADY_IN_LIST', 'That email is already in the list');
             } else {
               this._data.invites.push({ email });
               added = true;
@@ -980,7 +1005,9 @@ class onboarding_app extends LetcBox {
           // Re-render only the invite-list region (error + chips) in place,
           // not the whole step — no flash / scroll reset. Clear the input only
           // on a successful add so a rejected entry stays editable.
-          this._refreshInviteList();
+          this._refreshInviteList().then(() => {
+            if (added) this._scrollInviteListToEnd();
+          });
           if (added) this._clearInviteInput();
           // "Send invites" is gated on the list being non-empty.
           this.checkForm();

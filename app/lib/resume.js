@@ -8,7 +8,15 @@
 
 const { isOtherComplete } = require('./other-option');
 
-const MAX_STEP = 7;
+// Index of the final "done" screen. 8 since the combined tools step was split
+// into tools (4) and challenges (5), shifting goals to 6 and invite to 7.
+//
+// A step index stored by the pre-split build means one step earlier in the new
+// numbering (an old 6 = invite reads as 6 = goals). That is harmless: every
+// answer is restored from the server either way, the clamp below still refuses
+// to skip a mandatory gap, and the worst case is the user passing back through
+// an optional screen they had already answered — with their answer shown.
+const MAX_STEP = 8;
 // The steps mark_onboarding_complete validates. Resume must never place the
 // user past the first of these with no stored answer, or they would be unable
 // to satisfy completion without manually walking backwards.

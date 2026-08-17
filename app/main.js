@@ -37,6 +37,10 @@ class onboarding_app extends LetcBox {
     this._serverError = null;
     // Inline "we could not save that" banner text for the current step.
     this._saveError = null;
+    // Set once at least one invite has actually gone out. Read by the close
+    // handler, which finishes onboarding rather than discarding it from that
+    // point on.
+    this._invitesSent = false;
   }
 
   /**
@@ -189,14 +193,19 @@ class onboarding_app extends LetcBox {
 
   /**
    * Show a failure and put the step back in a usable state so the user can
-   * fix or simply retry. The answer stays in `this._data`, the step does not
-   * advance, and the primary button is re-enabled — pressing it again re-sends
-   * the same payload.
+   * fix or simply retry. The answer stays in `this._data` and the step does not
+   * advance.
+   *
+   * checkForm() rather than a flat setItemState(next, 1): a Continue that failed
+   * had a valid answer by definition, so the button lights again and pressing it
+   * re-sends the same payload — but a "Tell me later" that failed has just
+   * emptied the answer, and forcing the button on there would offer to submit
+   * nothing, which the gate exists to prevent.
    */
   _failStep(message) {
     this._saveError = message;
     this._setSubmitLoading(false);
-    this.setItemState(_a.next, 1);
+    this.checkForm();
     this._refreshError();
   }
 
@@ -261,12 +270,24 @@ class onboarding_app extends LetcBox {
     let data = this.getData() || {}
     let completed = 0;
     switch (this._step) {
-      case 0: // Name
-        if ((data.firstname && data.firstname.trim()) || (this._data.firstname && this._data.firstname.trim())) {
+      // Name. The live input wins whenever it is on screen: `data.firstname` is
+      // '' the moment the user clears the box, and the old fallback to the
+      // stored value made an empty field still count as answered — _captureStep
+      // only ever WRITES a non-empty name, so the previous one lingered in
+      // _data and kept Continue lit over an empty input.
+      case 0: {
+        let name = data.firstname != null ? data.firstname : this._data.firstname;
+        name = (name || '').trim();
+        if (name) {
           completed = 1;
-          if (data.firstname) this._data.firstname = data.firstname.trim();
+          this._data.firstname = name;
+        } else if (data.firstname != null) {
+          // Cleared on screen — drop it, so _data matches what is displayed and
+          // the greeting on later steps cannot use a name that is no longer set.
+          delete this._data.firstname;
         }
         break;
+      }
       case 1: // Industry
         if (isOtherComplete(this._data.industry, this._data.industry_other)) completed = 1;
         break;
@@ -276,22 +297,50 @@ class onboarding_app extends LetcBox {
       case 3: // Team size
         if (this._data.team_size) completed = 1;
         break;
-      case 4: // Tools & challenges (optional, always allow continue)
-        completed = 1;
+      // Tools. Nothing selected is not an answer: Continue stays disabled and
+      // "Tell me later" is the way past the step. buildToolsSelection decides
+      // what counts, so the button agrees with what would actually be sent —
+      // in particular a bare "Other" chip with an empty input is not a
+      // selection, exactly as save_onboarding_tools treats it.
+      case 4: {
+        let other = data.tools_other != null ? data.tools_other : this._data.tools_other;
+        if (buildToolsSelection(this._data.tools, other).tools.length) completed = 1;
         break;
-      case 5: // Goals
+      }
+      // Challenges. Either a picked row or a typed note counts — the note is a
+      // real answer to the question, so leaving Continue disabled for someone
+      // who only wrote free text would read as a broken button.
+      case 5: {
+        let note = data.challenge_text != null ? data.challenge_text : this._data.challenge_text;
+        if ((this._data.challenges || []).length) completed = 1;
+        else if ((note || '').trim()) completed = 1;
+        break;
+      }
+      case 6: // Goals
         if (this._data.goal) completed = 1;
         break;
-      case 6: // Invite (optional)
-        completed = 1;
+      // Invite. "Send invites" needs something to send: the gate is the staged
+      // list, i.e. what the invite-list region shows as chips.
+      //
+      // Not the region's own emptiness, though it usually amounts to the same
+      // thing — that region also carries the inline validation error, so a
+      // rejected address ("already in the list") would make it non-empty while
+      // there is still nothing to send.
+      //
+      // A typed-but-not-added address does not count either: "+ Add" is what
+      // puts an address on the list, and the list is what gets sent.
+      case 7:
+        if ((this._data.invites || []).length) completed = 1;
         break;
       default: // Done
         completed = 1;
         break;
     }
-    if (completed) {
-      this.setItemState(_a.next, 1)
-    }
+    // Both directions. This used to only ever ENABLE, so a gate could be
+    // satisfied and then un-satisfied — clear the name, de-select the last tool
+    // — and the button stayed lit, letting an answer the step had just rejected
+    // be submitted anyway.
+    this.setItemState(_a.next, completed ? 1 : 0);
     return completed;
   }
 
@@ -368,11 +417,15 @@ class onboarding_app extends LetcBox {
         );
         break;
 
-      case 4: // Tools + challenges. Free-text comes from the form via getData().
+      case 4: // Tools. "Other" free text comes from the form via getData().
         res = await this._commitTools(args);
         break;
 
-      case 5: // Intent (the "What do you want to start with?" goals screen)
+      case 5: // Challenges + the "tell me more" note, also from getData().
+        res = await this._commitChallenges(args);
+        break;
+
+      case 6: // Intent (the "What do you want to start with?" goals screen)
         if (!this._data.goal) {
           this._advance();
           return;
@@ -383,8 +436,19 @@ class onboarding_app extends LetcBox {
         );
         break;
 
-      case 6: // Invite team members — each becomes a contact via contact/invite
+      case 7: // Invite team members — each becomes a contact via contact/invite
         res = await this._commitInvites();
+        // Sending does NOT leave the step. It used to advance to the done
+        // screen, which threw the user off the list they were working on the
+        // instant it succeeded — and took the "N invite(s) sent" toast with it,
+        // since the toast lands on whatever screen is showing by the time it
+        // paints. Staying put means the confirmation appears where the action
+        // was, and a second and third teammate can be invited without walking
+        // back. "Skip this step" is the way on.
+        if (res && res.ok) {
+          this._afterInvitesSent();
+          return;
+        }
         break;
 
       default:
@@ -400,32 +464,122 @@ class onboarding_app extends LetcBox {
   }
 
   /**
-   * Step 4. Both lists are ALWAYS sent, including when empty.
+   * "Tell me later" / "Skip this step" — record that the user is NOT answering
+   * this step, instead of walking past it.
    *
-   * They used to be skipped when empty, which meant de-selecting every tool or
-   * challenge left the previously saved list in the database — the UI said
-   * "none" and the record said otherwise, with no way to correct it. An empty
-   * selection is a real answer and has to overwrite.
+   * It used to just call _advance(), which left whatever was stored before
+   * untouched. That was invisible while an empty answer could still be sent
+   * with Continue, but Continue is gated on a real answer now: a user who had
+   * saved tools, came back, de-selected them all and pressed "Tell me later"
+   * would be told "later" while the database kept the old list forever. There
+   * was no longer any path that could clear an answer.
    *
-   * The "Other" free text now travels in its own `tools_other` field instead
-   * of being spliced into the tools array, matching how industry and role have
+   * So skipping writes the empty answer. A failure is reported and the step
+   * holds, exactly as for Continue — advancing anyway would put the record and
+   * the UI back out of step, which is the whole thing this avoids.
+   */
+  async _skipStep() {
+    // Skipping writes now, so it is no longer instantaneous: without this a
+    // double-click on a slow connection fires two saves AND two _advance()
+    // calls, jumping a step. The primary button protects itself by going to
+    // state 0 (pointer-events: none); the secondary one has no such state.
+    if (this._skipping) return;
+    this._skipping = true;
+    try {
+      await this._skipStepOnce();
+    } finally {
+      this._skipping = false;
+    }
+  }
+
+  async _skipStepOnce() {
+    this._clearError();
+    this.setItemState(_a.next, 0);
+
+    let res;
+    switch (this._step) {
+      case 4: // Tools
+        this._data.tools = [];
+        this._data.tools_other = '';
+        res = await this._call(SERVICE.onboarding.save_tools, { tools: [], tools_other: '' });
+        break;
+
+      case 5: // Challenges + note
+        this._data.challenges = [];
+        this._data.challenge_text = '';
+        res = await this._call(SERVICE.onboarding.save_challenges, { challenges: [], note: '' });
+        break;
+
+      case 6: // Intent. '' clears the column — see save_onboarding_intent.sql,
+              // which treats an empty value as "no answer" rather than as an
+              // invalid enum member.
+        delete this._data.goal;
+        res = await this._call(SERVICE.onboarding.save_intent, { intent: '' });
+        break;
+
+      case 7:
+        // Invites live in contacts, not in onboarding_responses: there is no
+        // stored answer to clear, so dropping the staged addresses is the whole
+        // of "later" here. Nothing to save, nothing that can fail.
+        this._data.invites = [];
+        this._advance();
+        return;
+
+      default:
+        this._advance();
+        return;
+    }
+
+    if (res && res.ok) {
+      this._advance();
+    } else {
+      this._failStep((res && res.error) || this._errorText(null));
+    }
+  }
+
+  /**
+   * Step 5 (index 4). Whatever is selected is sent verbatim, so a shorter list
+   * overwrites a longer one — the call is never skipped on the grounds that
+   * "nothing changed", which is what used to leave a stale list in the database
+   * while the UI showed something else.
+   *
+   * It can no longer be reached with an EMPTY selection: checkForm gates
+   * Continue on a real answer, and "Tell me later" advances without saving. So
+   * clearing every tool no longer records "none" — it leaves the stored answer
+   * alone. That is the trade the gate makes; save_onboarding_tools still
+   * accepts and overwrites with an empty array if any caller sends one.
+   *
+   * The "Other" free text travels in its own `tools_other` field instead of
+   * being spliced into the tools array, matching how industry and role have
    * always handled it. buildToolsSelection strips a bare "other" with no text,
-   * so both sides agree on what counts as a selection.
+   * so the button, this payload and the procedure all agree on what counts as a
+   * selection.
    *
-   * Sequential rather than Promise.all: _call reports failures through a
-   * single `_serverError` slot, which concurrent calls would race over.
+   * Tools and challenges are separate steps now, so this is a single call.
+   * When they shared a step it had to run the two saves sequentially rather
+   * than via Promise.all, because _call reports failures through a single
+   * `_serverError` slot that concurrent calls would race over — worth keeping
+   * in mind before ever batching two saves into one step again.
    */
   async _commitTools(args) {
-    if (args.challenge_text != null) this._data.challenge_text = args.challenge_text;
     if (args.tools_other != null) this._data.tools_other = args.tools_other;
 
     let selection = buildToolsSelection(this._data.tools, this._data.tools_other);
 
-    let res = await this._call(SERVICE.onboarding.save_tools, {
+    return this._call(SERVICE.onboarding.save_tools, {
       tools: selection.tools,
       tools_other: selection.tools_other,
     });
-    if (!res.ok) return res;
+  }
+
+  /**
+   * Step 6 (index 5). Same contract as _commitTools: both fields are sent as
+   * they stand, so de-selecting rows or clearing the note overwrites, and the
+   * step is only reachable with a row picked or a note typed — an entirely
+   * empty answer goes through "Tell me later" instead, which saves nothing.
+   */
+  async _commitChallenges(args) {
+    if (args.challenge_text != null) this._data.challenge_text = args.challenge_text;
 
     return this._call(SERVICE.onboarding.save_challenges, {
       challenges: this._data.challenges || [],
@@ -434,7 +588,95 @@ class onboarding_app extends LetcBox {
   }
 
   /**
-   * Step 6. Invites are optional, but a failure is still reported rather than
+   * Reset the invite step after a successful send, without leaving it.
+   *
+   * The sent addresses are dropped from the staged list for the same reason
+   * _commitInvites drops them on a partial failure: they have gone out, and a
+   * second press of the button must not send them again. That empties the list,
+   * so checkForm() puts "Send invites" back to disabled until another address
+   * is added — the toast raised by _commitInvites is what reports the result.
+   */
+  _afterInvitesSent() {
+    this._data.invites = [];
+    this._inviteError = null;
+    this._setSubmitLoading(false);
+    this._refreshInviteList();
+    this.checkForm();
+  }
+
+  /**
+   * The "N invite(s) sent" notice (router-butler__main.notice).
+   *
+   * When everything went out, closing that notice IS the way on: its primary
+   * button carries the user to the done screen — "Open workspace" — instead of
+   * dropping them back on an invite step they have finished with. The header X
+   * is dropped for the same reason (Butler.say's third argument): it fires the
+   * very same _e.close, so it only offered a second, less obvious spelling of
+   * the same action.
+   *
+   * When some addresses failed, the notice stays an ordinary dismissible one —
+   * the failures are still on screen behind it, with the error banner and a
+   * button that retries exactly those, and navigating away from that would lose
+   * them.
+   *
+   * @param {String}  text
+   * @param {Boolean} complete  true when nothing failed
+   */
+  _sayInvitesSent(text, complete) {
+    const advance = () => {
+      // Butler keeps _onClose armed after firing it, so an unrelated dialog
+      // closed later can re-invoke this. Fixed in ui-team, but the deployed
+      // bundle there may not carry the fix yet, and a stale callback that
+      // silently advances the wizard is worse than a missing one. Only act
+      // while the invite step is still the one on screen.
+      if (this._step !== 7) return;
+      this._advance();
+    };
+    try {
+      // Third argument is ignored by an older Butler, which then simply keeps
+      // its X — and since the X fires _e.close too, the navigation still works.
+      Butler.say(text, complete ? advance : null, { closable: !complete });
+      if (complete) this._dropNoticeClose();
+    } catch (e) { /* best effort: the notice is not worth failing the send */ }
+  }
+
+  /**
+   * Take the X off the "N invite(s) sent" notice.
+   *
+   * Belongs in Butler, and is there — header.js drops it for `closable: false`.
+   * But that lives in ui-team, which deploys as the whole application, while
+   * this plugin deploys on its own; the endpoint currently serving this wizard
+   * is running an app build from before that option existed, so the X is still
+   * rendered and the option is silently ignored.
+   *
+   * So the node is removed here as well. It is deliberately narrow: it runs
+   * only for the notice this view just raised, and only on the complete-send
+   * path where closing means "go to the workspace" rather than "dismiss". Once
+   * a ui-team build carrying the option is deployed the element is never
+   * created and this quietly finds nothing.
+   *
+   * Polled because feed() paints the notice asynchronously; bounded so a butler
+   * that legitimately has no X costs half a second of cheap timers, not a
+   * permanent one.
+   */
+  _dropNoticeClose(attempt = 0) {
+    let el = null;
+    try {
+      el = document.querySelector('.router-butler__main.notice .router-butler__close');
+    } catch (e) {
+      return;
+    }
+    if (el) {
+      el.remove();
+      return;
+    }
+    if (attempt < 10) {
+      setTimeout(() => this._dropNoticeClose(attempt + 1), 50);
+    }
+  }
+
+  /**
+   * Step 8 (index 7). Invites are optional, but a failure is still reported rather than
    * swallowed: addresses that went out are dropped from the staged list (so a
    * retry cannot double-send) and the ones that failed stay put with an error.
    */
@@ -458,12 +700,17 @@ class onboarding_app extends LetcBox {
     }
 
     if (sent.length) {
+      // Recorded here rather than on the all-succeeded path, because a PARTIAL
+      // send still put real invitations out: those contacts exist and cannot be
+      // recalled, so closing must not discard the onboarding row from this
+      // point either.
+      this._invitesSent = true;
       // LOCALE returns the key name itself for an unset key, so guard against
       // that (not just undefined) before falling back, otherwise the toast
       // shows the literal "ONBOARDING_INVITES_SENT".
       let tpl = LOCALE.ONBOARDING_INVITES_SENT;
       if (!tpl || tpl === 'ONBOARDING_INVITES_SENT') tpl = '{0} invite(s) sent';
-      try { Butler.say(tpl.replace('{0}', String(sent.length))); } catch (e) { /* best effort */ }
+      this._sayInvitesSent(tpl.replace('{0}', String(sent.length)), !failed.length);
     }
 
     if (!failed.length) return { ok: true };
@@ -638,20 +885,39 @@ class onboarding_app extends LetcBox {
         break;
 
       case 'skip':
-        this._advance();
+        await this._skipStep();
         break;
 
       case 'enter-workspace':
         await this._enterWorkspace();
         break;
 
-      case 'select-option':
+      // Every single-select group (industry, role, team size, goal): first click
+       // selects, a second click on the same option clears it. Clicking a
+      // different option moves the selection, so only one is ever lit.
+      //
+      // Clearing a MANDATORY step's answer leaves Continue disabled and no way
+      // forward but to pick something — which is the honest state, since
+      // mark_onboarding_complete refuses without industry, role and team size.
+      // Being able to undo a mis-click without having to pick a wrong answer to
+      // replace it is worth that.
+      case 'toggle-option':
         {
           let field = cmd.el ? cmd.el.dataset.field : (args.field || '');
           let value = cmd.el ? cmd.el.dataset.value : (args.value || '');
           if (field && value) {
-            this._data[field] = value;
-            this._selectOption(field, value);
+            let on = this._data[field] !== value;
+            if (on) {
+              this._data[field] = value;
+            } else {
+              delete this._data[field];
+            }
+            // null clears every chip in the group: no option's value can match
+            // it, so they all fall back to data-state="0".
+            this._selectOption(field, on ? value : null);
+            // Reveal or hide the "<field>-other" input. Unselecting "Other"
+            // has to take its text box away with it, otherwise the step keeps
+            // a filled-in field belonging to an option nobody has chosen.
             if (field === 'industry' || field === 'role') {
               this._refreshOtherInput(field);
             }
@@ -668,6 +934,10 @@ class onboarding_app extends LetcBox {
             this._toggleArrayField('tools', value);
             this._toggleChip(cmd, (this._data.tools || []).includes(value));
             if (value === 'other') this._refreshOtherInput('tools');
+            // Continue is gated on a non-empty selection now, so every toggle
+            // has to re-evaluate it — in both directions.
+            this._clearError();
+            this.checkForm();
           }
         }
         break;
@@ -678,6 +948,8 @@ class onboarding_app extends LetcBox {
           if (value) {
             this._toggleArrayField('challenges', value);
             this._toggleChip(cmd, (this._data.challenges || []).includes(value));
+            this._clearError();
+            this.checkForm();
           }
         }
         break;
@@ -710,6 +982,8 @@ class onboarding_app extends LetcBox {
           // on a successful add so a rejected entry stays editable.
           this._refreshInviteList();
           if (added) this._clearInviteInput();
+          // "Send invites" is gated on the list being non-empty.
+          this.checkForm();
         }
         break;
 
@@ -720,6 +994,8 @@ class onboarding_app extends LetcBox {
             this._data.invites.splice(index, 1);
             this._inviteError = null;
             this._refreshInviteList();
+            // Removing the last one has to put the button back to disabled.
+            this.checkForm();
           }
         }
         break;
@@ -730,6 +1006,19 @@ class onboarding_app extends LetcBox {
         break;
 
       case _e.close:
+        // Once invites have gone out, closing FINISHES onboarding instead of
+        // discarding it: it moves to the done screen, where "Open workspace"
+        // runs mark_complete + update_profile.
+        //
+        // The alternative was destructive and silently so. _reset() wipes the
+        // stored answers (reset_onboarding_response DELETEs the row), so a user
+        // who had just invited their team and pressed X lost every answer they
+        // had given — while the invites themselves, already sent as contacts,
+        // could not be taken back. Nothing about "close" said that.
+        if (this._step === 7 && this._invitesSent) {
+          this._advance();
+          break;
+        }
         await this._reset();
         break;
 

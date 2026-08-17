@@ -5,6 +5,7 @@ const {
   role_form,
   team_size_form,
   tools_form,
+  challenges_form,
   goals_form,
   invite_form,
   done_form,
@@ -31,18 +32,23 @@ module.exports = function (ui, opt = {}) {
       content = tools_form(ui);
       break;
     case 5:
-      content = goals_form(ui);
+      content = challenges_form(ui);
       break;
     case 6:
+      content = goals_form(ui);
+      break;
+    case 7:
       content = invite_form(ui);
       break;
     default:
       content = done_form(ui);
   }
 
-  // Wider shell for steps that need horizontal room: step 2 (Industry, index 1)
-  // uses a 3-up option grid; step 5 (Tools, index 4) uses a two-column split.
-  const wide = (ui._step === 1 || ui._step === 4) ? ' is-wide' : '';
+  // Wider shell for the only step that still needs horizontal room: step 2
+  // (Industry, index 1) uses a 3-up option grid. Tools used to widen the shell
+  // too, for its two-column tools/challenges split; those are separate steps
+  // now (indexes 4 and 5) and both fit the standard card.
+  const wide = (ui._step === 1) ? ' is-wide' : '';
 
   let kids = [
     Skeletons.Box.Y({

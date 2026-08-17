@@ -546,16 +546,33 @@ class onboarding_app extends LetcBox {
         break;
 
       case 7:
-        // Drop the staged addresses — they were typed but never sent.
+        // Skip always leaves the step, whatever is on the list and whatever the
+        // server makes of it.
+        //
+        // Staged addresses are dropped — they were typed but never sent, so
+        // there is nothing to take back and nothing the user is losing that
+        // they had committed to.
+        //
+        // "Invited nobody" is still recorded, like every other skipped step,
+        // but ONLY when nothing has actually gone out: once contact/invite has
+        // accepted an address that invitation exists and cannot be recalled, so
+        // an empty list written over it would leave the record denying
+        // something that really happened. Skipping after a send means "no
+        // more", not "none".
+        //
+        // And unlike steps 5-7, that write cannot hold the step. Skip here is a
+        // navigation action over a list the user has just abandoned; trapping
+        // them on the invite screen because a bookkeeping row would not save —
+        // or because the endpoint has no save_invites service yet — would block
+        // the end of onboarding over something they cannot see or fix. The
+        // failure is warned about, exactly as _saveInvites does after a send.
         this._data.invites = [];
-        // Record "invited nobody", like every other skipped step. But ONLY if
-        // nothing has actually gone out: once contact/invite has accepted an
-        // address, that invitation exists and cannot be recalled, so writing an
-        // empty list over it would leave the record denying something that
-        // really happened. Skipping after a send just means "no more".
+        this._inviteError = null;
         if (!this._invitesSent) {
-          res = await this._call(SERVICE.onboarding.save_invites, { invites: [] });
-          break;
+          let saved = await this._call(SERVICE.onboarding.save_invites, { invites: [] });
+          if (!saved.ok) {
+            this.warn('[onboarding] skipped invites but could not record it', saved.error);
+          }
         }
         this._advance();
         return;

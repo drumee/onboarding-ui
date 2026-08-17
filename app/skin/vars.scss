@@ -10,7 +10,9 @@
   --ob-option-bg-hover: rgba(89, 80, 255, 0.15);
   --ob-option-bg-active: rgba(89, 80, 255, 0.1);
   --ob-option-text-active: rgb(11, 10, 33);
-  --ob-section-label: rgb(177, 172, 255);
+  // The question line above a group of options ("What tools are you using?").
+  // Body copy in black, not the small-caps lavender label it used to be.
+  --ob-question: rgb(0, 0, 0);
   --ob-input-text: rgb(52, 52, 58);
   --ob-input-placeholder: rgb(101, 101, 108);
   --ob-input-bg: rgba(89, 80, 255, 0.1);

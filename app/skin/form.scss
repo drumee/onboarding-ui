@@ -16,19 +16,29 @@
   gap: 16px;
 }
 
-/* Selected-state check badge, reused across option chips, tool chips and
-   challenge options. The host element must be position: relative. */
-%onboarding-checked-badge {
+/* The selected-state check glyph: accent circle, white tick. Used inline —
+   as a flex item inside a tool pill, which is how the design draws it. */
+%onboarding-checked-mark {
   content: '';
+  flex: 0 0 auto;
+  width: 12px;
+  height: 12px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='7' fill='%235950FF'/%3E%3Cpath d='M5 8l2.5 2.5L11 5.5' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+/* Same glyph pinned to the right edge, for the full-width rows (option chips,
+   challenge options, goals) where the label is left-aligned and the check sits
+   opposite it. The host element must be position: relative. */
+%onboarding-checked-badge {
+  @extend %onboarding-checked-mark;
   position: absolute;
   right: 12px;
   top: 50%;
   transform: translateY(-50%);
   width: 16px;
   height: 16px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='7' fill='%235950FF'/%3E%3Cpath d='M5 8l2.5 2.5L11 5.5' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-size: contain;
 }
 
 .onboarding-app__option-chip {
@@ -120,11 +130,13 @@
 }
 
 /* ============================================
-   Tools step title (star icon + text)
+   "Help us tailor your workspace" heading (star icon + text). Rendered inside
+   the form body on both the tools and the challenges steps — see tailor_title
+   in skeleton/toolkit/form.js.
    ============================================ */
 .onboarding-app__tools-title {
   align-items: center;
-  gap: 8px;
+  gap: 12px;
 }
 
 .onboarding-app__tools-star {
@@ -135,8 +147,8 @@
 
   svg {
     display: block;
-    width: 22px;
-    height: 22px;
+    width: 20px;
+    height: 20px;
   }
 }
 
@@ -144,37 +156,27 @@
   font-size: 20px;
   font-family: var(--font-bold);
   color: var(--ob-title);
-  line-height: 22px;
+  line-height: 1.1;
 }
 
-/* ============================================
-   Section labels
-   ============================================ */
+/* Section labels — the question above a group of options ("What tools are you
+   using?"). Plain body copy in the design, not a small-caps label. */
 .onboarding-app__section-label {
   font-size: 14px;
-  font-family: var(--font-medium);
-  color: var(--ob-section-label);
-  line-height: 20px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  font-family: var(--font-main);
+  color: var(--ob-question);
+  line-height: 1.4;
 }
 
-/* Tools step: two side-by-side parts (part 1 = tools + "other"; part 2 =
-   challenges). The shell is widened for this step (see skeleton/index.js). */
-.onboarding-app__tools-split {
+/* One question and its options. Sits under the step heading, which the
+   form-section's own 24px gap spaces away from it. */
+.onboarding-app__question-block {
   width: 100%;
-  align-items: flex-start;
-  gap: 32px;
-}
-
-.onboarding-app__tools-part {
-  flex: 1;
-  min-width: 0;
-  gap: 16px;
+  gap: 12px;
 }
 
 /* ============================================
-   Tool chips (wrapped flex, multi-select)
+   Tool chips (wrapped flex pills, multi-select)
    ============================================ */
 .onboarding-app__tool-chips-wrap {
   width: 100%;
@@ -184,45 +186,40 @@
 
 .onboarding-app__tool-chip {
   cursor: pointer;
-  position: relative;
+  display: flex;
+  align-items: center;
   padding: 8px 20px;
   background: var(--ob-option-bg);
   border: 1px solid transparent;
-  border-radius: 4px;
+  border-radius: 999px;
   font-size: 14px;
   font-family: var(--font-main);
   color: var(--ob-option-text);
-  transition: all 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
   white-space: nowrap;
 
   &:hover {
     background: var(--ob-option-bg-hover);
   }
 
+  // Selected pills grow by the width of the check rather than reserving room
+  // for it up front, which is how the design draws them: an unselected pill is
+  // padded symmetrically and hugs its label.
   &[data-state="1"] {
     background: var(--ob-option-bg-active);
     border-color: var(--ob-accent-border);
     color: var(--ob-option-text-active);
-    // room for the badge (compact chip, right-aligned check)
-    padding-right: 40px;
 
     &::after {
-      @extend %onboarding-checked-badge;
-      right: 16px;
+      @extend %onboarding-checked-mark;
+      margin-left: 8px;
     }
   }
 }
 
 /* ============================================
-   Challenge options (single col)
+   Challenge options (own step, single col)
    ============================================ */
-.onboarding-app__tools-divider {
-  width: 100%;
-  height: 1px;
-  background: rgba(52, 52, 58, 0.2);
-  flex-shrink: 0;
-}
-
 .onboarding-app__challenge-list {
   width: 100%;
   gap: 12px;
@@ -233,14 +230,15 @@
   cursor: pointer;
   position: relative;
   // reserve room on the right for the selected badge (avoids a shift on select)
-  padding: 8px 40px 8px 12px;
+  padding: 8px 32px 8px 12px;
   background: var(--ob-option-bg);
   border: 1px solid transparent;
   border-radius: 4px;
   font-size: 14px;
+  line-height: 1.4;
   font-family: var(--font-main);
   color: var(--ob-option-text);
-  transition: all 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 
   &:hover {
     background: var(--ob-option-bg-hover);
@@ -251,7 +249,12 @@
     border-color: var(--ob-accent-border);
     color: var(--ob-option-text-active);
 
-    &::after { @extend %onboarding-checked-badge; }
+    // 12px here rather than the 16px the wider rows use, per the design.
+    &::after {
+      @extend %onboarding-checked-badge;
+      width: 12px;
+      height: 12px;
+    }
   }
 }
 

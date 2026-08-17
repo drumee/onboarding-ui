@@ -3,7 +3,8 @@ const STEP_TITLE_KEYS = [
   'ONBOARDING_WHAT_KIND_OF_WORK',
   'ONBOARDING_WHAT_YOUR_ROLE',
   'ONBOARDING_HOW_MANY_PEOPLE',
-  'ONBOARDING_HELP_TAILOR',
+  'ONBOARDING_HELP_TAILOR',  // tools
+  'ONBOARDING_HELP_TAILOR',  // challenges
   'ONBOARDING_WHAT_TO_START_WITH',
   'ONBOARDING_INVITE_TEAM',
 ];
@@ -14,17 +15,25 @@ const STEP_TIPS_KEYS = [
   'ONBOARDING_PICK_BEST_FIT',
   'ONBOARDING_PICK_BEST_FIT',
   '',
+  '',
   'ONBOARDING_SHAPES_WORKSPACE',
   'ONBOARDING_WORKSPACE_READY',
 ];
 
-const TOTAL_STEPS = 7;
+// One dot per question screen. Went from 7 to 8 when the combined tools step
+// was split into tools (index 4) and challenges (index 5).
+const TOTAL_STEPS = 8;
+
+// Steps that render "Help us tailor your workspace" inside the form body (star
+// icon + text, see tailor_title in ./form.js), so the header must not also
+// print a title for them.
+const INLINE_TITLE_STEPS = [4, 5];
 
 export function header(ui) {
   const fig = ui.fig.family;
   let step = ui._step;
   const isDone = step >= TOTAL_STEPS;
-  const isToolsStep = step === 4;
+  const hasInlineTitle = INLINE_TITLE_STEPS.includes(step);
   const userName = ui._data.firstname || Visitor.get('firstname') || 'Alex';
 
   const titleKey = STEP_TITLE_KEYS[step];
@@ -100,7 +109,7 @@ export function header(ui) {
       })
     );
 
-    if (!isToolsStep) {
+    if (!hasInlineTitle) {
       headerKids.push(
         Skeletons.Note({
           className: `${fig}__title`,

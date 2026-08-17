@@ -32,7 +32,8 @@ export function footer(ui) {
       break;
 
     // Step 2 (Role) sits with the mandatory steps, NOT with the skippable
-    // ones. It used to fall through to case 5 and so offered "Tell me later",
+    // ones. It used to fall through to the skippable case and so offered
+    // "Tell me later",
     // but mark_onboarding_complete treats role as required (its own comment
     // claims "no Tell me later in UI for these steps" — which this footer
     // contradicted). Skipping it produced a wizard that could be walked to the
@@ -54,6 +55,11 @@ export function footer(ui) {
       );
       break;
 
+    // Tools (4) and challenges (5). Skippable, but Continue is gated on an
+    // actual answer: it renders disabled and checkForm() lights it once
+    // something is selected or typed. Getting past these steps with nothing to
+    // say is what "Tell me later" is for.
+    case 4:
     case 5:
       kids.push(
         Skeletons.Note({
@@ -77,7 +83,9 @@ export function footer(ui) {
       );
       break;
 
-    case 4:
+    // Goals. The button stays disabled until something is picked, but the step
+    // is skippable, so it carries both actions.
+    case 6:
       kids.push(
         Skeletons.Note({
           className: `${fig}__primary-btn`,
@@ -85,9 +93,9 @@ export function footer(ui) {
           partHandler: [ui],
           content: LOCALE.CONTINUE || "Continue",
           service: _a.next,
-          state: 1,
+          state: 0,
           reference: _a.state,
-          dataset: { state: 1 },
+          dataset: { state: 0 },
         })
       );
       kids.push(
@@ -100,7 +108,10 @@ export function footer(ui) {
       );
       break;
 
-    case 6:
+    // Invite. "Send invites" starts disabled and checkForm() lights it once an
+    // address has actually been added to the list; leaving with nobody invited
+    // is what "Skip this step" is for.
+    case 7:
       kids.push(
         Skeletons.Note({
           className: `${fig}__primary-btn`,
@@ -108,9 +119,9 @@ export function footer(ui) {
           partHandler: [ui],
           content: LOCALE.ONBOARDING_SEND_INVITES || "Send invites",
           service: _a.next,
-          state: 1,
+          state: 0,
           reference: _a.state,
-          dataset: { state: 1 },
+          dataset: { state: 0 },
         })
       );
       kids.push(
@@ -143,7 +154,7 @@ export function footer(ui) {
   // primary button with a Back button to its left (Back stays smaller, the
   // primary button grows to fill the row). Secondary buttons (skip / tell me
   // later), if any, stay stacked below.
-  if (step > 0 && step < 7 && kids.length) {
+  if (step > 0 && step < 8 && kids.length) {
     let primary = kids.shift();
     kids.unshift(
       Skeletons.Box.X({

@@ -66,6 +66,19 @@ const GOAL_ICONS = {
   file: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M5 2H12L16 6V18H5C3.9 18 3 17.1 3 16V4C3 2.9 3.9 2 5 2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 2V6H16" stroke="currentColor" stroke-width="1.5"/></svg>`,
 };
 
+// A localised string, or the fallback.
+//
+// `LOCALE[key] || fallback` is not enough: for a key with no row in yp.languages
+// LOCALE hands back the KEY NAME, which is truthy — so the plain `||` renders
+// the literal "ONBOARDING_NAME_PLACEHOLDER" in the input instead of any human
+// text. main.js hits the same trap with ONBOARDING_INVITES_SENT and guards it
+// the same way.
+function loc(key, fallback) {
+  const v = LOCALE[key];
+  if (!v || v === key) return fallback;
+  return v;
+}
+
 // The free-text input revealed when an "Other" option is active. Reuses the
 // __input-field styling; name is "<field>_other" so getData() surfaces it.
 function other_input(ui, field) {
@@ -141,7 +154,10 @@ function buildOptionGrid(ui, opts, field, perRow = 2) {
         name: label,
         sys_pn: `${field}-${i}`,
         partHandler: [ui],
-        service: 'select-option',
+        // Toggling single-select: click to choose, click the chosen one again to
+        // clear it. Shared by industry, role and team size (and the goals step,
+        // which builds its rows separately).
+        service: 'toggle-option',
         uiHandler: [ui],
         state: isOn ? 1 : 0,
         dataset: { state: isOn ? 1 : 0, value: key, field },
@@ -187,7 +203,12 @@ export function name_form(ui) {
                 innerClass: 'firstname',
                 mode: _a.interactive,
                 service: _a.input,
-                placeholder: LOCALE.ONBOARDING_NAME_PLACEHOLDER || 'Alex',
+                // Not ONBOARDING_NAME_PLACEHOLDER: that key holds an example
+                // first name ('Alex') on every deployed endpoint, so reading it
+                // would keep rendering 'Alex' until each one is patched. This
+                // key is new, so loc() falls back to the English prompt until
+                // the locale rows land.
+                placeholder: loc('ONBOARDING_USERNAME_PLACEHOLDER', 'Enter your username'),
                 uiHandler: [ui],
                 state: 0,
                 radio: ui._id
@@ -204,10 +225,35 @@ export function industry_form(ui) { return buildOptionGrid(ui, INDUSTRY_OPTS, 'i
 export function role_form(ui) { return buildOptionGrid(ui, ROLE_OPTS, 'role'); }
 export function team_size_form(ui) { return buildOptionGrid(ui, TEAM_SIZE_OPTS, 'team_size'); }
 
+// Heading shared by the two "Help us tailor your workspace" steps (tools and
+// challenges). Both screens carry it inline instead of using the standard
+// header title, which is why header.js suppresses its own title on both — see
+// STEP_TITLE_KEYS there.
+function tailor_title(ui) {
+  const pfx = ui.fig.family;
+  return Skeletons.Box.X({
+    className: `${pfx}__tools-title`,
+    kids: [
+      Skeletons.Element({
+        className: `${pfx}__tools-star`,
+        content: `<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 1L13.5 8.5H21L15 13L17 21L11 16.5L5 21L7 13L1 8.5H8.5L11 1Z" fill="currentColor"/></svg>`,
+        active: 0,
+      }),
+      Skeletons.Note({
+        className: `${pfx}__tools-title-text`,
+        content: LOCALE.ONBOARDING_HELP_TAILOR || 'Help us tailor your workspace',
+        active: 0,
+      }),
+    ]
+  });
+}
+
+// Step 5 (index 4). Tools only, on the standard-width card: the design gives
+// the tools question and the challenges question a screen each rather than the
+// two-column split this step used to render.
 export function tools_form(ui) {
   const pfx = ui.fig.family;
   let selectedTools = ui._data.tools || [];
-  let selectedChallenges = ui._data.challenges || [];
 
   let toolChips = TOOL_OPTS.map(([key, localeKey], i) => {
     let label = LOCALE[localeKey] || key;
@@ -224,6 +270,39 @@ export function tools_form(ui) {
       content: label,
     });
   });
+
+  return Skeletons.Box.Y({
+    className: `${pfx}__form-section`,
+    kids: [
+      tailor_title(ui),
+      Skeletons.Box.Y({
+        className: `${pfx}__question-block`,
+        kids: [
+          Skeletons.Note({
+            className: `${pfx}__section-label`,
+            content: LOCALE.ONBOARDING_TOOLS_QUESTION || 'What tools are you using?',
+          }),
+          Skeletons.Box.X({
+            className: `${pfx}__tool-chips-wrap`,
+            kids: toolChips,
+          }),
+          Skeletons.Box.Y({
+            className: `${pfx}__other-region`,
+            sys_pn: 'tools-other',
+            kids: tools_other_region(ui),
+          }),
+        ]
+      }),
+    ]
+  });
+}
+
+// Step 6 (index 5). The challenges multi-select plus its "tell me more" note,
+// split out of the old combined tools step. Saves through save_challenges on
+// its own Continue; the two answers no longer share a commit.
+export function challenges_form(ui) {
+  const pfx = ui.fig.family;
+  let selectedChallenges = ui._data.challenges || [];
 
   let challengeKids = CHALLENGE_OPTS.map(([key, localeKey], i) => {
     let label = LOCALE[localeKey] || key;
@@ -262,63 +341,22 @@ export function tools_form(ui) {
     })
   );
 
-  // Split the tools step into two side-by-side parts (the shell is widened for
-  // this step, see skeleton/index.js): part 1 runs from the title through the
-  // tools "other" reveal region; part 2 is the challenges question to the end.
-  let part1 = Skeletons.Box.Y({
-    className: `${pfx}__tools-part`,
-    kids: [
-      Skeletons.Box.X({
-        className: `${pfx}__tools-title`,
-        kids: [
-          Skeletons.Element({
-            className: `${pfx}__tools-star`,
-            content: `<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 1L13.5 8.5H21L15 13L17 21L11 16.5L5 21L7 13L1 8.5H8.5L11 1Z" fill="currentColor"/></svg>`,
-            active: 0,
-          }),
-          Skeletons.Note({
-            className: `${pfx}__tools-title-text`,
-            content: LOCALE.ONBOARDING_HELP_TAILOR || 'Help us tailor your workspace',
-            active: 0,
-          }),
-        ]
-      }),
-      Skeletons.Note({
-        className: `${pfx}__section-label`,
-        content: LOCALE.ONBOARDING_TOOLS_QUESTION || 'What tools are you using?',
-      }),
-      Skeletons.Box.X({
-        className: `${pfx}__tool-chips-wrap`,
-        kids: toolChips,
-      }),
-      Skeletons.Box.Y({
-        className: `${pfx}__other-region`,
-        sys_pn: 'tools-other',
-        kids: tools_other_region(ui),
-      }),
-    ]
-  });
-
-  let part2 = Skeletons.Box.Y({
-    className: `${pfx}__tools-part`,
-    kids: [
-      Skeletons.Note({
-        className: `${pfx}__section-label`,
-        content: LOCALE.ONBOARDING_CHALLENGES_QUESTION || 'What challenges are you facing with your current setup?',
-      }),
-      Skeletons.Box.Y({
-        className: `${pfx}__challenge-list`,
-        kids: challengeKids,
-      }),
-    ]
-  });
-
   return Skeletons.Box.Y({
     className: `${pfx}__form-section`,
     kids: [
-      Skeletons.Box.X({
-        className: `${pfx}__tools-split`,
-        kids: [part1, part2],
+      tailor_title(ui),
+      Skeletons.Box.Y({
+        className: `${pfx}__question-block`,
+        kids: [
+          Skeletons.Note({
+            className: `${pfx}__section-label`,
+            content: LOCALE.ONBOARDING_CHALLENGES_QUESTION || 'What challenges are you facing with your current setup?',
+          }),
+          Skeletons.Box.Y({
+            className: `${pfx}__challenge-list`,
+            kids: challengeKids,
+          }),
+        ]
       }),
     ]
   });
@@ -336,7 +374,8 @@ export function goals_form(ui) {
       name: g.key,
       sys_pn: `goal-${i}`,
       partHandler: [ui],
-      service: 'select-option',
+      // Same toggling single-select as the option grids above.
+      service: 'toggle-option',
       uiHandler: [ui],
       state: isOn ? 1 : 0,
       dataset: { state: isOn ? 1 : 0, value: g.key, field: 'goal' },

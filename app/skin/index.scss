@@ -17,7 +17,6 @@
     align-items: center;
     height: 100vh;
     width: 100vw;
-    background-color: var(--ob-bg);
     color: var(--ob-title);
     overflow: hidden;
     position: fixed;
@@ -25,22 +24,24 @@
     left: 0;
     z-index: 9999;
 
-    &::before {
-      content: "";
-      position: absolute;
-      bottom: -200px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 885px;
-      height: 727px;
-      background: radial-gradient(
-        ellipse at center,
-        var(--ob-glow) 0%,
-        transparent 70%
+    // The 2.0 backdrop: a white ground lit from the top-left and, more
+    // strongly, from the bottom-right corner — replacing the single
+    // bottom-centre glow 1.0 used. The design ships this as a 1920x1080 PNG;
+    // these two ellipses were fitted to twelve points sampled off it and track
+    // it to within 3/255 per channel. Sized in viewport units so the mesh keeps
+    // its proportions instead of shrinking into a blob on wide screens.
+    background-color: var(--ob-bg);
+    background-image:
+      radial-gradient(
+        ellipse 40vw 130vh at 0% 0%,
+        var(--ob-mesh-tl) 0%,
+        transparent 80%
+      ),
+      radial-gradient(
+        ellipse 55vw 95vh at 100% 100%,
+        var(--ob-mesh-br) 0%,
+        transparent 90%
       );
-      pointer-events: none;
-      z-index: 0;
-    }
   }
 
   &__main {
@@ -48,7 +49,12 @@
     height: 100%;
     width: 100%;
     max-width: 620px;
-    padding: 0 var(--spacer-7);
+    // Top-anchored, per the design (card top = 110px in a 1024px-tall frame).
+    // Centring made the card jump vertically between steps as the content grew;
+    // anchoring it keeps the logo and progress bar still while the user moves
+    // through the flow. Tall steps scroll inside this box, as before.
+    justify-content: flex-start;
+    padding: var(--ob-card-top) var(--spacer-7) var(--spacer-7);
     overflow-y: auto;
     gap: 0;
     position: relative;
@@ -68,29 +74,57 @@
   &__card {
     width: 100%;
     max-width: 520px;
-    gap: 20px;
-    padding: 24px;
-    margin: auto;
+    // 32px between the header block, the form and the primary action.
+    gap: var(--ob-gap-block);
+    padding: var(--ob-card-pad);
+    margin: 0 auto;
+    flex: 0 0 auto;
 
     &.is-wide {
       max-width: 800px;
+    }
+
+    // Steps whose design spaces its blocks 24px apart rather than 32px: tools
+    // and challenges (Figma 155:47287) and goals (155:47398). Neither carries
+    // the name step's 8px form inset.
+    &.is-inline-title,
+    &.is-tight {
+      gap: var(--ob-gap-inline);
+
+      .onboarding-app__form-section {
+        padding-top: 0;
+      }
+    }
+
+    // Tools and challenges additionally print their heading inside the form
+    // body, so the 48px the design puts between the progress bar and that
+    // heading is this card gap plus a matching offset on the form section.
+    &.is-inline-title .onboarding-app__form-section {
+      margin-top: var(--ob-gap-inline);
     }
   }
 
   &__header {
     height: auto;
     width: 100%;
-    gap: 20px;
+    gap: var(--ob-gap-lead);
   }
 
-  // Logo + progress bar grouped and centered as a unit. Capped at the normal
-  // card content width (520 - 24*2 padding) so on is-wide steps it stays
-  // consistent and centered while the content below uses the full width.
+  // Title + tip line. Their own box so the header's 48px gap separates the
+  // question from the logo/progress lead without also prising the tip off its
+  // title — see header.js.
+  &__header-copy {
+    width: 100%;
+    gap: 8px;
+  }
+
+  // Logo + progress bar, grouped so the header's 48px gap separates them from
+  // the question as one unit. They span the full card width: 2.0 aligns the
+  // wordmark with the left edge of the content, so the old 472px cap left the
+  // logo floating inboard of the options on the wider steps.
   &__header-lead {
     width: 100%;
-    max-width: 472px;
-    align-self: center;
-    gap: 20px;
+    gap: var(--ob-gap-lead);
   }
 
   &__header-top {
@@ -103,30 +137,26 @@
     }
   }
 
-  &__logo-container {
-    align-items: end;
-    gap: var(--spacer-3);
+  // The exported drumee wordmark. Fixed intrinsic size from the design
+  // (190.471 x 37.866) and the 0.7deg tilt the mark carries there. Colours live
+  // in the SVG itself, so nothing here sets fill.
+  &__logo {
+    display: flex;
+    align-items: center;
     flex-shrink: 0;
-  }
-
-  &__logo-content {
-    width: 48px;
-    height: 48px;
-    color: var(--ob-logo-color);
+    // The mark is 190.471 x 37.866 and sits tilted 0.7deg. Figma sizes its
+    // container to the ROTATED bounding box (40.181px tall), which is what
+    // pushes the progress bar to its place in the design — so the box carries
+    // that height and the mark is centred inside it.
+    width: 190.917px;
+    height: 40.181px;
 
     svg {
-      width: 100%;
-      height: 100%;
-      fill: currentColor;
+      display: block;
+      width: 190.471px;
+      height: 37.866px;
+      transform: rotate(0.7deg);
     }
-  }
-
-  &__logo-text {
-    font-size: 32px;
-    font-weight: 600;
-    font-family: var(--font-bold);
-    color: var(--ob-logo-text-color);
-    letter-spacing: -0.3px;
   }
 
   &__progress-bar {
@@ -138,9 +168,11 @@
   }
 
   &__progress-step {
-    flex: 1;
+    // One even share of the content width each — the design's segments stretch
+    // to fill the row, so the old 61px cap left dead space at the right.
+    flex: 1 1 0;
+    min-width: 0;
     height: 6px;
-    max-width: 61px;
     border-radius: 12px;
     background: var(--ob-option-bg);
     transition: background 0.3s ease;
@@ -153,7 +185,7 @@
   &__title {
     font-family: var(--font-bold);
     font-size: 32px;
-    line-height: 35px;
+    line-height: 1.1;
     font-weight: 600;
     color: var(--ob-title);
     margin-top: 0;
@@ -183,10 +215,11 @@
     align-items: center;
     justify-content: center;
     width: 100%;
-    height: 48px;
+    min-height: 48px;
     padding: 12px 24px;
-    border-radius: 4px;
+    border-radius: var(--ob-radius-btn);
     font-size: 16px;
+    line-height: 24px;
     font-weight: 600;
     font-family: var(--font-medium);
     background: var(--ob-primary-inactive-bg);
@@ -244,10 +277,11 @@
     align-items: center;
     justify-content: center;
     width: 100%;
-    height: 48px;
+    min-height: 48px;
     padding: 12px 24px;
-    border-radius: 4px;
+    border-radius: var(--ob-radius-btn);
     font-size: 16px;
+    line-height: 24px;
     font-weight: 600;
     font-family: var(--font-medium);
     background: transparent;
@@ -286,9 +320,9 @@
     align-items: center;
     justify-content: center;
     width: 100%;
-    height: 48px;
+    min-height: 48px;
     padding: 12px 20px;
-    border-radius: 4px;
+    border-radius: var(--ob-radius-btn);
     font-size: 16px;
     font-weight: 600;
     font-family: var(--font-medium);

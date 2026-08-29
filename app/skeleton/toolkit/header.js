@@ -1,23 +1,35 @@
-const STEP_TITLE_KEYS = [
-  'ONBOARDING_WHAT_SHOULD_WE_CALL_YOU',
-  'ONBOARDING_WHAT_KIND_OF_WORK',
-  'ONBOARDING_WHAT_YOUR_ROLE',
-  'ONBOARDING_HOW_MANY_PEOPLE',
-  'ONBOARDING_HELP_TAILOR',  // tools
-  'ONBOARDING_HELP_TAILOR',  // challenges
-  'ONBOARDING_WHAT_TO_START_WITH',
-  'ONBOARDING_INVITE_TEAM',
+const { LOGO_SVG } = require('./logo');
+const { loc } = require('../../lib/locale-text');
+
+// [locale key, English fallback]. The fallback is what renders when a bundle
+// has no row for the key — LOCALE echoes the key name back in that case, which
+// is why these go through loc() rather than `LOCALE[k] || ''` (that prints
+// "ONBOARDING_WHAT_TO_START_WITH" on screen; see lib/locale-text.js). The
+// goals wording is Figma 155:47398 verbatim, the name step 155:47112.
+const STEP_TITLES = [
+  ['ONBOARDING_WHAT_SHOULD_WE_CALL_YOU', 'What should we call you?'],
+  ['ONBOARDING_WHAT_KIND_OF_WORK',       'Hi {0}, what kind of work do you do?'],
+  ['ONBOARDING_WHAT_YOUR_ROLE',          "What's your role, {0}?"],
+  ['ONBOARDING_HOW_MANY_PEOPLE',         'How many people do you work with, {0}?'],
+  ['ONBOARDING_HELP_TAILOR',             'Help us tailor your workspace'],  // tools, inline
+  ['ONBOARDING_HELP_TAILOR',             'Help us tailor your workspace'],  // challenges, inline
+  ['ONBOARDING_WHAT_TO_START_WITH',      'What do you want to start with?'],
+  ['ONBOARDING_INVITE_TEAM',             'Invite your team members'],
 ];
 
+// Indexed by `ui._step`. An empty entry means the step prints its title alone,
+// with no tip line under it — which is every question screen in 2.0 except the
+// last: the header is the question and nothing else. Invite keeps its tip
+// because "your workspace is ready" is news, not a restatement of the title.
 const STEP_TIPS_KEYS = [
-  'ONBOARDING_FIRST_NAME_TIP',
-  'ONBOARDING_PICK_BEST_FIT',
-  'ONBOARDING_PICK_BEST_FIT',
-  'ONBOARDING_PICK_BEST_FIT',
-  '',
-  '',
-  'ONBOARDING_SHAPES_WORKSPACE',
-  'ONBOARDING_WORKSPACE_READY',
+  '',  // 1. name
+  '',  // 2. industry
+  '',  // 3. role
+  '',  // 4. team size
+  '',  // 5. tools
+  '',  // 6. challenges
+  '',  // 7. goals
+  'ONBOARDING_WORKSPACE_READY',  // 8. invite
 ];
 
 // One dot per question screen. Went from 7 to 8 when the combined tools step
@@ -29,6 +41,19 @@ const TOTAL_STEPS = 8;
 // print a title for them.
 const INLINE_TITLE_STEPS = [4, 5];
 
+// The wordmark, as one exported asset. It replaces the old sprite-icon +
+// "drumee" text pair: the Figma mark is a single vector whose letterforms are
+// not the UI font, so composing it from a text node never matched. The 0.7deg
+// tilt is part of the design (Figma node 155:47118).
+function logo(ui) {
+  const fig = ui.fig.family;
+  return Skeletons.Element({
+    className: `${fig}__logo`,
+    content: LOGO_SVG,
+    active: 0,
+  });
+}
+
 export function header(ui) {
   const fig = ui.fig.family;
   let step = ui._step;
@@ -36,9 +61,9 @@ export function header(ui) {
   const hasInlineTitle = INLINE_TITLE_STEPS.includes(step);
   const userName = ui._data.firstname || Visitor.get('firstname') || 'Alex';
 
-  const titleKey = STEP_TITLE_KEYS[step];
+  const titleEntry = STEP_TITLES[step];
   const tipsKey = STEP_TIPS_KEYS[step];
-  let title = (titleKey && LOCALE[titleKey]) || '';
+  let title = titleEntry ? loc(titleEntry[0], titleEntry[1]) : '';
   title = title.replace('{0}', userName);
   let tips = (tipsKey && LOCALE[tipsKey]) || '';
 
@@ -59,19 +84,7 @@ export function header(ui) {
       Skeletons.Box.X({
         className: `${fig}__header-top centered`,
         kids: [
-          Skeletons.Box.X({
-            className: `${fig}__logo-container`,
-            kids: [
-              Skeletons.Button.Svg({
-                ico: "raw-logo-drumee-icon",
-                className: `${fig}__logo-content`,
-              }),
-              Skeletons.Element({
-                className: `${fig}__logo-text`,
-                content: "drumee",
-              })
-            ]
-          }),
+          logo(ui),
         ]
       })
     );
@@ -86,19 +99,7 @@ export function header(ui) {
           Skeletons.Box.X({
             className: `${fig}__header-top`,
             kids: [
-              Skeletons.Box.X({
-                className: `${fig}__logo-container`,
-                kids: [
-                  Skeletons.Button.Svg({
-                    ico: "raw-logo-drumee-icon",
-                    className: `${fig}__logo-content`,
-                  }),
-                  Skeletons.Element({
-                    className: `${fig}__logo-text`,
-                    content: "drumee",
-                  })
-                ]
-              }),
+              logo(ui),
             ]
           }),
           Skeletons.Box.X({
@@ -110,20 +111,30 @@ export function header(ui) {
     );
 
     if (!hasInlineTitle) {
-      headerKids.push(
+      // Title and tip travel together. The header's gap is the design's 48px
+      // step between the logo/progress lead and the question; the tip has to
+      // sit right under its title, so it gets its own tighter box rather than
+      // becoming a third 48px-spaced sibling.
+      let copyKids = [
         Skeletons.Note({
           className: `${fig}__title`,
           content: title,
         })
-      );
+      ];
       if (tips) {
-        headerKids.push(
+        copyKids.push(
           Skeletons.Note({
             className: `${fig}__tips`,
             content: tips,
           })
         );
       }
+      headerKids.push(
+        Skeletons.Box.Y({
+          className: `${fig}__header-copy`,
+          kids: copyKids,
+        })
+      );
     }
   }
 

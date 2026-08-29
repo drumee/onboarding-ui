@@ -1,3 +1,16 @@
+// Shared guard against LOCALE echoing an unset key back — see lib/locale-text.js
+// for what that costs when it is missed (a red "ALREADY_IN_LIST" on the invite
+// step, where a sentence belonged).
+const { loc } = require('../../lib/locale-text');
+const {
+  STAR_FOUR_SVG,
+  APP_FOLDER_SVG,
+  APP_HANDSHAKE_SVG,
+  APP_LOCK_SVG,
+  APP_PUZZLE_SVG,
+  APPS_NETWORK_SVG,
+} = require('./icons');
+
 // Canonical wire keys must match the loby DB enum check constraints in
 // schemas/procedures/save_onboarding_*.sql — keep these arrays in sync.
 const INDUSTRY_OPTS = [
@@ -41,35 +54,53 @@ const TOOL_OPTS = [
   ['other',        'ONBOARDING_TOOL_OTHER'],
 ];
 
+// [wire key, locale key, label exactly as Figma 155:47287 draws it].
+//
+// The locale keys are NOT the old ONBOARDING_CHAL_FILES_SCATTERED / _DISCONNECTED
+// / _SECURITY / _COSTS / _PERMISSIONS / _VISIBILITY. Those hold 1.0's longer
+// wording ("Files are scattered across tools", "No visibility on who views or
+// edits what") on deployed endpoints, and a populated row beats the fallback —
+// so reading them would keep printing the old copy over the new design. These
+// names are new, so loc() falls back to the design text until the rows land.
+// Same move as GOAL_DEFS above and ONBOARDING_USERNAME_PLACEHOLDER below.
+//
+// The wire keys are untouched: save_onboarding_challenges' enum still sees
+// files_scattered / disconnected / security / costs / permissions / visibility.
 const CHALLENGE_OPTS = [
-  ['files_scattered', 'ONBOARDING_CHAL_FILES_SCATTERED'],
-  ['disconnected',    'ONBOARDING_CHAL_DISCONNECTED'],
-  ['security',        'ONBOARDING_CHAL_SECURITY'],
-  ['costs',           'ONBOARDING_CHAL_COSTS'],
-  ['permissions',     'ONBOARDING_CHAL_PERMISSIONS'],
-  ['visibility',      'ONBOARDING_CHAL_VISIBILITY'],
+  ['files_scattered', 'ONBOARDING_CHAL_SCATTERING',          'Files scattering across tools'],
+  ['disconnected',    'ONBOARDING_CHAL_CHAT_FILES',          'Chat & files are disconnected'],
+  ['security',        'ONBOARDING_CHAL_DATA_SECURITY',       'Data security & ownership'],
+  ['costs',           'ONBOARDING_CHAL_TOOL_COSTS',          'High tool costs'],
+  ['permissions',     'ONBOARDING_CHAL_ACCESS_PERMISSIONS',  'Access & permissions'],
+  ['visibility',      'ONBOARDING_CHAL_FILE_ACTIVITY',       'No visibility into file activity'],
 ];
 
+// `key` is the wire value checked by save_onboarding_goal's enum constraint —
+// do not rename. `text` is the label exactly as Figma 155:47398 draws it.
+//
+// The locale keys are NOT the old ONBOARDING_GOAL_MANAGE / _CLIENTS / _STORE /
+// _WORKFLOWS / _PERSONAL. Those carry 1.0's wording ("Store sensitive data —
+// fully under your control" and friends) on every deployed endpoint, and since
+// a populated row beats the fallback, reading them would keep printing the old
+// copy over the new design until each endpoint is patched. These names are new,
+// so loc() falls back to the design text until the rows land — the same move
+// ONBOARDING_USERNAME_PLACEHOLDER makes below, for the same reason. They also
+// now mirror the wire keys, which the old short names did not.
 const GOAL_DEFS = [
-  { key: 'manage_projects',   localeKey: 'ONBOARDING_GOAL_MANAGE',    icon: 'folder' },
-  { key: 'work_with_clients', localeKey: 'ONBOARDING_GOAL_CLIENTS',   icon: 'users' },
-  { key: 'store_sensitive',   localeKey: 'ONBOARDING_GOAL_STORE',     icon: 'lock' },
-  { key: 'build_workflows',   localeKey: 'ONBOARDING_GOAL_WORKFLOWS', icon: 'settings' },
-  { key: 'personal_files',    localeKey: 'ONBOARDING_GOAL_PERSONAL',  icon: 'file' },
+  { key: 'manage_projects',   localeKey: 'ONBOARDING_GOAL_MANAGE_PROJECTS',  text: 'Manage projects & teams',      icon: 'folder' },
+  { key: 'work_with_clients', localeKey: 'ONBOARDING_GOAL_WORK_CLIENTS',     text: 'Work with clients',            icon: 'handshake' },
+  { key: 'store_sensitive',   localeKey: 'ONBOARDING_GOAL_SECURE_DATA',      text: 'Secure sensitive data',        icon: 'lock' },
+  { key: 'build_workflows',   localeKey: 'ONBOARDING_GOAL_BUILD_WORKFLOWS',  text: 'Build workflows on your data', icon: 'puzzle' },
+  { key: 'personal_files',    localeKey: 'ONBOARDING_GOAL_PERSONAL_FILES',   text: 'Manage personal files',        icon: 'network' },
 ];
 
 const GOAL_ICONS = {
-  folder: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="2" y="4" width="16" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M2 6H8L9.5 4H18" stroke="currentColor" stroke-width="1.5"/></svg>`,
-  users: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="7" cy="7" r="3" stroke="currentColor" stroke-width="1.5"/><circle cx="14" cy="7" r="2" stroke="currentColor" stroke-width="1.5"/><path d="M1 17C1 14.2 3.2 12 6 12H8C10.8 12 13 14.2 13 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M13 12C15 12 17 13.8 17 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`,
-  lock: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="4" y="9" width="12" height="8" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M7 9V6C7 4.3 8.3 3 10 3C11.7 3 13 4.3 13 6V9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`,
-  settings: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M10 1V3M10 17V19M1 10H3M17 10H19M3.5 3.5L5 5M15 15L16.5 16.5M16.5 3.5L15 5M5 15L3.5 16.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`,
-  file: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M5 2H12L16 6V18H5C3.9 18 3 17.1 3 16V4C3 2.9 3.9 2 5 2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 2V6H16" stroke="currentColor" stroke-width="1.5"/></svg>`,
+  folder:    APP_FOLDER_SVG,
+  handshake: APP_HANDSHAKE_SVG,
+  lock:      APP_LOCK_SVG,
+  puzzle:    APP_PUZZLE_SVG,
+  network:   APPS_NETWORK_SVG,
 };
-
-// Shared guard against LOCALE echoing an unset key back — see lib/locale-text.js
-// for what that costs when it is missed (a red "ALREADY_IN_LIST" on the invite
-// step, where a sentence belonged).
-const { loc } = require('../../lib/locale-text');
 
 // The free-text input revealed when an "Other" option is active. Reuses the
 // __input-field styling; name is "<field>_other" so getData() surfaces it.
@@ -220,7 +251,7 @@ export function team_size_form(ui) { return buildOptionGrid(ui, TEAM_SIZE_OPTS, 
 // Heading shared by the two "Help us tailor your workspace" steps (tools and
 // challenges). Both screens carry it inline instead of using the standard
 // header title, which is why header.js suppresses its own title on both — see
-// STEP_TITLE_KEYS there.
+// INLINE_TITLE_STEPS there.
 function tailor_title(ui) {
   const pfx = ui.fig.family;
   return Skeletons.Box.X({
@@ -228,7 +259,7 @@ function tailor_title(ui) {
     kids: [
       Skeletons.Element({
         className: `${pfx}__tools-star`,
-        content: `<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 1L13.5 8.5H21L15 13L17 21L11 16.5L5 21L7 13L1 8.5H8.5L11 1Z" fill="currentColor"/></svg>`,
+        content: STAR_FOUR_SVG,
         active: 0,
       }),
       Skeletons.Note({
@@ -296,8 +327,8 @@ export function challenges_form(ui) {
   const pfx = ui.fig.family;
   let selectedChallenges = ui._data.challenges || [];
 
-  let challengeKids = CHALLENGE_OPTS.map(([key, localeKey], i) => {
-    let label = LOCALE[localeKey] || key;
+  let challengeKids = CHALLENGE_OPTS.map(([key, localeKey, text], i) => {
+    let label = loc(localeKey, text);
     let isOn = selectedChallenges.includes(key);
     return Skeletons.Note({
       className: `${pfx}__challenge-option`,
@@ -359,7 +390,7 @@ export function goals_form(ui) {
   let selected = ui._data.goal || '';
 
   let kids = GOAL_DEFS.map((g, i) => {
-    let label = LOCALE[g.localeKey] || g.key;
+    let label = loc(g.localeKey, g.text);
     let isOn = selected === g.key;
     return Skeletons.Box.X({
       className: `${pfx}__goal-option`,
@@ -502,7 +533,7 @@ export function done_form(ui) {
   if (teamSize) badges.push(teamSize);
   if (ui._data.goal) {
     let g = GOAL_DEFS.find(x => x.key === ui._data.goal);
-    if (g) badges.push(LOCALE[g.localeKey] || g.key);
+    if (g) badges.push(loc(g.localeKey, g.text));
   }
 
   let badgeKids = badges.map(b => {

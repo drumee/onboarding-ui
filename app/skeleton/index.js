@@ -50,9 +50,20 @@ module.exports = function (ui, opt = {}) {
   // now (indexes 4 and 5) and both fit the standard card.
   const wide = (ui._step === 1) ? ' is-wide' : '';
 
+  // Tools (4) and challenges (5) print their heading inside the form body
+  // ("Help us tailor your workspace") instead of in the header, so the card's
+  // own rhythm differs: Figma 155:47287 spaces those blocks 24px apart, not the
+  // 32px the header-titled steps use, and puts 48px between the progress bar
+  // and the heading. See __card.is-inline-title in skin/index.scss.
+  const inline = [4, 5].includes(ui._step) ? ' is-inline-title' : '';
+
+  // Goals (index 6) -- step 7 of 8 -- shares that 24px block rhythm but keeps its
+  // title in the header, so it takes the gap without the form-section offset.
+  const tight = (ui._step === 6) ? ' is-tight' : '';
+
   let kids = [
     Skeletons.Box.Y({
-      className: `${ui.fig.family}__card${wide}`,
+      className: `${ui.fig.family}__card${wide}${inline}${tight}`,
       kids: [
         header(ui),
         content,

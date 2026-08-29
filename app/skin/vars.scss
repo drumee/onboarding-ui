@@ -38,15 +38,11 @@
   --ob-info-bg: rgba(89, 80, 255, 0.08);
   --ob-info-border: rgba(89, 80, 255, 0.2);
   --ob-info-text: rgb(101, 101, 108);
-  --ob-invited-bg: rgba(89, 80, 255, 0.05);
-  --ob-invited-text: rgb(101, 101, 108);
   --ob-remove-icon: rgb(101, 101, 108);
   --ob-badge-bg: rgba(89, 80, 255, 0.1);
   --ob-badge-text: rgb(101, 101, 108);
   --ob-done-icon-bg: rgba(84, 182, 132, 0.15);
-  // Failure states. --ob-error was already referenced (with an inline
-  // fallback) by .onboarding-app__invite-error; define it here so the inline
-  // save-error banner and the invite validation message stay in step.
+  // Failure states, used by the inline save-error banner.
   --ob-error: rgb(215, 78, 73);
   --ob-error-bg: rgba(215, 78, 73, 0.08);
   --ob-error-border: rgba(215, 78, 73, 0.28);
@@ -56,8 +52,8 @@
   // ---------------------------------------------------------------------
   // 2.0 rounds everything noticeably more than 1.0's flat 4px. The design
   // pins two of these directly (button 12px, text field 8px); the rest follow
-  // the field radius so chips, option rows and the invite list stay in step
-  // with the input they sit beside.
+  // the field radius so chips and option rows stay in step with the input they
+  // sit beside.
   --ob-radius-btn: 12px;
   --ob-radius-field: 8px;
   --ob-radius-pill: 999px;

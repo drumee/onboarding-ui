@@ -380,6 +380,49 @@
    Done / "You're all set"
    ============================================ */
 /* ============================================
+   Inline save-failure banner
+   ============================================ */
+/* Present on every step (see skeleton/index.js) and empty until something
+   actually fails, so it costs nothing normally. These rules previously sat
+   between two invite rules and were removed with them. */
+.onboarding-app__error-region {
+  width: 100%;
+
+  &:empty {
+    display: none;
+  }
+}
+
+.onboarding-app__save-error {
+  width: 100%;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 4px 0 12px;
+  padding: 10px 12px;
+  border-radius: var(--ob-radius-field);
+  background: var(--ob-error-bg);
+  border: 1px solid var(--ob-error-border);
+  color: var(--ob-error);
+  font-size: 13px;
+  font-family: var(--font-medium);
+  line-height: 1.45;
+}
+
+.onboarding-app__save-error-icon {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  height: 19px; // match the first line-box so the icon sits on the first line
+  color: var(--ob-error);
+}
+
+.onboarding-app__save-error-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  word-break: break-word;
+}
+
+/* ============================================
    Done screen (Figma 155:47483)
    ============================================ */
 .onboarding-app__done-section {

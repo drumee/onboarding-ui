@@ -111,6 +111,22 @@ class onboarding_app extends LetcBox {
    */
   async _call(service, args = {}) {
     this._serverError = null;
+
+    // An unresolvable service is a DEPLOYMENT gap, not a server error, and it
+    // has to say so. SERVICE is built from the endpoint's ACL, so a service the
+    // endpoint has not deployed yet reads as `undefined` here — and posting
+    // that builds the URL `/svc/undefined`, which the server answers with
+    // 401 MODULE_NOT_FOUND. That surfaced to the user as "Sorry, an internal
+    // error has occurred! (401)", which points at nothing.
+    if (!service) {
+      this.warn('[onboarding] service is not available on this endpoint');
+      return {
+        ok: false,
+        error: loc('SERVICE_UNAVAILABLE',
+          'That action is not available on this server yet. Please try again later.'),
+      };
+    }
+
     let res;
     try {
       res = await this.postService(service, args, SVC_OPT);

@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add a "Your organization name" field and a "Create your organization" action to the final "You're all set, {name}" screen, matching Figma 155:47483. The invite step stays exactly as it is.
+**Goal:** Add a "Your organization name" field and a "Create your organization" action to the final "You're all set, {name}" screen, matching Figma 155:47483.
 
-**Architecture:** Client-only. The whole server side already exists and is deployed — column, procedure, service handler, ACL entry and locale rows all landed earlier and are live on stage. What is missing is the field on the screen, the gate that lights the button, and the call chain behind it. The done screen is **step 8** (`TOTAL_STEPS = 8`, `MAX_STEP = 8`), so every index in this plan is 8, not 7.
+**Architecture:** Client-only. The whole server side already exists and is deployed — column, procedure, service handler, ACL entry and locale rows all landed earlier and are live on stage. What is missing is the field on the screen, the gate that lights the button, and the call chain behind it. The done screen is **step 7** (`TOTAL_STEPS = 7`, `MAX_STEP = 7`) — the invite step has been removed, so the flow is name(0) industry(1) role(2) team(3) tools(4) challenges(5) goals(6) and done(7).
 
 **Tech Stack:** Drumee `Skeletons`/`LetcBox` client framework, SCSS. No test runner — verification is `tests/load-modules.js` (module execution), `tests/resume.test.js` (`node:assert`), `npx sass` compilation, and `tests/harness.js` (headless-chromium measurement).
 
@@ -27,6 +27,8 @@ Read this before starting. A previous pass built the server side and the screen'
 | `DONE_CHECK_SVG` (39px `#54B684`) | `app/skeleton/toolkit/icons.js` | On the branch |
 | `_call` guard for unresolvable services | `app/main.js:131` | On the branch |
 | Verification harnesses | `tests/` | On the branch |
+| Invite step removed | onboarding-ui `fc5440e` | Done — the flow is 7 screens + done |
+| Save-error banner styles | `app/skin/form.scss` | Own section now, safe from step deletions |
 
 **One live blocker, not a code change:** the stage server process started at 05:25 and the plugin carrying `save_organisation` was deployed at 11:09, so the running process has never read that ACL. Until it is restarted, `SERVICE.onboarding.save_organisation` is `undefined` on the client and the guard will report "That action is not available on this server yet." That is Task 5.
 
@@ -34,14 +36,14 @@ Read this before starting. A previous pass built the server side and the screen'
 
 ## Global Constraints
 
-- **The done screen is index 8.** `TOTAL_STEPS = 8`, `MAX_STEP = 8`, `isDone = step >= 8`. The invite step owns index 7. Do not touch either number.
+- **The done screen is index 7.** `TOTAL_STEPS = 7`, `MAX_STEP = 7`, `isDone = step >= 7`. Goals owns index 6. `tests/resume.test.js` asserts this — if it fails, the step count moved and every index below is wrong.
 - **Locale idiom is `loc(KEY, 'literal')`**, never `LOCALE[KEY] || fallback` — `LOCALE` echoes an unknown key back, and the echo is truthy, so `||` never fires and the key name renders on screen. This is not hypothetical: it is why deleting the invite keys briefly made the invite step print `ONBOARDING_SEND_INVITES` as a button label.
 - **Design tokens already exist** in `app/skin/vars.scss` (`--ob-radius-btn`, `--ob-radius-field`, `--ob-gap-done`, `--ob-done-col`, the short-viewport breakpoints). Reuse; do not hardcode a value a token covers.
 - **Figma strokes borders INSIDE the box.** A CSS `border` adds to the box and pushes everything below it down. Use `box-shadow: inset 0 0 0 1px` — the option pills already do.
 - **Re-feed parts, never the whole form,** for in-step updates; a rebuild discards what the user typed.
 - **BEM family is pinned** via `figName`; build classes from `ui.fig.family`.
 - **Branch:** onboarding-ui base is `test`; work continues on `feat/remove-invite-org-name`. loby and ui-team already have their branches and need no further commits.
-- **Out of scope:** removing the invite step; changing `mark_complete`'s required steps; anything about the `invites` column.
+- **Out of scope:** changing `mark_complete`'s required steps; anything about the `invites` column or the other server-side invite leftovers (they hold funnel history — a retention decision, not a side effect of this work).
 
 ---
 
@@ -53,7 +55,7 @@ Read this before starting. A previous pass built the server side and the screen'
 | `app/skin/form.scss` | `__org-section` / `__org-label` / `__org-input` rules. |
 | `app/skeleton/toolkit/form.js` | `done_form` gains the label + Entry. |
 | `app/skeleton/toolkit/footer.js` | Done-screen button: label, service, starts disabled. |
-| `app/main.js` | `_captureStep` picks up the field; `checkForm` case 8 gates the button; `_enterWorkspace` becomes `_createOrganisation`. |
+| `app/main.js` | `_captureStep` picks up the field; `checkForm` case 7 gates the button; `_enterWorkspace` becomes `_createOrganisation`. |
 | `app/lib/resume.js` | `hydrate` restores the field on reload. |
 
 ---
@@ -214,7 +216,7 @@ git commit -m "feat(onboarding): add the organization-name field to the done scr
 
 **Files:**
 - Modify: `app/skeleton/toolkit/footer.js:140-150` (the `default:` case)
-- Modify: `app/main.js` (`_captureStep` ~881, `checkForm` ~379)
+- Modify: `app/main.js` (`_captureStep`, `checkForm` — the `default: // Done` arm)
 - Modify: `app/lib/resume.js` (`hydrate`)
 
 **Interfaces:**
@@ -258,11 +260,11 @@ Add `const { loc } = require('../../lib/locale-text');` at the top of `footer.js
 
 - [ ] **Step 3: Gate on a non-empty name**
 
-In `checkForm`, replace `default: // Done` with an explicit case 8, keeping a default:
+In `checkForm`, replace `default: // Done` with an explicit case 7, keeping a default:
 
 ```js
       // Done screen: the organization name is the one answer it collects.
-      case 8: {
+      case 7: {
         let orgName = data.organisation_name != null
           ? data.organisation_name
           : this._data.organisation_name;
@@ -292,7 +294,7 @@ cd /home/drumee/onboarding-ui \
   && npx sass --no-source-map --load-path=app/skin app/skin/index.scss /dev/null && echo "SCSS ok"
 ```
 
-Expected: modules load, `resume.test.js: all assertions passed` (it asserts `MAX_STEP === 8` — if that fails, someone changed the step count and this plan's index 8 is wrong), `SCSS ok`.
+Expected: modules load, `resume.test.js: all assertions passed` (it asserts `MAX_STEP === 7` — if that fails, someone changed the step count and this plan's index 7 is wrong), `SCSS ok`.
 
 - [ ] **Step 6: Commit**
 
@@ -306,7 +308,7 @@ git commit -m "feat(onboarding): gate the done screen on an organization name"
 ## Task 3: Wire the call chain
 
 **Files:**
-- Modify: `app/main.js` (`_enterWorkspace` at ~905, `onUiEvent` at ~992)
+- Modify: `app/main.js` (`_enterWorkspace`, and its `enter-workspace` case in `onUiEvent`)
 
 **Interfaces:**
 - Consumes: `SERVICE.onboarding.save_organisation` (live on stage), `SERVICE.adminpanel.create_organisation`.
@@ -355,7 +357,8 @@ git commit -m "feat(onboarding): gate the done screen on an organization name"
     // hub_id is what makes this src:owner service resolvable from onboarding.
     // Onboarding requests carry no hub_id, so the ACL would otherwise resolve
     // against the endpoint's own hub — which the user does not own, and every
-    // call would be denied. contact/invite uses the same trick on step 7.
+    // call would be denied. contact/invite used the same trick before the
+    // invite step was removed.
     //
     // ident is omitted deliberately: organisation_create mints one itself, and
     // organisation names are not required to be unique, so a name is enough.
@@ -399,7 +402,7 @@ cd /home/drumee/onboarding-ui \
   || echo "no live references to the old handler"
 ```
 
-Expected: modules load; the only remaining `enter-workspace` is in `app/skeleton/done.js`, which nothing requires (dead since `done_form` moved into the toolkit). Leave it — deleting it is a separate call.
+Expected: modules load; the only remaining `enter-workspace` is in `app/skeleton/done.js`, which nothing requires (dead since `done_form` moved into the toolkit) and which also orphans `app/locale/index.js` and `app/locale/*.json`. Deleting that set is a separate call — raise it, do not fold it in.
 
 - [ ] **Step 4: Commit**
 
@@ -440,21 +443,21 @@ measure(html,{sec:'.onboarding-app__done-section',icon:'.onboarding-app__done-ic
 
 Assert: `sec.w` 464; `icon` 70×70 with `rgba(84,182,132,0.15)`; `title` 32px `rgb(67,60,197)`; `badges.y - (title.y + title.h)` = 40; `org.y - (badges.y + badges.h)` = 40; `btn.radius` 12px; `_overflow` 0.
 
-- [ ] **Step 2: Confirm the invite step is untouched**
+- [ ] **Step 2: Confirm the step count still matches this plan**
 
 ```bash
 cd /home/drumee/onboarding-ui && node -e "
 const src=require('fs').readFileSync('app/skeleton/toolkit/header.js','utf8');
-console.log('TOTAL_STEPS', (src.match(/const TOTAL_STEPS = (\d+)/)||[])[1], '(expect 8)');
-console.log('MAX_STEP', require('./app/lib/resume').MAX_STEP, '(expect 8)');
-" && grep -c "invite_form\|invite_list" app/skeleton/toolkit/form.js && echo "invite builders present"
+console.log('TOTAL_STEPS', (src.match(/const TOTAL_STEPS = (\d+)/)||[])[1], '(expect 7)');
+console.log('MAX_STEP', require('./app/lib/resume').MAX_STEP, '(expect 7)');
+"
 ```
 
-Expected: `8`, `8`, `2`.
+Expected: `7`, `7`.
 
 - [ ] **Step 3: Sweep every step for overflow**
 
-Render each step through `tests/harness.js` at heights 1024, 900, 800, 768, 720, 640 and assert `_overflow === 0` for all. The done screen grows by 73px + 40px gap with the new field; it had ~480px of headroom at 1024, so it should still clear 640.
+Render each of the seven steps plus the done screen through `tests/harness.js` at heights 1024, 900, 800, 768, 720, 640 and assert `_overflow === 0` for all. The done screen grows by 73px + a 40px gap with the new field; it measured 542px tall at 1024 with ~480px of headroom, so it should still clear 640.
 
 ---
 
@@ -499,4 +502,4 @@ Reset with `SERVICE.onboarding.reset`, then walk all eight steps including invit
 1. **Is the organization name required?** This plan gates the button on non-empty, consistent with every other step. The design shows no skip — but it also shows no way past the screen without creating an org, so a user who does not want one is stuck. Confirm the intent.
 2. **What happens when provisioning fails?** `organisation_create` signals `POOL_EMPTY` when no clean hub is available. Task 3 shows the error in place and re-enables the button, which on an empty pool is an infinite retry. Decide whether a "continue without an organization" escape is needed.
 3. **Users who already have an organization.** ui-team's own form refuses when `Organization.get('domain_id') != 1`. The done screen should probably hide the field entirely for them rather than let the call fail. Not covered by the design.
-4. **The invite step and the org step now both end the flow.** Invite (7) sends contacts; done (8) creates the org. Nobody has looked at whether inviting people *before* the organization exists puts them in the right place. Worth a product answer before this ships.
+4. **Nobody is invited during onboarding any more.** The invite step is gone, so the organization is created with exactly one member. Whether users are expected to invite their team from the desk afterwards, and whether anything should prompt them to, is an open product question this screen does not answer.

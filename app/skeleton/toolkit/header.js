@@ -14,7 +14,6 @@ const STEP_TITLES = [
   ['ONBOARDING_HELP_TAILOR',             'Help us tailor your workspace'],  // tools, inline
   ['ONBOARDING_HELP_TAILOR',             'Help us tailor your workspace'],  // challenges, inline
   ['ONBOARDING_WHAT_TO_START_WITH',      'What do you want to start with?'],
-  ['ONBOARDING_INVITE_TEAM',             'Invite your team members'],
 ];
 
 // Indexed by `ui._step`. An empty entry means the step prints its title alone,
@@ -32,9 +31,10 @@ const STEP_TIPS_KEYS = [
   'ONBOARDING_WORKSPACE_READY',  // 8. invite
 ];
 
-// One dot per question screen. Went from 7 to 8 when the combined tools step
-// was split into tools (index 4) and challenges (index 5).
-const TOTAL_STEPS = 8;
+// One segment per question screen. Seven — matching the design's progress bar
+// (Figma 155:47112 fills 1 of 7, 155:47287 fills 6, 155:47398 fills all 7).
+// Was 8 while the flow carried an invite step.
+const TOTAL_STEPS = 7;
 
 // Steps that render "Help us tailor your workspace" inside the form body (star
 // icon + text, see tailor_title in ./form.js), so the header must not also

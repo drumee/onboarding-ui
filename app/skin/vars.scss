@@ -82,6 +82,13 @@
   --ob-freetext-radius: 4px;
   --ob-freetext-h: 65px;
 
+  // Done screen (Figma 155:47483). The success badge is Signal/Success at 15%,
+  // and its column is 464px wide rather than the 472px the question screens use.
+  --ob-done-badge-size: 70px;
+  --ob-done-icon-size: 39px;
+  --ob-done-col: 464px;
+  --ob-gap-done: 40px;
+
   // Distance from the top of the viewport to the top of the card. 110px at the
   // design's 1024px-tall frame.
   --ob-card-top: 110px;

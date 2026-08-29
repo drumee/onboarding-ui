@@ -379,55 +379,66 @@
 /* ============================================
    Done / "You're all set"
    ============================================ */
+/* ============================================
+   Done screen (Figma 155:47483)
+   ============================================ */
 .onboarding-app__done-section {
+  width: 100%;
+  max-width: var(--ob-done-col);
+  margin: 0 auto;
+  gap: var(--ob-gap-done);
+  padding-top: 0;
+}
+
+/* Check badge + headline, centred as one block (Figma 155:47493). */
+.onboarding-app__done-head {
   width: 100%;
   align-items: center;
   gap: 16px;
 }
 
 .onboarding-app__done-icon {
+  width: var(--ob-done-badge-size);
+  height: var(--ob-done-badge-size);
+  border-radius: 100px;
+  background: var(--ob-done-icon-bg);
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 70px;
-  height: 70px;
-  background: var(--ob-done-icon-bg);
-  border-radius: 50%;
+  flex-shrink: 0;
 
   svg {
     display: block;
+    width: var(--ob-done-icon-size);
+    height: var(--ob-done-icon-size);
   }
 }
 
 .onboarding-app__done-title {
-  font-size: 32px;
+  width: 100%;
   font-family: var(--font-bold);
+  font-size: 32px;
+  font-weight: 600;
+  line-height: 1.1;
   color: var(--ob-title);
-  line-height: 35px;
-  text-align: center;
-  margin-bottom: 24px;
-}
-
-.onboarding-app__done-tips {
-  font-size: 16px;
-  font-family: var(--font-main);
-  color: var(--ob-tips);
-  line-height: 22px;
   text-align: center;
 }
 
+/* Answer summary. Wraps, centred, 12px apart (Figma 155:47499). */
 .onboarding-app__summary-badges {
+  width: 100%;
   flex-wrap: wrap;
-  gap: 12px;
   justify-content: center;
+  gap: 12px;
 }
 
 .onboarding-app__summary-badge {
   padding: 8px 20px;
-  background: var(--ob-badge-bg);
   border-radius: var(--ob-radius-field);
-  font-size: 14px;
+  background: var(--ob-badge-bg);
+  color: var(--ob-option-text-active);
   font-family: var(--font-main);
-  color: var(--ob-badge-text);
+  font-size: 14px;
+  line-height: 1.4;
   white-space: nowrap;
 }

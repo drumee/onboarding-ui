@@ -4,6 +4,7 @@
 const { loc } = require('../../lib/locale-text');
 const {
   STAR_FOUR_SVG,
+  DONE_CHECK_SVG,
   APP_FOLDER_SVG,
   APP_HANDSHAKE_SVG,
   APP_LOCK_SVG,
@@ -451,17 +452,25 @@ export function done_form(ui) {
   return Skeletons.Box.Y({
     className: `${pfx}__done-section`,
     kids: [
-      Skeletons.Element({
-        className: `${pfx}__done-icon`,
-        content: `<svg width="39" height="39" viewBox="0 0 39 39" fill="none"><circle cx="19.5" cy="19.5" r="17" stroke="#54B684" stroke-width="2"/><path d="M12 19.5L17 24.5L27 14.5" stroke="#54B684" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
-      }),
-      Skeletons.Note({
-        className: `${pfx}__done-title`,
-        content: (LOCALE.ONBOARDING_ALL_SET || "You are all set, {0}").replace('{0}', userName),
-      }),
-      Skeletons.Note({
-        className: `${pfx}__done-tips`,
-        content: LOCALE.ONBOARDING_ALL_SET_TIPS || 'Your workspace is configured and ready to go.',
+      // Badge and headline are one centred block, 16px apart, with 40px down to
+      // the summary — the design groups them (Figma 155:47493) rather than
+      // spacing all four children equally.
+      Skeletons.Box.Y({
+        className: `${pfx}__done-head`,
+        kids: [
+          Skeletons.Element({
+            className: `${pfx}__done-icon`,
+            content: DONE_CHECK_SVG,
+            active: 0,
+          }),
+          Skeletons.Note({
+            className: `${pfx}__done-title`,
+            // New key: deployed endpoints hold 1.0's "You are all set" under
+            // ONBOARDING_ALL_SET, and a populated row beats the fallback.
+            content: loc('ONBOARDING_ALL_SET_V2', "You're all set, {0}")
+              .replace('{0}', userName),
+          }),
+        ],
       }),
       Skeletons.Box.X({
         className: `${pfx}__summary-badges`,

@@ -88,6 +88,8 @@
   --ob-done-icon-size: 39px;
   --ob-done-col: 464px;
   --ob-gap-done: 40px;
+  // Overlay/light mode at 5% — the org field is outlined, not filled.
+  --ob-org-input-border: rgba(0, 0, 0, 0.05);
 
   // Distance from the top of the viewport to the top of the card. 110px at the
   // design's 1024px-tall frame.

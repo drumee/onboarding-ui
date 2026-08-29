@@ -476,6 +476,31 @@ export function done_form(ui) {
         className: `${pfx}__summary-badges`,
         kids: badgeKids,
       }),
+      // The one answer this screen collects. Both keys are new, so loc() shows
+      // the design copy until the locale rows land.
+      Skeletons.Box.Y({
+        className: `${pfx}__org-section`,
+        kids: [
+          Skeletons.Note({
+            className: `${pfx}__org-label`,
+            content: loc('ONBOARDING_ORG_NAME_LABEL', 'Your organization name'),
+            active: 0,
+          }),
+          Skeletons.Entry({
+            className: `${pfx}__org-input`,
+            name: 'organisation_name',
+            value: ui._data.organisation_name || '',
+            formItem: 'organisation_name',
+            innerClass: 'organisation_name',
+            mode: _a.interactive,
+            service: _a.input,
+            placeholder: loc('ONBOARDING_ORG_NAME_PLACEHOLDER', 'Type the name...'),
+            uiHandler: [ui],
+            state: 0,
+            radio: ui._id,
+          }),
+        ],
+      }),
     ]
   });
 }

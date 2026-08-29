@@ -286,7 +286,15 @@ class onboarding_app extends LetcBox {
       }
       case 6: // Goals
         if (this._data.goal) completed = 1;
-        break;      default: // Done
+        break;      // Done screen: the organization name is the one answer it collects.
+      case 7: {
+        let orgName = data.organisation_name != null
+          ? data.organisation_name
+          : this._data.organisation_name;
+        if ((orgName || '').trim()) completed = 1;
+        break;
+      }
+      default:
         completed = 1;
         break;
     }
@@ -568,6 +576,11 @@ class onboarding_app extends LetcBox {
     if (data.industry_other != null) this._data.industry_other = data.industry_other;
     if (data.role_other != null) this._data.role_other = data.role_other;
     if (data.tools_other != null) this._data.tools_other = data.tools_other;
+    // Stored untrimmed: checkForm trims for the gate and _createOrganisation
+    // trims for the wire, so the caret is not disturbed mid-word.
+    if (data.organisation_name != null) {
+      this._data.organisation_name = data.organisation_name;
+    }
   }
 
   /**

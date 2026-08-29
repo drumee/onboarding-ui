@@ -1,3 +1,5 @@
+const { loc } = require('../../lib/locale-text');
+
 function backBtn(ui) {
   const fig = ui.fig.family;
   return Skeletons.Note({
@@ -109,16 +111,18 @@ export function footer(ui) {
       break;
 
     default:
+      // Done screen. Starts disabled like every other step and is lit by
+      // checkForm() once an organization name has been typed.
       kids.push(
         Skeletons.Note({
           className: `${fig}__primary-btn`,
           sys_pn: _a.next,
           partHandler: [ui],
-          content: LOCALE.ONBOARDING_OPEN_WORKSPACE || "Open workspace",
-          service: 'enter-workspace',
-          state: 1,
+          content: loc('ONBOARDING_CREATE_ORG', 'Create your organization'),
+          service: 'create-organisation',
+          state: 0,
           reference: _a.state,
-          dataset: { state: 1 },
+          dataset: { state: 0 },
         })
       );
       break;

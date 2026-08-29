@@ -1,5 +1,6 @@
 
 const SVC_OPT = { async: 1 };
+const { isValidEmail, normalizeEmail } = require('./lib/email');
 const { isOtherComplete, buildToolsSelection } = require('./lib/other-option');
 const { classifyResponse, errorText } = require('./lib/service-result');
 const { hydrate, resumeStep, firstIncompleteStep, MAX_STEP } = require('./lib/resume');
@@ -37,6 +38,15 @@ class onboarding_app extends LetcBox {
     this._serverError = null;
     // Inline "we could not save that" banner text for the current step.
     this._saveError = null;
+    // Set once at least one invite has actually gone out. Read by the close
+    // handler, which finishes onboarding rather than discarding it from that
+    // point on.
+    this._invitesSent = false;
+    // Every address contact/invite has accepted this session. Accumulated
+    // rather than replaced, because the staged list is emptied after each send
+    // and the user can add more — save_onboarding_invites stores the whole set,
+    // not a delta.
+    this._sentInvites = [];
   }
 
   /**
@@ -114,10 +124,10 @@ class onboarding_app extends LetcBox {
 
     // An unresolvable service is a DEPLOYMENT gap, not a server error, and it
     // has to say so. SERVICE is built from the endpoint's ACL, so a service the
-    // endpoint has not deployed yet reads as `undefined` here — and posting
-    // that builds the URL `/svc/undefined`, which the server answers with
-    // 401 MODULE_NOT_FOUND. That surfaced to the user as "Sorry, an internal
-    // error has occurred! (401)", which points at nothing.
+    // endpoint has not loaded reads as `undefined` here — and posting that
+    // builds the URL `/svc/undefined`, which the server answers with 401
+    // MODULE_NOT_FOUND. That reached the user as "Sorry, an internal error has
+    // occurred! (401)", which points at nothing.
     if (!service) {
       this.warn('[onboarding] service is not available on this endpoint');
       return {
@@ -158,9 +168,46 @@ class onboarding_app extends LetcBox {
   }
 
   /**
+   * Re-render only the step-6 invite list region (validation error + staged
+   * chips) in place, instead of re-feeding the whole step via loadForm().
+   * Avoids the flash / scroll-reset of a full rebuild and keeps the email
+   * input (which lives outside this part) untouched.
+   */
+  _refreshInviteList() {
+    const { invite_list } = require('./skeleton/toolkit');
+    // Returns the promise so a caller can act once the region has actually been
+    // re-fed — the add handler scrolls the new chip into view that way.
+    return this.ensurePart('invite-list').then((p) => {
+      p.clear();
+      p.feed(invite_list(this));
+    });
+  }
+
+  /**
+   * Keep the newest invitee in view.
+   *
+   * The staged list scrolls once it passes about four entries (see
+   * __invited-list in skin/form.scss). A chip appended below the fold is
+   * indistinguishable from an add that did nothing, and the input has been
+   * cleared by then, so there is not even the typed address left as evidence.
+   */
+  _scrollInviteListToEnd() {
+    const run = () => {
+      if (!this.el) return;
+      let list = this.el.querySelector(`.${this.fig.family}__invited-list`);
+      if (list) list.scrollTop = list.scrollHeight;
+    };
+    // After paint: feed() has returned by the time this is called, but the rows
+    // it queued are not necessarily laid out, and scrollHeight before layout is
+    // the height without them.
+    if (typeof requestAnimationFrame === 'function') requestAnimationFrame(run);
+    else setTimeout(run, 0);
+  }
+
+  /**
    * Re-render only the "<field>-other" reveal region in place after a
    * selection/toggle change, and focus the input when it appears. Mirrors
-   * Avoids a full-form rebuild / scroll reset.
+   * _refreshInviteList — avoids a full-form rebuild / scroll reset.
    */
   _refreshOtherInput(field) {
     const { other_region, tools_other_region } = require('./skeleton/toolkit');
@@ -177,7 +224,7 @@ class onboarding_app extends LetcBox {
 
   /**
    * Re-render the inline save-error banner in place. Same pattern as
-   * No full rebuild, so the user's inputs and scroll
+   * _refreshInviteList: no full rebuild, so the user's inputs and scroll
    * position survive a failed save.
    */
   _refreshError() {
@@ -216,8 +263,21 @@ class onboarding_app extends LetcBox {
   }
 
   /**
-   * Toggle a loading state on the primary button while a submit is in flight.
-   * `is-loading` shows a spinner and
+   * Clear and refocus the invite email input after a successful add, without
+   * rebuilding it.
+   */
+  _clearInviteInput() {
+    if (!this.el) return;
+    let input = this.el.querySelector('[name="invite_email"]');
+    if (input) {
+      input.value = '';
+      input.focus();
+    }
+  }
+
+  /**
+   * Toggle a loading state on the step-6 primary ("Send invites") button while
+   * the contact/invite calls are in flight. `is-loading` shows a spinner and
    * blocks clicks (see app/skin/index.scss). On success the flow advances and
    * re-feeds the footer; on failure _failStep turns it back off.
    */
@@ -302,15 +362,21 @@ class onboarding_app extends LetcBox {
       }
       case 6: // Goals
         if (this._data.goal) completed = 1;
-        break;      // Done screen: the organization name is the one answer it collects.
-      case 7: {
-        let orgName = data.organisation_name != null
-          ? data.organisation_name
-          : this._data.organisation_name;
-        if ((orgName || '').trim()) completed = 1;
         break;
-      }
-      default:
+      // Invite. "Send invites" needs something to send: the gate is the staged
+      // list, i.e. what the invite-list region shows as chips.
+      //
+      // Not the region's own emptiness, though it usually amounts to the same
+      // thing — that region also carries the inline validation error, so a
+      // rejected address ("already in the list") would make it non-empty while
+      // there is still nothing to send.
+      //
+      // A typed-but-not-added address does not count either: "+ Add" is what
+      // puts an address on the list, and the list is what gets sent.
+      case 7:
+        if ((this._data.invites || []).length) completed = 1;
+        break;
+      default: // Done
         completed = 1;
         break;
     }
@@ -326,6 +392,7 @@ class onboarding_app extends LetcBox {
    *
    */
   _advance() {
+    this._inviteError = null;
     this._saveError = null;
     this._step++;
     if (this._step > MAX_STEP) this._step = MAX_STEP;
@@ -413,6 +480,21 @@ class onboarding_app extends LetcBox {
         );
         break;
 
+      case 7: // Invite team members — each becomes a contact via contact/invite
+        res = await this._commitInvites();
+        // Sending does NOT leave the step. It used to advance to the done
+        // screen, which threw the user off the list they were working on the
+        // instant it succeeded — and took the "N invite(s) sent" toast with it,
+        // since the toast lands on whatever screen is showing by the time it
+        // paints. Staying put means the confirmation appears where the action
+        // was, and a second and third teammate can be invited without walking
+        // back. "Skip this step" is the way on.
+        if (res && res.ok) {
+          this._afterInvitesSent();
+          return;
+        }
+        break;
+
       default:
         this._advance();
         return;
@@ -479,6 +561,38 @@ class onboarding_app extends LetcBox {
         res = await this._call(SERVICE.onboarding.save_intent, { intent: '' });
         break;
 
+      case 7:
+        // Skip always leaves the step, whatever is on the list and whatever the
+        // server makes of it.
+        //
+        // Staged addresses are dropped — they were typed but never sent, so
+        // there is nothing to take back and nothing the user is losing that
+        // they had committed to.
+        //
+        // "Invited nobody" is still recorded, like every other skipped step,
+        // but ONLY when nothing has actually gone out: once contact/invite has
+        // accepted an address that invitation exists and cannot be recalled, so
+        // an empty list written over it would leave the record denying
+        // something that really happened. Skipping after a send means "no
+        // more", not "none".
+        //
+        // And unlike steps 5-7, that write cannot hold the step. Skip here is a
+        // navigation action over a list the user has just abandoned; trapping
+        // them on the invite screen because a bookkeeping row would not save —
+        // or because the endpoint has no save_invites service yet — would block
+        // the end of onboarding over something they cannot see or fix. The
+        // failure is warned about, exactly as _saveInvites does after a send.
+        this._data.invites = [];
+        this._inviteError = null;
+        if (!this._invitesSent) {
+          let saved = await this._call(SERVICE.onboarding.save_invites, { invites: [] });
+          if (!saved.ok) {
+            this.warn('[onboarding] skipped invites but could not record it', saved.error);
+          }
+        }
+        this._advance();
+        return;
+
       default:
         this._advance();
         return;
@@ -542,6 +656,179 @@ class onboarding_app extends LetcBox {
   }
 
   /**
+   * Reset the invite step after a successful send, without leaving it.
+   *
+   * The sent addresses are dropped from the staged list for the same reason
+   * _commitInvites drops them on a partial failure: they have gone out, and a
+   * second press of the button must not send them again. That empties the list,
+   * so checkForm() puts "Send invites" back to disabled until another address
+   * is added — the toast raised by _commitInvites is what reports the result.
+   */
+  _afterInvitesSent() {
+    this._data.invites = [];
+    this._inviteError = null;
+    this._setSubmitLoading(false);
+    this._refreshInviteList();
+    this.checkForm();
+  }
+
+  /**
+   * Record the invite step's answer on the onboarding row.
+   *
+   * Every other step persists what the user said; this one used to persist
+   * nothing — the addresses went out through contact/invite and left no trace
+   * on onboarding_responses, so a stored response could not tell "invited
+   * nobody" from "invited four people".
+   *
+   * BEST EFFORT, DELIBERATELY. The invitations have already been sent by the
+   * time this runs, and they cannot be recalled. Failing the step over a failed
+   * bookkeeping write would tell the user their invites did not go out — which
+   * is false — and invite a retry that would send them a second time. So the
+   * failure is warned about and swallowed; every other save in this wizard
+   * reports and holds, and the difference is that all of those own the answer
+   * they are writing, while this one is a record of something that already
+   * happened elsewhere.
+   */
+  async _saveInvites() {
+    let res = await this._call(
+      SERVICE.onboarding.save_invites,
+      { invites: this._sentInvites }
+    );
+    if (!res.ok) {
+      this.warn('[onboarding] invites sent but not recorded on the response', res.error);
+    }
+    return res;
+  }
+
+  /**
+   * The "N invite(s) sent" notice (router-butler__main.notice).
+   *
+   * When everything went out, closing that notice IS the way on: its primary
+   * button carries the user to the done screen — "Open workspace" — instead of
+   * dropping them back on an invite step they have finished with. The header X
+   * is dropped for the same reason (Butler.say's third argument): it fires the
+   * very same _e.close, so it only offered a second, less obvious spelling of
+   * the same action.
+   *
+   * When some addresses failed, the notice stays an ordinary dismissible one —
+   * the failures are still on screen behind it, with the error banner and a
+   * button that retries exactly those, and navigating away from that would lose
+   * them.
+   *
+   * @param {String}  text
+   * @param {Boolean} complete  true when nothing failed
+   */
+  _sayInvitesSent(text, complete) {
+    const advance = () => {
+      // Butler keeps _onClose armed after firing it, so an unrelated dialog
+      // closed later can re-invoke this. Fixed in ui-team, but the deployed
+      // bundle there may not carry the fix yet, and a stale callback that
+      // silently advances the wizard is worse than a missing one. Only act
+      // while the invite step is still the one on screen.
+      if (this._step !== 7) return;
+      this._advance();
+    };
+    try {
+      // Third argument is ignored by an older Butler, which then simply keeps
+      // its X — and since the X fires _e.close too, the navigation still works.
+      Butler.say(text, complete ? advance : null, { closable: !complete });
+      if (complete) this._dropNoticeClose();
+    } catch (e) { /* best effort: the notice is not worth failing the send */ }
+  }
+
+  /**
+   * Take the X off the "N invite(s) sent" notice.
+   *
+   * Belongs in Butler, and is there — header.js drops it for `closable: false`.
+   * But that lives in ui-team, which deploys as the whole application, while
+   * this plugin deploys on its own; the endpoint currently serving this wizard
+   * is running an app build from before that option existed, so the X is still
+   * rendered and the option is silently ignored.
+   *
+   * So the node is removed here as well. It is deliberately narrow: it runs
+   * only for the notice this view just raised, and only on the complete-send
+   * path where closing means "go to the workspace" rather than "dismiss". Once
+   * a ui-team build carrying the option is deployed the element is never
+   * created and this quietly finds nothing.
+   *
+   * Polled because feed() paints the notice asynchronously; bounded so a butler
+   * that legitimately has no X costs half a second of cheap timers, not a
+   * permanent one.
+   */
+  _dropNoticeClose(attempt = 0) {
+    let el = null;
+    try {
+      el = document.querySelector('.router-butler__main.notice .router-butler__close');
+    } catch (e) {
+      return;
+    }
+    if (el) {
+      el.remove();
+      return;
+    }
+    if (attempt < 10) {
+      setTimeout(() => this._dropNoticeClose(attempt + 1), 50);
+    }
+  }
+
+  /**
+   * Step 8 (index 7). Invites are optional, but a failure is still reported rather than
+   * swallowed: addresses that went out are dropped from the staged list (so a
+   * retry cannot double-send) and the ones that failed stay put with an error.
+   */
+  async _commitInvites() {
+    let emails = (this._data.invites || [])
+      .map(inv => (typeof inv === 'string' ? inv : inv.email) || '')
+      .map(e => e.trim())
+      .filter(Boolean);
+
+    if (!emails.length) return { ok: true };
+
+    let sent = [];
+    let failed = [];
+    for (let email of emails) {
+      let r = await this._call(SERVICE.contact.invite, { email, hub_id: Visitor.id });
+      if (r.ok) {
+        sent.push(email);
+      } else {
+        failed.push(email);
+      }
+    }
+
+    if (sent.length) {
+      // Recorded here rather than on the all-succeeded path, because a PARTIAL
+      // send still put real invitations out: those contacts exist and cannot be
+      // recalled, so closing must not discard the onboarding row from this
+      // point either.
+      this._invitesSent = true;
+      this._sentInvites.push(...sent);
+      await this._saveInvites();
+      // loct() carries the guard this used to spell out inline: LOCALE echoes
+      // an unset key back, so a plain `||` would put the literal
+      // "ONBOARDING_INVITES_SENT" in the notice.
+      this._sayInvitesSent(
+        loct('ONBOARDING_INVITES_SENT', '{0} invite(s) sent', sent.length),
+        !failed.length
+      );
+    }
+
+    if (!failed.length) return { ok: true };
+
+    // Keep only what still needs sending, so pressing the button again retries
+    // exactly the failures.
+    this._data.invites = this._data.invites.filter((inv) => {
+      let e = ((typeof inv === 'string' ? inv : inv.email) || '').trim();
+      return failed.includes(e);
+    });
+    this._refreshInviteList();
+
+    return {
+      ok: false,
+      error: loct('ONBOARDING_INVITES_FAILED', 'Could not invite: {0}', failed.join(', ')),
+    };
+  }
+
+  /**
    * Record the failure instead of only toasting it.
    *
    * The framework calls this for BOTH transport errors and 200-with-`error`
@@ -592,11 +879,6 @@ class onboarding_app extends LetcBox {
     if (data.industry_other != null) this._data.industry_other = data.industry_other;
     if (data.role_other != null) this._data.role_other = data.role_other;
     if (data.tools_other != null) this._data.tools_other = data.tools_other;
-    // Stored untrimmed: checkForm trims for the gate and _createOrganisation
-    // trims for the wire, so the caret is not disturbed mid-word.
-    if (data.organisation_name != null) {
-      this._data.organisation_name = data.organisation_name;
-    }
   }
 
   /**
@@ -613,55 +895,37 @@ class onboarding_app extends LetcBox {
   }
 
   /**
-   * Final screen. Four server calls, in order, each gating the next:
-   *   1. mark_complete       — refuses if a mandatory answer never landed
-   *   2. update_profile      — syncs the answers onto the YP profile
-   *   3. save_organisation   — records the typed name on the onboarding row
-   *   4. adminpanel.create_organisation — provisions the organization
-   *
-   * Only (1) can send the user backwards. The done screen has no Back button,
-   * so a mark_complete refusal has to route them to the offending step or they
-   * are trapped on a screen whose one button can only ever fail again. The
-   * other three are failures of OUR side, not of their answers, so they report
-   * in place and leave the user able to retry.
+   * Leave the wizard. Both calls must succeed: mark_complete validates that
+   * the mandatory steps really are stored, and update_profile is what sets
+   * `onboarded = 1` — the flag desk reads to decide whether to show the wizard
+   * again. Exiting when either fails is what produced the worst symptom of the
+   * old flow: the user was dropped into the workspace believing they were
+   * done, and met the wizard again on their next login.
    */
-  async _createOrganisation() {
+  async _enterWorkspace() {
     this._clearError();
     this.setItemState(_a.next, 0);
     this._setSubmitLoading(true);
 
     let res = await this._call(SERVICE.onboarding.mark_complete, {});
+    if (res.ok) {
+      res = await this._call(SERVICE.onboarding.update_profile, {});
+    }
     if (!res.ok) {
+      // mark_complete refuses with "Step N is incomplete" when a mandatory
+      // answer never reached the server. The done screen carries no Back
+      // button, so simply reporting the error here would trap the user on a
+      // screen with one button that can only fail again. Send them to the step
+      // that needs fixing, with the reason shown there.
       const gap = firstIncompleteStep(this._data);
       this._setSubmitLoading(false);
       this._saveError = res.error;
-      if (gap >= 0) this._step = gap;
+      if (gap >= 0) {
+        this._step = gap;
+      }
       this.loadForm();
       return;
     }
-
-    res = await this._call(SERVICE.onboarding.update_profile, {});
-    if (!res.ok) return this._failOrgStep(res.error);
-
-    const name = (this._data.organisation_name || '').trim();
-    res = await this._call(SERVICE.onboarding.save_organisation, {
-      organisation_name: name,
-    });
-    if (!res.ok) return this._failOrgStep(res.error);
-
-    // hub_id is what makes this src:owner service resolvable from onboarding.
-    // Onboarding requests carry no hub_id, so the ACL would otherwise resolve
-    // against the endpoint's own hub — which the user does not own, and every
-    // call would be denied. contact/invite used the same trick from this file.
-    //
-    // ident is omitted deliberately: organisation_create mints one itself, and
-    // organisation names are not required to be unique, so a name is enough.
-    res = await this._call(SERVICE.adminpanel.create_organisation, {
-      name,
-      hub_id: Visitor.id,
-      nid: Visitor.get(_a.home_id),
-    });
-    if (!res.ok) return this._failOrgStep(res.error);
 
     localStorage.onboarding_step = "0";
     if (this.mget(_a.type) == 'app') {
@@ -669,17 +933,6 @@ class onboarding_app extends LetcBox {
       return;
     }
     window.location.href = '/';
-  }
-
-  /**
-   * Report a done-screen failure in place. The user keeps what they typed and
-   * can retry; nothing sends them backwards, because their answers are fine.
-   */
-  _failOrgStep(message) {
-    this._setSubmitLoading(false);
-    this._saveError = message || this._fallbackError();
-    this._refreshError();
-    this.setItemState(_a.next, 1);
   }
 
   /**
@@ -702,6 +955,7 @@ class onboarding_app extends LetcBox {
     }
     this._step = 0;
     this._data = {};
+    this._inviteError = null;
     this._saveError = null;
     this.loadForm();
   }
@@ -723,6 +977,7 @@ class onboarding_app extends LetcBox {
         // already live in this._data (written on select/toggle); only the
         // free-text fields still sit in the rendered Entries.
         this._captureStep();
+        this._inviteError = null;
         this._saveError = null;
         this._step--;
         if (this._step < 0) this._step = 0;
@@ -733,8 +988,8 @@ class onboarding_app extends LetcBox {
         await this._skipStep();
         break;
 
-      case 'create-organisation':
-        await this._createOrganisation();
+      case 'enter-workspace':
+        await this._enterWorkspace();
         break;
 
       // Every single-select group (industry, role, team size, goal): first click
@@ -799,12 +1054,73 @@ class onboarding_app extends LetcBox {
         }
         break;
 
+      case 'add-invite':
+        {
+          let formData = this.getData() || {};
+          let email = normalizeEmail(formData.invite_email || '');
+          this._inviteError = null;
+          let added = false;
+
+          if (!email) {
+            this._inviteError = loc('EMAIL_REQUIRED', 'Please enter an email address');
+          } else if (!isValidEmail(email)) {
+            this._inviteError = loc('INVALID_EMAIL_FORMAT', 'Please enter a valid email address');
+          } else if (email === normalizeEmail((Visitor.profile && Visitor.profile().email) || '')) {
+            this._inviteError = loc('CANNOT_ADD_SELF_AS_CONTACT', 'You cannot add yourself');
+          } else {
+            if (!this._data.invites) this._data.invites = [];
+            let dup = this._data.invites.some(inv => normalizeEmail(inv.email || inv) === email);
+            if (dup) {
+              this._inviteError = loc('ALREADY_IN_LIST', 'That email is already in the list');
+            } else {
+              this._data.invites.push({ email });
+              added = true;
+            }
+          }
+          // Re-render only the invite-list region (error + chips) in place,
+          // not the whole step — no flash / scroll reset. Clear the input only
+          // on a successful add so a rejected entry stays editable.
+          this._refreshInviteList().then(() => {
+            if (added) this._scrollInviteListToEnd();
+          });
+          if (added) this._clearInviteInput();
+          // "Send invites" is gated on the list being non-empty.
+          this.checkForm();
+        }
+        break;
+
+      case 'remove-invite':
+        {
+          let index = parseInt(cmd.el ? cmd.el.dataset.index : -1);
+          if (index >= 0 && this._data.invites) {
+            this._data.invites.splice(index, 1);
+            this._inviteError = null;
+            this._refreshInviteList();
+            // Removing the last one has to put the button back to disabled.
+            this.checkForm();
+          }
+        }
+        break;
+
       case _a.input:
         this._captureStep();
         this.checkForm();
         break;
 
       case _e.close:
+        // Once invites have gone out, closing FINISHES onboarding instead of
+        // discarding it: it moves to the done screen, where "Open workspace"
+        // runs mark_complete + update_profile.
+        //
+        // The alternative was destructive and silently so. _reset() wipes the
+        // stored answers (reset_onboarding_response DELETEs the row), so a user
+        // who had just invited their team and pressed X lost every answer they
+        // had given — while the invites themselves, already sent as contacts,
+        // could not be taken back. Nothing about "close" said that.
+        if (this._step === 7 && this._invitesSent) {
+          this._advance();
+          break;
+        }
         await this._reset();
         break;
 

@@ -191,6 +191,13 @@
     margin-top: 0;
   }
 
+  &__tips {
+    font-family: var(--font-main);
+    font-size: 16px;
+    line-height: 22px;
+    color: var(--ob-tips);
+  }
+
   &__footer {
     width: 100%;
     align-items: center;
@@ -241,7 +248,7 @@
       }
     }
 
-    // Loading state while a submit is in flight: keep the active look, block
+    // Loading state while invites are being sent: keep the active look, block
     // clicks, and append a spinner next to the label (the button's gap:8px
     // spaces it). Placed after the data-state rules so it wins on source order.
     &.is-loading {
@@ -293,8 +300,8 @@
     align-items: stretch;
     gap: 12px;
 
-    // Continue grows to fill the row; Back stays compact on the left so the
-    // primary action reads as the larger, dominant button.
+    // Continue (or Send invites) grows to fill the row; Back stays compact on
+    // the left so the primary action reads as the larger, dominant button.
     .onboarding-app__primary-btn {
       flex: 1 1 auto;
       width: auto;

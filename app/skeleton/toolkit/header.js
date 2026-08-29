@@ -14,12 +14,27 @@ const STEP_TITLES = [
   ['ONBOARDING_HELP_TAILOR',             'Help us tailor your workspace'],  // tools, inline
   ['ONBOARDING_HELP_TAILOR',             'Help us tailor your workspace'],  // challenges, inline
   ['ONBOARDING_WHAT_TO_START_WITH',      'What do you want to start with?'],
+  ['ONBOARDING_INVITE_TEAM',             'Invite your team members'],
 ];
 
-// One segment per question screen. Seven — matching the design's progress bar
-// (Figma 155:47112 fills 1 of 7, 155:47287 fills 6, 155:47398 fills all 7).
-// Was 8 while the flow carried an invite step.
-const TOTAL_STEPS = 7;
+// Indexed by `ui._step`. An empty entry means the step prints its title alone,
+// with no tip line under it — which is every question screen in 2.0 except the
+// last: the header is the question and nothing else. Invite keeps its tip
+// because "your workspace is ready" is news, not a restatement of the title.
+const STEP_TIPS_KEYS = [
+  '',  // 1. name
+  '',  // 2. industry
+  '',  // 3. role
+  '',  // 4. team size
+  '',  // 5. tools
+  '',  // 6. challenges
+  '',  // 7. goals
+  'ONBOARDING_WORKSPACE_READY',  // 8. invite
+];
+
+// One dot per question screen. Went from 7 to 8 when the combined tools step
+// was split into tools (index 4) and challenges (index 5).
+const TOTAL_STEPS = 8;
 
 // Steps that render "Help us tailor your workspace" inside the form body (star
 // icon + text, see tailor_title in ./form.js), so the header must not also
@@ -47,8 +62,10 @@ export function header(ui) {
   const userName = ui._data.firstname || Visitor.get('firstname') || 'Alex';
 
   const titleEntry = STEP_TITLES[step];
+  const tipsKey = STEP_TIPS_KEYS[step];
   let title = titleEntry ? loc(titleEntry[0], titleEntry[1]) : '';
   title = title.replace('{0}', userName);
+  let tips = (tipsKey && LOCALE[tipsKey]) || '';
 
   let progressKids = [];
   for (let i = 0; i < TOTAL_STEPS; i++) {
@@ -94,16 +111,28 @@ export function header(ui) {
     );
 
     if (!hasInlineTitle) {
-      // Its own box so the header's 48px gap separates the question from the
-      // logo/progress lead. A single child today — no 2.0 screen carries a tip
-      // line — but the wrapper stays, because controlling that gap is what it
-      // exists for.
+      // Title and tip travel together. The header's gap is the design's 48px
+      // step between the logo/progress lead and the question; the tip has to
+      // sit right under its title, so it gets its own tighter box rather than
+      // becoming a third 48px-spaced sibling.
+      let copyKids = [
+        Skeletons.Note({
+          className: `${fig}__title`,
+          content: title,
+        })
+      ];
+      if (tips) {
+        copyKids.push(
+          Skeletons.Note({
+            className: `${fig}__tips`,
+            content: tips,
+          })
+        );
+      }
       headerKids.push(
         Skeletons.Box.Y({
           className: `${fig}__header-copy`,
-          kids: [
-            Skeletons.Note({ className: `${fig}__title`, content: title }),
-          ],
+          kids: copyKids,
         })
       );
     }

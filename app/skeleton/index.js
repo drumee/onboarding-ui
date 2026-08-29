@@ -7,6 +7,7 @@ const {
   tools_form,
   challenges_form,
   goals_form,
+  invite_form,
   done_form,
   error_region,
   footer,
@@ -35,6 +36,9 @@ module.exports = function (ui, opt = {}) {
       break;
     case 6:
       content = goals_form(ui);
+      break;
+    case 7:
+      content = invite_form(ui);
       break;
     default:
       content = done_form(ui);

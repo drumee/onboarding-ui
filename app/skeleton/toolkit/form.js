@@ -424,6 +424,98 @@ export function goals_form(ui) {
   });
 }
 
+export function invite_form(ui) {
+  const pfx = ui.fig.family;
+
+  let infoBanner = Skeletons.Note({
+    className: `${pfx}__invite-info`,
+    content: LOCALE.ONBOARDING_INVITE_INFO || 'Add team member as contact.',
+  });
+
+  let inputRow = Skeletons.Box.X({
+    className: `${pfx}__invite-input-row`,
+    kids: [
+      Skeletons.Entry({
+        className: `${pfx}__invite-email`,
+        name: 'invite_email',
+        value: '',
+        formItem: 'invite_email',
+        innerClass: 'invite_email',
+        mode: _a.interactive,
+        service: _a.input,
+        placeholder: LOCALE.INVITE_PLACEHOLDER || 'name@company.com',
+        uiHandler: [ui],
+        state: 0,
+        radio: ui._id
+      }),
+      Skeletons.Note({
+        className: `${pfx}__invite-add-btn`,
+        content: LOCALE.ONBOARDING_ADD || '+ Add',
+        service: 'add-invite',
+        uiHandler: [ui],
+      }),
+    ]
+  });
+
+  // The dynamic region (validation error + staged chips) lives in its own
+  // "invite-list" part so add/remove can re-feed just this region in place
+  // (see main.js _refreshInviteList) instead of re-feeding the whole step.
+  return Skeletons.Box.Y({
+    className: `${pfx}__form-section`,
+    kids: [
+      infoBanner,
+      inputRow,
+      Skeletons.Box.Y({
+        className: `${pfx}__invite-list-region`,
+        sys_pn: 'invite-list',
+        kids: invite_list(ui),
+      }),
+    ]
+  });
+}
+
+// Contents of the "invite-list" part: an optional inline validation error
+// followed by the staged-invitee chips. Returned as an array so it can be fed
+// directly into the part (Skeletons accepts an array of kids).
+export function invite_list(ui) {
+  const pfx = ui.fig.family;
+  let kids = [];
+
+  if (ui._inviteError) {
+    kids.push(Skeletons.Element({
+      className: `${pfx}__invite-error`,
+      content: ui._inviteError,
+      active: 0,
+    }));
+  }
+
+  let invitedKids = (ui._data.invites || []).map((inv, i) => {
+    return Skeletons.Box.X({
+      className: `${pfx}__invited-row`,
+      kids: [
+        Skeletons.Element({
+          className: `${pfx}__invited-email`,
+          content: inv.email || inv,
+          active: 0,
+        }),
+        Skeletons.Button.Svg({
+          ico: "cross",
+          className: `${pfx}__invited-remove`,
+          service: 'remove-invite',
+          dataset: { index: i },
+          uiHandler: [ui],
+        }),
+      ]
+    });
+  });
+
+  if (invitedKids.length) {
+    kids.push(Skeletons.Box.Y({ className: `${pfx}__invited-list`, kids: invitedKids }));
+  }
+
+  return kids;
+}
+
 function _labelFor(opts, key) {
   if (!key) return null;
   let entry = opts.find(([k]) => k === key);
@@ -475,31 +567,6 @@ export function done_form(ui) {
       Skeletons.Box.X({
         className: `${pfx}__summary-badges`,
         kids: badgeKids,
-      }),
-      // The one answer this screen collects. Both keys are new, so loc() shows
-      // the design copy until the locale rows land.
-      Skeletons.Box.Y({
-        className: `${pfx}__org-section`,
-        kids: [
-          Skeletons.Note({
-            className: `${pfx}__org-label`,
-            content: loc('ONBOARDING_ORG_NAME_LABEL', 'Your organization name'),
-            active: 0,
-          }),
-          Skeletons.Entry({
-            className: `${pfx}__org-input`,
-            name: 'organisation_name',
-            value: ui._data.organisation_name || '',
-            formItem: 'organisation_name',
-            innerClass: 'organisation_name',
-            mode: _a.interactive,
-            service: _a.input,
-            placeholder: loc('ONBOARDING_ORG_NAME_PLACEHOLDER', 'Type the name...'),
-            uiHandler: [ui],
-            state: 0,
-            radio: ui._id,
-          }),
-        ],
       }),
     ]
   });

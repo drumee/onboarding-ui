@@ -8,15 +8,16 @@
 
 const { isOtherComplete } = require('./other-option');
 
-// Index of the final "done" screen. 8 since the combined tools step was split
-// into tools (4) and challenges (5), shifting goals to 6 and invite to 7.
+// Index of the final "done" screen. 7 since the invite step was removed — the
+// flow is name(0) industry(1) role(2) team(3) tools(4) challenges(5) goals(6),
+// and the design's progress bar shows exactly seven segments (Figma 155:47398
+// renders all 7 filled on the last question screen).
 //
-// A step index stored by the pre-split build means one step earlier in the new
-// numbering (an old 6 = invite reads as 6 = goals). That is harmless: every
-// answer is restored from the server either way, the clamp below still refuses
-// to skip a mandatory gap, and the worst case is the user passing back through
-// an optional screen they had already answered — with their answer shown.
-const MAX_STEP = 8;
+// A step index stored by an earlier build is clamped here rather than trusted:
+// an 8 from the invite-era build reads as the done screen, which is correct —
+// that user had answered every question. The clamp below still refuses to skip
+// a mandatory gap either way.
+const MAX_STEP = 7;
 // The steps mark_onboarding_complete validates. Resume must never place the
 // user past the first of these with no stored answer, or they would be unable
 // to satisfy completion without manually walking backwards.

@@ -1,3 +1,14 @@
+> **SUPERSEDED — do not execute.** This plan removed the invite step. That
+> removal was reverted (see `revert(onboarding): restore the invite step`), so
+> its Tasks 2-8 and 10 no longer describe the codebase. What survived is kept
+> and recorded in the successor's "Already Done" table: the verification
+> harnesses (Task 1), the done-screen restyle (Task 7), the loby server side
+> (Task 9, now live on stage) and the locale keys (Task 11).
+>
+> The current plan is
+> [2026-08-29-done-screen-organisation-name.md](2026-08-29-done-screen-organisation-name.md),
+> which adds the organization form with the invite step left in place.
+
 # Remove Invite Step + Organization-Name Form Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.

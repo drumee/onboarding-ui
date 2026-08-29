@@ -68,6 +68,7 @@ function hydrate(row) {
   take('goal', row.intent);
   take('challenge_text', row.challenge_note);
   take('tools_other', row.tools_other);
+  take('organisation_name', row.organisation_name);
 
   const tools = toList(row.current_tools != null ? row.current_tools : row.tools);
   if (tools) {

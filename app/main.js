@@ -597,37 +597,55 @@ class onboarding_app extends LetcBox {
   }
 
   /**
-   * Leave the wizard. Both calls must succeed: mark_complete validates that
-   * the mandatory steps really are stored, and update_profile is what sets
-   * `onboarded = 1` — the flag desk reads to decide whether to show the wizard
-   * again. Exiting when either fails is what produced the worst symptom of the
-   * old flow: the user was dropped into the workspace believing they were
-   * done, and met the wizard again on their next login.
+   * Final screen. Four server calls, in order, each gating the next:
+   *   1. mark_complete       — refuses if a mandatory answer never landed
+   *   2. update_profile      — syncs the answers onto the YP profile
+   *   3. save_organisation   — records the typed name on the onboarding row
+   *   4. adminpanel.create_organisation — provisions the organization
+   *
+   * Only (1) can send the user backwards. The done screen has no Back button,
+   * so a mark_complete refusal has to route them to the offending step or they
+   * are trapped on a screen whose one button can only ever fail again. The
+   * other three are failures of OUR side, not of their answers, so they report
+   * in place and leave the user able to retry.
    */
-  async _enterWorkspace() {
+  async _createOrganisation() {
     this._clearError();
     this.setItemState(_a.next, 0);
     this._setSubmitLoading(true);
 
     let res = await this._call(SERVICE.onboarding.mark_complete, {});
-    if (res.ok) {
-      res = await this._call(SERVICE.onboarding.update_profile, {});
-    }
     if (!res.ok) {
-      // mark_complete refuses with "Step N is incomplete" when a mandatory
-      // answer never reached the server. The done screen carries no Back
-      // button, so simply reporting the error here would trap the user on a
-      // screen with one button that can only fail again. Send them to the step
-      // that needs fixing, with the reason shown there.
       const gap = firstIncompleteStep(this._data);
       this._setSubmitLoading(false);
       this._saveError = res.error;
-      if (gap >= 0) {
-        this._step = gap;
-      }
+      if (gap >= 0) this._step = gap;
       this.loadForm();
       return;
     }
+
+    res = await this._call(SERVICE.onboarding.update_profile, {});
+    if (!res.ok) return this._failOrgStep(res.error);
+
+    const name = (this._data.organisation_name || '').trim();
+    res = await this._call(SERVICE.onboarding.save_organisation, {
+      organisation_name: name,
+    });
+    if (!res.ok) return this._failOrgStep(res.error);
+
+    // hub_id is what makes this src:owner service resolvable from onboarding.
+    // Onboarding requests carry no hub_id, so the ACL would otherwise resolve
+    // against the endpoint's own hub — which the user does not own, and every
+    // call would be denied. contact/invite used the same trick from this file.
+    //
+    // ident is omitted deliberately: organisation_create mints one itself, and
+    // organisation names are not required to be unique, so a name is enough.
+    res = await this._call(SERVICE.adminpanel.create_organisation, {
+      name,
+      hub_id: Visitor.id,
+      nid: Visitor.get(_a.home_id),
+    });
+    if (!res.ok) return this._failOrgStep(res.error);
 
     localStorage.onboarding_step = "0";
     if (this.mget(_a.type) == 'app') {
@@ -635,6 +653,17 @@ class onboarding_app extends LetcBox {
       return;
     }
     window.location.href = '/';
+  }
+
+  /**
+   * Report a done-screen failure in place. The user keeps what they typed and
+   * can retry; nothing sends them backwards, because their answers are fine.
+   */
+  _failOrgStep(message) {
+    this._setSubmitLoading(false);
+    this._saveError = message || this._fallbackError();
+    this._refreshError();
+    this.setItemState(_a.next, 1);
   }
 
   /**
@@ -688,8 +717,8 @@ class onboarding_app extends LetcBox {
         await this._skipStep();
         break;
 
-      case 'enter-workspace':
-        await this._enterWorkspace();
+      case 'create-organisation':
+        await this._createOrganisation();
         break;
 
       // Every single-select group (industry, role, team size, goal): first click

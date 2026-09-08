@@ -3,7 +3,12 @@
    ============================================ */
 .onboarding-app__form-section {
   width: 100%;
-  gap: 24px;
+  gap: var(--ob-gap-inline);
+  // Figma's "Form Section" carries an 8px top inset, which reads as a slightly
+  // wider step between the question and the first field than between the
+  // fields themselves. The inline-title steps replace it with their own offset
+  // (see __card.is-inline-title).
+  padding-top: 8px;
 }
 
 .onboarding-app__option-grid {
@@ -16,19 +21,31 @@
   gap: 16px;
 }
 
-/* Selected-state check badge, reused across option chips, tool chips and
-   challenge options. The host element must be position: relative. */
-%onboarding-checked-badge {
+/* The selected-state check glyph: accent circle, white tick. Used inline —
+   as a flex item inside a tool pill, which is how the design draws it. */
+%onboarding-checked-mark {
   content: '';
+  flex: 0 0 auto;
+  width: 12px;
+  height: 12px;
+  // CheckCircle, exported from Figma node 155:47596 (a #5950FF disc with the
+  // tick knocked out of it). Path data is the exported asset verbatim.
+  background-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M10.875 6C10.875 6.96418 10.5891 7.90672 10.0534 8.70841C9.51774 9.51009 8.75637 10.1349 7.86558 10.5039C6.97479 10.8729 5.99459 10.9694 5.04894 10.7813C4.10328 10.5932 3.23464 10.1289 2.55285 9.44715C1.87107 8.76537 1.40677 7.89672 1.21867 6.95107C1.03057 6.00541 1.12711 5.02521 1.49609 4.13442C1.86506 3.24363 2.48991 2.48226 3.2916 1.94659C4.09328 1.41091 5.03582 1.125 6 1.125C7.29251 1.12636 8.53169 1.64042 9.44564 2.55436C10.3596 3.46831 10.8736 4.70749 10.875 6ZM8.22171 4.7314C8.20284 4.68587 8.17518 4.64452 8.14031 4.60969C8.10549 4.57482 8.06413 4.54716 8.0186 4.52829C7.97308 4.50942 7.92428 4.49971 7.875 4.49971C7.82572 4.49971 7.77692 4.50942 7.7314 4.52829C7.68587 4.54716 7.64452 4.57482 7.60969 4.60969L5.25 6.96984L4.39031 6.10969C4.31995 6.03932 4.22451 5.99979 4.125 5.99979C4.02549 5.99979 3.93005 6.03932 3.85969 6.10969C3.78932 6.18005 3.74979 6.27549 3.74979 6.375C3.74979 6.47451 3.78932 6.56995 3.85969 6.64031L4.98469 7.76531C5.01952 7.80018 5.06087 7.82784 5.1064 7.84671C5.15192 7.86558 5.20072 7.8753 5.25 7.8753C5.29928 7.8753 5.34808 7.86558 5.3936 7.84671C5.43913 7.82784 5.48049 7.80018 5.51531 7.76531L8.14031 5.14031C8.17518 5.10549 8.20284 5.06413 8.22171 5.0186C8.24058 4.97308 8.2503 4.92428 8.2503 4.875C8.2503 4.82572 8.24058 4.77692 8.22171 4.7314Z' fill='%235950FF'/></svg>");
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+/* Same glyph pinned to the right edge, for the full-width rows (option chips,
+   challenge options, goals) where the label is left-aligned and the check sits
+   opposite it. The host element must be position: relative. */
+%onboarding-checked-badge {
+  @extend %onboarding-checked-mark;
   position: absolute;
   right: 12px;
   top: 50%;
   transform: translateY(-50%);
   width: 16px;
   height: 16px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='7' fill='%235950FF'/%3E%3Cpath d='M5 8l2.5 2.5L11 5.5' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-size: contain;
 }
 
 .onboarding-app__option-chip {
@@ -42,7 +59,7 @@
   padding: 8px 12px;
   background: var(--ob-option-bg);
   border: 1px solid transparent;
-  border-radius: 4px;
+  border-radius: var(--ob-radius-field);
   font-size: 14px;
   font-family: var(--font-main);
   color: var(--ob-option-text);
@@ -80,7 +97,7 @@
    ============================================ */
 .onboarding-app__input-group {
   width: 100%;
-  gap: 8px;
+  gap: 12px;
 }
 
 .onboarding-app__input-row {
@@ -90,7 +107,7 @@
 .onboarding-app__input-field {
   width: 100%;
   background: var(--ob-input-bg);
-  border-radius: 4px;
+  border-radius: var(--ob-radius-field);
   padding: 12px;
 
   input {
@@ -98,8 +115,12 @@
     background: transparent;
     border: none;
     outline: none;
+    // The UA's default 1px/2px input padding is on top of the field's own
+    // 12px, which made the box 2px taller than the design's 43.6px.
+    padding: 0;
     color: var(--ob-input-text);
     font-size: 14px;
+    line-height: 1.4;
     font-family: var(--font-main);
 
     &::placeholder {
@@ -120,11 +141,13 @@
 }
 
 /* ============================================
-   Tools step title (star icon + text)
+   "Help us tailor your workspace" heading (star icon + text). Rendered inside
+   the form body on both the tools and the challenges steps — see tailor_title
+   in skeleton/toolkit/form.js.
    ============================================ */
 .onboarding-app__tools-title {
   align-items: center;
-  gap: 8px;
+  gap: 12px;
 }
 
 .onboarding-app__tools-star {
@@ -135,8 +158,8 @@
 
   svg {
     display: block;
-    width: 22px;
-    height: 22px;
+    width: 20px;
+    height: 20px;
   }
 }
 
@@ -144,37 +167,27 @@
   font-size: 20px;
   font-family: var(--font-bold);
   color: var(--ob-title);
-  line-height: 22px;
+  line-height: 1.1;
 }
 
-/* ============================================
-   Section labels
-   ============================================ */
+/* Section labels — the question above a group of options ("What tools are you
+   using?"). Plain body copy in the design, not a small-caps label. */
 .onboarding-app__section-label {
   font-size: 14px;
-  font-family: var(--font-medium);
-  color: var(--ob-section-label);
-  line-height: 20px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  font-family: var(--font-main);
+  color: var(--ob-question);
+  line-height: 1.2;
 }
 
-/* Tools step: two side-by-side parts (part 1 = tools + "other"; part 2 =
-   challenges). The shell is widened for this step (see skeleton/index.js). */
-.onboarding-app__tools-split {
+/* One question and its options. Sits under the step heading, which the
+   form-section's own gap spaces away from it. */
+.onboarding-app__question-block {
   width: 100%;
-  align-items: flex-start;
-  gap: 32px;
-}
-
-.onboarding-app__tools-part {
-  flex: 1;
-  min-width: 0;
-  gap: 16px;
+  gap: var(--ob-gap-list);
 }
 
 /* ============================================
-   Tool chips (wrapped flex, multi-select)
+   Tool chips (wrapped flex pills, multi-select)
    ============================================ */
 .onboarding-app__tool-chips-wrap {
   width: 100%;
@@ -184,63 +197,64 @@
 
 .onboarding-app__tool-chip {
   cursor: pointer;
-  position: relative;
+  display: flex;
+  align-items: center;
   padding: 8px 20px;
   background: var(--ob-option-bg);
   border: 1px solid transparent;
-  border-radius: 4px;
+  border-radius: var(--ob-radius-pill);
   font-size: 14px;
   font-family: var(--font-main);
   color: var(--ob-option-text);
-  transition: all 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
   white-space: nowrap;
 
   &:hover {
     background: var(--ob-option-bg-hover);
   }
 
+  // Selected pills grow by the width of the check rather than reserving room
+  // for it up front, which is how the design draws them: an unselected pill is
+  // padded symmetrically and hugs its label.
   &[data-state="1"] {
     background: var(--ob-option-bg-active);
     border-color: var(--ob-accent-border);
     color: var(--ob-option-text-active);
-    // room for the badge (compact chip, right-aligned check)
-    padding-right: 40px;
 
     &::after {
-      @extend %onboarding-checked-badge;
-      right: 16px;
+      @extend %onboarding-checked-mark;
+      margin-left: 8px;
     }
   }
 }
 
 /* ============================================
-   Challenge options (single col)
+   Challenge options (own step, single col)
    ============================================ */
-.onboarding-app__tools-divider {
-  width: 100%;
-  height: 1px;
-  background: rgba(52, 52, 58, 0.2);
-  flex-shrink: 0;
-}
-
 .onboarding-app__challenge-list {
   width: 100%;
-  gap: 12px;
+  gap: var(--ob-gap-list);
 }
 
 .onboarding-app__challenge-option {
   width: 100%;
   cursor: pointer;
   position: relative;
-  // reserve room on the right for the selected badge (avoids a shift on select)
-  padding: 8px 40px 8px 12px;
+  // 16px in, 12px out (Figma 155:47317). The right side also has to clear the
+  // 20px check plus the design's 24px gap, and that reserve is unconditional so
+  // selecting a row never reflows its label.
+  padding: var(--ob-pill-pad-y) 56px var(--ob-pill-pad-y) 16px;
   background: var(--ob-option-bg);
-  border: 1px solid transparent;
-  border-radius: 4px;
+  border-radius: var(--ob-pill-radius);
+  // Inset stroke, for the same reason as the goal rows above.
+  box-shadow: inset 0 0 0 1px transparent;
   font-size: 14px;
+  line-height: 1.4;
   font-family: var(--font-main);
-  color: var(--ob-option-text);
-  transition: all 0.2s ease;
+  // Pill labels read in Primary/100 whether or not the row is on — the
+  // selected state is carried by the border and the check, not by the text.
+  color: var(--ob-option-text-active);
+  transition: background 0.2s ease, box-shadow 0.2s ease;
 
   &:hover {
     background: var(--ob-option-bg-hover);
@@ -248,19 +262,29 @@
 
   &[data-state="1"] {
     background: var(--ob-option-bg-active);
-    border-color: var(--ob-accent-border);
-    color: var(--ob-option-text-active);
+    box-shadow: inset 0 0 0 1px var(--ob-accent-border);
 
-    &::after { @extend %onboarding-checked-badge; }
+    &::after {
+      @extend %onboarding-checked-badge;
+      width: 20px;
+      height: 20px;
+    }
   }
 }
 
 .onboarding-app__challenge-freetext {
   width: 100%;
 
+  // The design keeps this box square-cornered (4px) while the pills above it
+  // go fully round, so it reads as a text area rather than another option.
   .onboarding-app__input-field {
     background: var(--ob-freetext-bg);
-    min-height: 65px;
+    border-radius: var(--ob-freetext-radius);
+    min-height: var(--ob-freetext-h);
+    // 8px/12px here, not the 12px all round the single-line fields use, and
+    // the caret sits at the top of the box because it is a multi-line note.
+    padding: 8px 12px;
+    align-items: flex-start;
   }
 }
 
@@ -269,7 +293,7 @@
    ============================================ */
 .onboarding-app__goal-list {
   width: 100%;
-  gap: 12px;
+  gap: var(--ob-gap-list);
 }
 
 .onboarding-app__goal-option {
@@ -278,14 +302,20 @@
   position: relative;
   display: flex;
   align-items: center;
-  gap: 12px;
-  // reserve room on the right for the selected badge (avoids a shift on select)
-  padding: 10px 40px 10px 12px;
-  min-height: 45px;
+  // 24px between the icon and its label (Figma 155:47422). The right side
+  // reserves 12px edge + 20px check + 24px gap unconditionally, so selecting a
+  // row never reflows its label.
+  gap: 24px;
+  padding: var(--ob-goal-pad-y) 56px var(--ob-goal-pad-y) 16px;
   background: var(--ob-option-bg);
-  border: 1px solid transparent;
-  border-radius: 4px;
-  transition: all 0.2s ease;
+  border-radius: var(--ob-pill-radius);
+  // The selected ring is an inset shadow, not a border. Figma draws the stroke
+  // inside the row's 472x45 box, so a real border — which box-sizing takes out
+  // of the padding box — made every row 2px taller and shifted the label 1px in.
+  // This keeps the geometry identical selected or not, without the transparent
+  // placeholder border that caused the drift.
+  box-shadow: inset 0 0 0 1px transparent;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
 
   & > * {
     pointer-events: none;
@@ -297,199 +327,163 @@
 
   &[data-state="1"] {
     background: var(--ob-option-bg-active);
-    border-color: var(--ob-accent-border);
+    box-shadow: inset 0 0 0 1px var(--ob-accent-border);
 
-    &::after { @extend %onboarding-checked-badge; }
-  }
-}
-
-.onboarding-app__goal-icon {
-  color: var(--ob-goal-icon);
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-
-  svg {
-    display: block;
-    width: 20px;
-    height: 20px;
-  }
-
-  [data-state="1"] & {
-    color: var(--ob-goal-icon-active);
-  }
-}
-
-.onboarding-app__goal-label {
-  font-size: 14px;
-  font-family: var(--font-main);
-  color: var(--ob-option-text);
-  line-height: 1.4;
-
-  [data-state="1"] & {
-    color: var(--ob-option-text-active);
-  }
-}
-
-/* ============================================
-   Invite form
-   ============================================ */
-.onboarding-app__invite-info {
-  width: 100%;
-  padding: 12px;
-  background: var(--ob-info-bg);
-  border: 1px solid var(--ob-info-border);
-  border-radius: 4px;
-  font-size: 13px;
-  font-family: var(--font-main);
-  color: var(--ob-info-text);
-  line-height: 1.5;
-}
-
-.onboarding-app__invite-error {
-  color: var(--ob-error, #d74e49);
-  font-size: 13px;
-  font-family: var(--font-medium);
-  margin-top: 4px;
-}
-
-.onboarding-app__invite-input-row {
-  width: 100%;
-  min-height: 49px;
-  align-items: center;
-  gap: 0;
-  background: var(--ob-input-bg);
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.onboarding-app__invite-email {
-  flex: 1;
-  padding: 12px;
-
-  input {
-    width: 100%;
-    background: transparent;
-    border: none;
-    outline: none;
-    color: var(--ob-input-text);
-    font-size: 14px;
-    font-family: var(--font-main);
-
-    &::placeholder {
-      color: var(--ob-input-placeholder);
+    &::after {
+      @extend %onboarding-checked-badge;
+      width: 20px;
+      height: 20px;
     }
   }
 }
 
-.onboarding-app__invite-add-btn {
-  cursor: pointer;
-  padding: 8px 16px;
-  font-size: 14px;
-  font-family: var(--font-medium);
-  color: var(--ob-tips);
-  align-self: stretch;
+.onboarding-app__goal-icon {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
-  transition: color 0.2s;
-
-  &:hover {
-    color: var(--ob-title);
-  }
-}
-
-.onboarding-app__invited-list {
-  width: 100%;
-  gap: 8px;
-  margin-top: -8px;
-}
-
-.onboarding-app__invited-row {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px;
-  background: var(--ob-invited-bg);
-  border-radius: 4px;
-}
-
-.onboarding-app__invited-email {
-  font-size: 14px;
-  font-family: var(--font-main);
-  color: var(--ob-invited-text);
-}
-
-.onboarding-app__invited-remove {
-  width: 16px;
-  height: 16px;
-  cursor: pointer;
-  color: var(--ob-remove-icon);
-  display: flex;
-  align-items: center;
-  transition: color 0.2s;
+  justify-content: center;
+  // The design reserves a 21px square per glyph and centres the icon in it at
+  // its NATURAL size -- it does not scale it to fill. So the box is fixed here
+  // and the SVG keeps the intrinsic width/height it carries in icons.js;
+  // stretching them to 21x21 draws folder, lock and puzzle ~17% too large.
+  width: 21px;
+  height: 21px;
 
   svg {
     display: block;
+    flex: 0 0 auto;
   }
+}
 
-  &:hover {
-    color: var(--ob-title);
-  }
+.onboarding-app__goal-label {
+  // Body/Small Body (Figma 155:47425): 14px, weight 400, 1.4 leading, in
+  // Primary/100 whether or not the row is on — like the challenge pills, the
+  // selected state is the border and the check, not the text colour.
+  font-size: 14px;
+  font-weight: 400;
+  font-family: var(--font-main);
+  color: var(--ob-option-text-active);
+  line-height: 1.4;
+
+  // The design gives the label the rest of the row (flex-1, min-w-px) and
+  // truncates it on one line rather than wrapping — a two-line label would
+  // break the pill's fixed height. With the row's 56px right reserve this
+  // leaves exactly the design's 24px between the text and the check.
+  flex: 1 0 0;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ============================================
    Done / "You're all set"
    ============================================ */
+/* ============================================
+   Inline save-failure banner
+   ============================================ */
+/* Present on every step (see skeleton/index.js) and empty until something
+   actually fails, so it costs nothing normally. These rules used to sit between
+   two invite rules, and removing the invite section took them with it — the
+   banner then rendered as unstyled body text. They live here now, away from
+   anything step-specific. */
+.onboarding-app__error-region {
+  width: 100%;
+
+  &:empty {
+    display: none;
+  }
+}
+
+.onboarding-app__save-error {
+  width: 100%;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 4px 0 12px;
+  padding: 10px 12px;
+  border-radius: var(--ob-radius-field);
+  background: var(--ob-error-bg);
+  border: 1px solid var(--ob-error-border);
+  color: var(--ob-error);
+  font-size: 13px;
+  font-family: var(--font-medium);
+  line-height: 1.45;
+}
+
+.onboarding-app__save-error-icon {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  height: 19px; // match the first line-box so the icon sits on the first line
+  color: var(--ob-error);
+}
+
+.onboarding-app__save-error-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  word-break: break-word;
+}
+
+/* ============================================
+   Done screen (Figma 155:47483)
+   ============================================ */
 .onboarding-app__done-section {
+  width: 100%;
+  max-width: var(--ob-done-col);
+  margin: 0 auto;
+  gap: var(--ob-gap-done);
+  padding-top: 0;
+}
+
+/* Check badge + headline, centred as one block (Figma 155:47493). */
+.onboarding-app__done-head {
   width: 100%;
   align-items: center;
   gap: 16px;
 }
 
 .onboarding-app__done-icon {
+  width: var(--ob-done-badge-size);
+  height: var(--ob-done-badge-size);
+  border-radius: 100px;
+  background: var(--ob-done-icon-bg);
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 70px;
-  height: 70px;
-  background: var(--ob-done-icon-bg);
-  border-radius: 50%;
+  flex-shrink: 0;
 
   svg {
     display: block;
+    width: var(--ob-done-icon-size);
+    height: var(--ob-done-icon-size);
   }
 }
 
 .onboarding-app__done-title {
-  font-size: 32px;
+  width: 100%;
   font-family: var(--font-bold);
+  font-size: 32px;
+  font-weight: 600;
+  line-height: 1.1;
   color: var(--ob-title);
-  line-height: 35px;
-  text-align: center;
-  margin-bottom: 24px;
-}
-
-.onboarding-app__done-tips {
-  font-size: 16px;
-  font-family: var(--font-main);
-  color: var(--ob-tips);
-  line-height: 22px;
   text-align: center;
 }
 
+/* Answer summary. Wraps, centred, 12px apart (Figma 155:47499). */
 .onboarding-app__summary-badges {
+  width: 100%;
   flex-wrap: wrap;
-  gap: 12px;
   justify-content: center;
+  gap: 12px;
 }
 
 .onboarding-app__summary-badge {
   padding: 8px 20px;
+  border-radius: var(--ob-radius-field);
   background: var(--ob-badge-bg);
-  border-radius: 4px;
-  font-size: 14px;
+  color: var(--ob-option-text-active);
   font-family: var(--font-main);
-  color: var(--ob-badge-text);
+  font-size: 14px;
+  line-height: 1.4;
   white-space: nowrap;
 }

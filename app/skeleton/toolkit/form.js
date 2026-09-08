@@ -1,3 +1,17 @@
+// Shared guard against LOCALE echoing an unset key back — see lib/locale-text.js
+// for what that costs when it is missed (a red "ALREADY_IN_LIST" on the invite
+// step, where a sentence belonged).
+const { loc } = require('../../lib/locale-text');
+const {
+  STAR_FOUR_SVG,
+  DONE_CHECK_SVG,
+  APP_FOLDER_SVG,
+  APP_HANDSHAKE_SVG,
+  APP_LOCK_SVG,
+  APP_PUZZLE_SVG,
+  APPS_NETWORK_SVG,
+} = require('./icons');
+
 // Canonical wire keys must match the loby DB enum check constraints in
 // schemas/procedures/save_onboarding_*.sql — keep these arrays in sync.
 const INDUSTRY_OPTS = [
@@ -41,29 +55,52 @@ const TOOL_OPTS = [
   ['other',        'ONBOARDING_TOOL_OTHER'],
 ];
 
+// [wire key, locale key, label exactly as Figma 155:47287 draws it].
+//
+// The locale keys are NOT the old ONBOARDING_CHAL_FILES_SCATTERED / _DISCONNECTED
+// / _SECURITY / _COSTS / _PERMISSIONS / _VISIBILITY. Those hold 1.0's longer
+// wording ("Files are scattered across tools", "No visibility on who views or
+// edits what") on deployed endpoints, and a populated row beats the fallback —
+// so reading them would keep printing the old copy over the new design. These
+// names are new, so loc() falls back to the design text until the rows land.
+// Same move as GOAL_DEFS above and ONBOARDING_USERNAME_PLACEHOLDER below.
+//
+// The wire keys are untouched: save_onboarding_challenges' enum still sees
+// files_scattered / disconnected / security / costs / permissions / visibility.
 const CHALLENGE_OPTS = [
-  ['files_scattered', 'ONBOARDING_CHAL_FILES_SCATTERED'],
-  ['disconnected',    'ONBOARDING_CHAL_DISCONNECTED'],
-  ['security',        'ONBOARDING_CHAL_SECURITY'],
-  ['costs',           'ONBOARDING_CHAL_COSTS'],
-  ['permissions',     'ONBOARDING_CHAL_PERMISSIONS'],
-  ['visibility',      'ONBOARDING_CHAL_VISIBILITY'],
+  ['files_scattered', 'ONBOARDING_CHAL_SCATTERING',          'Files scattering across tools'],
+  ['disconnected',    'ONBOARDING_CHAL_CHAT_FILES',          'Chat & files are disconnected'],
+  ['security',        'ONBOARDING_CHAL_DATA_SECURITY',       'Data security & ownership'],
+  ['costs',           'ONBOARDING_CHAL_TOOL_COSTS',          'High tool costs'],
+  ['permissions',     'ONBOARDING_CHAL_ACCESS_PERMISSIONS',  'Access & permissions'],
+  ['visibility',      'ONBOARDING_CHAL_FILE_ACTIVITY',       'No visibility into file activity'],
 ];
 
+// `key` is the wire value checked by save_onboarding_goal's enum constraint —
+// do not rename. `text` is the label exactly as Figma 155:47398 draws it.
+//
+// The locale keys are NOT the old ONBOARDING_GOAL_MANAGE / _CLIENTS / _STORE /
+// _WORKFLOWS / _PERSONAL. Those carry 1.0's wording ("Store sensitive data —
+// fully under your control" and friends) on every deployed endpoint, and since
+// a populated row beats the fallback, reading them would keep printing the old
+// copy over the new design until each endpoint is patched. These names are new,
+// so loc() falls back to the design text until the rows land — the same move
+// ONBOARDING_USERNAME_PLACEHOLDER makes below, for the same reason. They also
+// now mirror the wire keys, which the old short names did not.
 const GOAL_DEFS = [
-  { key: 'manage_projects',   localeKey: 'ONBOARDING_GOAL_MANAGE',    icon: 'folder' },
-  { key: 'work_with_clients', localeKey: 'ONBOARDING_GOAL_CLIENTS',   icon: 'users' },
-  { key: 'store_sensitive',   localeKey: 'ONBOARDING_GOAL_STORE',     icon: 'lock' },
-  { key: 'build_workflows',   localeKey: 'ONBOARDING_GOAL_WORKFLOWS', icon: 'settings' },
-  { key: 'personal_files',    localeKey: 'ONBOARDING_GOAL_PERSONAL',  icon: 'file' },
+  { key: 'manage_projects',   localeKey: 'ONBOARDING_GOAL_MANAGE_PROJECTS',  text: 'Manage projects & teams',      icon: 'folder' },
+  { key: 'work_with_clients', localeKey: 'ONBOARDING_GOAL_WORK_CLIENTS',     text: 'Work with clients',            icon: 'handshake' },
+  { key: 'store_sensitive',   localeKey: 'ONBOARDING_GOAL_SECURE_DATA',      text: 'Secure sensitive data',        icon: 'lock' },
+  { key: 'build_workflows',   localeKey: 'ONBOARDING_GOAL_BUILD_WORKFLOWS',  text: 'Build workflows on your data', icon: 'puzzle' },
+  { key: 'personal_files',    localeKey: 'ONBOARDING_GOAL_PERSONAL_FILES',   text: 'Manage personal files',        icon: 'network' },
 ];
 
 const GOAL_ICONS = {
-  folder: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="2" y="4" width="16" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M2 6H8L9.5 4H18" stroke="currentColor" stroke-width="1.5"/></svg>`,
-  users: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="7" cy="7" r="3" stroke="currentColor" stroke-width="1.5"/><circle cx="14" cy="7" r="2" stroke="currentColor" stroke-width="1.5"/><path d="M1 17C1 14.2 3.2 12 6 12H8C10.8 12 13 14.2 13 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M13 12C15 12 17 13.8 17 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`,
-  lock: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="4" y="9" width="12" height="8" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M7 9V6C7 4.3 8.3 3 10 3C11.7 3 13 4.3 13 6V9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`,
-  settings: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M10 1V3M10 17V19M1 10H3M17 10H19M3.5 3.5L5 5M15 15L16.5 16.5M16.5 3.5L15 5M5 15L3.5 16.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`,
-  file: `<svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M5 2H12L16 6V18H5C3.9 18 3 17.1 3 16V4C3 2.9 3.9 2 5 2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 2V6H16" stroke="currentColor" stroke-width="1.5"/></svg>`,
+  folder:    APP_FOLDER_SVG,
+  handshake: APP_HANDSHAKE_SVG,
+  lock:      APP_LOCK_SVG,
+  puzzle:    APP_PUZZLE_SVG,
+  network:   APPS_NETWORK_SVG,
 };
 
 // The free-text input revealed when an "Other" option is active. Reuses the
@@ -99,6 +136,33 @@ export function tools_other_region(ui) {
   return (ui._data.tools || []).includes('other') ? [other_input(ui, 'tools')] : [];
 }
 
+// Contents of the "save-error" part, present on every step (see
+// skeleton/index.js). Renders the inline banner shown when a step failed to
+// persist. Returned as an array so main.js can re-feed just this region in
+// place — a failed save must not rebuild the form and discard what the user
+// typed. Empty when there is nothing to report, so it costs nothing normally.
+export function error_region(ui) {
+  if (!ui._saveError) return [];
+  const pfx = ui.fig.family;
+  return [
+    Skeletons.Box.X({
+      className: `${pfx}__save-error`,
+      kids: [
+        Skeletons.Element({
+          className: `${pfx}__save-error-icon`,
+          content: `<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M8 4.5V9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="8" cy="11.5" r="0.9" fill="currentColor"/></svg>`,
+          active: 0,
+        }),
+        Skeletons.Element({
+          className: `${pfx}__save-error-text`,
+          content: ui._saveError,
+          active: 0,
+        }),
+      ]
+    }),
+  ];
+}
+
 function buildOptionGrid(ui, opts, field, perRow = 2) {
   const pfx = ui.fig.family;
   let selected = ui._data[field] || '';
@@ -114,7 +178,10 @@ function buildOptionGrid(ui, opts, field, perRow = 2) {
         name: label,
         sys_pn: `${field}-${i}`,
         partHandler: [ui],
-        service: 'select-option',
+        // Toggling single-select: click to choose, click the chosen one again to
+        // clear it. Shared by industry, role and team size (and the goals step,
+        // which builds its rows separately).
+        service: 'toggle-option',
         uiHandler: [ui],
         state: isOn ? 1 : 0,
         dataset: { state: isOn ? 1 : 0, value: key, field },
@@ -160,7 +227,12 @@ export function name_form(ui) {
                 innerClass: 'firstname',
                 mode: _a.interactive,
                 service: _a.input,
-                placeholder: LOCALE.ONBOARDING_NAME_PLACEHOLDER || 'Alex',
+                // Not ONBOARDING_NAME_PLACEHOLDER: that key holds an example
+                // first name ('Alex') on every deployed endpoint, so reading it
+                // would keep rendering 'Alex' until each one is patched. This
+                // key is new, so loc() falls back to the English prompt until
+                // the locale rows land.
+                placeholder: loc('ONBOARDING_USERNAME_PLACEHOLDER', 'Enter your username'),
                 uiHandler: [ui],
                 state: 0,
                 radio: ui._id
@@ -177,10 +249,35 @@ export function industry_form(ui) { return buildOptionGrid(ui, INDUSTRY_OPTS, 'i
 export function role_form(ui) { return buildOptionGrid(ui, ROLE_OPTS, 'role'); }
 export function team_size_form(ui) { return buildOptionGrid(ui, TEAM_SIZE_OPTS, 'team_size'); }
 
+// Heading shared by the two "Help us tailor your workspace" steps (tools and
+// challenges). Both screens carry it inline instead of using the standard
+// header title, which is why header.js suppresses its own title on both — see
+// INLINE_TITLE_STEPS there.
+function tailor_title(ui) {
+  const pfx = ui.fig.family;
+  return Skeletons.Box.X({
+    className: `${pfx}__tools-title`,
+    kids: [
+      Skeletons.Element({
+        className: `${pfx}__tools-star`,
+        content: STAR_FOUR_SVG,
+        active: 0,
+      }),
+      Skeletons.Note({
+        className: `${pfx}__tools-title-text`,
+        content: LOCALE.ONBOARDING_HELP_TAILOR || 'Help us tailor your workspace',
+        active: 0,
+      }),
+    ]
+  });
+}
+
+// Step 5 (index 4). Tools only, on the standard-width card: the design gives
+// the tools question and the challenges question a screen each rather than the
+// two-column split this step used to render.
 export function tools_form(ui) {
   const pfx = ui.fig.family;
   let selectedTools = ui._data.tools || [];
-  let selectedChallenges = ui._data.challenges || [];
 
   let toolChips = TOOL_OPTS.map(([key, localeKey], i) => {
     let label = LOCALE[localeKey] || key;
@@ -198,8 +295,41 @@ export function tools_form(ui) {
     });
   });
 
-  let challengeKids = CHALLENGE_OPTS.map(([key, localeKey], i) => {
-    let label = LOCALE[localeKey] || key;
+  return Skeletons.Box.Y({
+    className: `${pfx}__form-section`,
+    kids: [
+      tailor_title(ui),
+      Skeletons.Box.Y({
+        className: `${pfx}__question-block`,
+        kids: [
+          Skeletons.Note({
+            className: `${pfx}__section-label`,
+            content: LOCALE.ONBOARDING_TOOLS_QUESTION || 'What tools are you using?',
+          }),
+          Skeletons.Box.X({
+            className: `${pfx}__tool-chips-wrap`,
+            kids: toolChips,
+          }),
+          Skeletons.Box.Y({
+            className: `${pfx}__other-region`,
+            sys_pn: 'tools-other',
+            kids: tools_other_region(ui),
+          }),
+        ]
+      }),
+    ]
+  });
+}
+
+// Step 6 (index 5). The challenges multi-select plus its "tell me more" note,
+// split out of the old combined tools step. Saves through save_challenges on
+// its own Continue; the two answers no longer share a commit.
+export function challenges_form(ui) {
+  const pfx = ui.fig.family;
+  let selectedChallenges = ui._data.challenges || [];
+
+  let challengeKids = CHALLENGE_OPTS.map(([key, localeKey, text], i) => {
+    let label = loc(localeKey, text);
     let isOn = selectedChallenges.includes(key);
     return Skeletons.Note({
       className: `${pfx}__challenge-option`,
@@ -235,63 +365,22 @@ export function tools_form(ui) {
     })
   );
 
-  // Split the tools step into two side-by-side parts (the shell is widened for
-  // this step, see skeleton/index.js): part 1 runs from the title through the
-  // tools "other" reveal region; part 2 is the challenges question to the end.
-  let part1 = Skeletons.Box.Y({
-    className: `${pfx}__tools-part`,
-    kids: [
-      Skeletons.Box.X({
-        className: `${pfx}__tools-title`,
-        kids: [
-          Skeletons.Element({
-            className: `${pfx}__tools-star`,
-            content: `<svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 1L13.5 8.5H21L15 13L17 21L11 16.5L5 21L7 13L1 8.5H8.5L11 1Z" fill="currentColor"/></svg>`,
-            active: 0,
-          }),
-          Skeletons.Note({
-            className: `${pfx}__tools-title-text`,
-            content: LOCALE.ONBOARDING_HELP_TAILOR || 'Help us tailor your workspace',
-            active: 0,
-          }),
-        ]
-      }),
-      Skeletons.Note({
-        className: `${pfx}__section-label`,
-        content: LOCALE.ONBOARDING_TOOLS_QUESTION || 'What tools are you using?',
-      }),
-      Skeletons.Box.X({
-        className: `${pfx}__tool-chips-wrap`,
-        kids: toolChips,
-      }),
-      Skeletons.Box.Y({
-        className: `${pfx}__other-region`,
-        sys_pn: 'tools-other',
-        kids: tools_other_region(ui),
-      }),
-    ]
-  });
-
-  let part2 = Skeletons.Box.Y({
-    className: `${pfx}__tools-part`,
-    kids: [
-      Skeletons.Note({
-        className: `${pfx}__section-label`,
-        content: LOCALE.ONBOARDING_CHALLENGES_QUESTION || 'What challenges are you facing with your current setup?',
-      }),
-      Skeletons.Box.Y({
-        className: `${pfx}__challenge-list`,
-        kids: challengeKids,
-      }),
-    ]
-  });
-
   return Skeletons.Box.Y({
     className: `${pfx}__form-section`,
     kids: [
-      Skeletons.Box.X({
-        className: `${pfx}__tools-split`,
-        kids: [part1, part2],
+      tailor_title(ui),
+      Skeletons.Box.Y({
+        className: `${pfx}__question-block`,
+        kids: [
+          Skeletons.Note({
+            className: `${pfx}__section-label`,
+            content: LOCALE.ONBOARDING_CHALLENGES_QUESTION || 'What challenges are you facing with your current setup?',
+          }),
+          Skeletons.Box.Y({
+            className: `${pfx}__challenge-list`,
+            kids: challengeKids,
+          }),
+        ]
       }),
     ]
   });
@@ -302,14 +391,15 @@ export function goals_form(ui) {
   let selected = ui._data.goal || '';
 
   let kids = GOAL_DEFS.map((g, i) => {
-    let label = LOCALE[g.localeKey] || g.key;
+    let label = loc(g.localeKey, g.text);
     let isOn = selected === g.key;
     return Skeletons.Box.X({
       className: `${pfx}__goal-option`,
       name: g.key,
       sys_pn: `goal-${i}`,
       partHandler: [ui],
-      service: 'select-option',
+      // Same toggling single-select as the option grids above.
+      service: 'toggle-option',
       uiHandler: [ui],
       state: isOn ? 1 : 0,
       dataset: { state: isOn ? 1 : 0, value: g.key, field: 'goal' },
@@ -334,98 +424,6 @@ export function goals_form(ui) {
   });
 }
 
-export function invite_form(ui) {
-  const pfx = ui.fig.family;
-
-  let infoBanner = Skeletons.Note({
-    className: `${pfx}__invite-info`,
-    content: LOCALE.ONBOARDING_INVITE_INFO || 'Add team member as contact.',
-  });
-
-  let inputRow = Skeletons.Box.X({
-    className: `${pfx}__invite-input-row`,
-    kids: [
-      Skeletons.Entry({
-        className: `${pfx}__invite-email`,
-        name: 'invite_email',
-        value: '',
-        formItem: 'invite_email',
-        innerClass: 'invite_email',
-        mode: _a.interactive,
-        service: _a.input,
-        placeholder: LOCALE.INVITE_PLACEHOLDER || 'name@company.com',
-        uiHandler: [ui],
-        state: 0,
-        radio: ui._id
-      }),
-      Skeletons.Note({
-        className: `${pfx}__invite-add-btn`,
-        content: LOCALE.ONBOARDING_ADD || '+ Add',
-        service: 'add-invite',
-        uiHandler: [ui],
-      }),
-    ]
-  });
-
-  // The dynamic region (validation error + staged chips) lives in its own
-  // "invite-list" part so add/remove can re-feed just this region in place
-  // (see main.js _refreshInviteList) instead of re-feeding the whole step.
-  return Skeletons.Box.Y({
-    className: `${pfx}__form-section`,
-    kids: [
-      infoBanner,
-      inputRow,
-      Skeletons.Box.Y({
-        className: `${pfx}__invite-list-region`,
-        sys_pn: 'invite-list',
-        kids: invite_list(ui),
-      }),
-    ]
-  });
-}
-
-// Contents of the "invite-list" part: an optional inline validation error
-// followed by the staged-invitee chips. Returned as an array so it can be fed
-// directly into the part (Skeletons accepts an array of kids).
-export function invite_list(ui) {
-  const pfx = ui.fig.family;
-  let kids = [];
-
-  if (ui._inviteError) {
-    kids.push(Skeletons.Element({
-      className: `${pfx}__invite-error`,
-      content: ui._inviteError,
-      active: 0,
-    }));
-  }
-
-  let invitedKids = (ui._data.invites || []).map((inv, i) => {
-    return Skeletons.Box.X({
-      className: `${pfx}__invited-row`,
-      kids: [
-        Skeletons.Element({
-          className: `${pfx}__invited-email`,
-          content: inv.email || inv,
-          active: 0,
-        }),
-        Skeletons.Button.Svg({
-          ico: "cross",
-          className: `${pfx}__invited-remove`,
-          service: 'remove-invite',
-          dataset: { index: i },
-          uiHandler: [ui],
-        }),
-      ]
-    });
-  });
-
-  if (invitedKids.length) {
-    kids.push(Skeletons.Box.Y({ className: `${pfx}__invited-list`, kids: invitedKids }));
-  }
-
-  return kids;
-}
-
 function _labelFor(opts, key) {
   if (!key) return null;
   let entry = opts.find(([k]) => k === key);
@@ -444,7 +442,7 @@ export function done_form(ui) {
   if (teamSize) badges.push(teamSize);
   if (ui._data.goal) {
     let g = GOAL_DEFS.find(x => x.key === ui._data.goal);
-    if (g) badges.push(LOCALE[g.localeKey] || g.key);
+    if (g) badges.push(loc(g.localeKey, g.text));
   }
 
   let badgeKids = badges.map(b => {
@@ -454,17 +452,25 @@ export function done_form(ui) {
   return Skeletons.Box.Y({
     className: `${pfx}__done-section`,
     kids: [
-      Skeletons.Element({
-        className: `${pfx}__done-icon`,
-        content: `<svg width="39" height="39" viewBox="0 0 39 39" fill="none"><circle cx="19.5" cy="19.5" r="17" stroke="#54B684" stroke-width="2"/><path d="M12 19.5L17 24.5L27 14.5" stroke="#54B684" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
-      }),
-      Skeletons.Note({
-        className: `${pfx}__done-title`,
-        content: (LOCALE.ONBOARDING_ALL_SET || "You are all set, {0}").replace('{0}', userName),
-      }),
-      Skeletons.Note({
-        className: `${pfx}__done-tips`,
-        content: LOCALE.ONBOARDING_ALL_SET_TIPS || 'Your workspace is configured and ready to go.',
+      // Badge and headline are one centred block, 16px apart, with 40px down to
+      // the summary — the design groups them (Figma 155:47493) rather than
+      // spacing all four children equally.
+      Skeletons.Box.Y({
+        className: `${pfx}__done-head`,
+        kids: [
+          Skeletons.Element({
+            className: `${pfx}__done-icon`,
+            content: DONE_CHECK_SVG,
+            active: 0,
+          }),
+          Skeletons.Note({
+            className: `${pfx}__done-title`,
+            // New key: deployed endpoints hold 1.0's "You are all set" under
+            // ONBOARDING_ALL_SET, and a populated row beats the fallback.
+            content: loc('ONBOARDING_ALL_SET_V2', "You're all set, {0}")
+              .replace('{0}', userName),
+          }),
+        ],
       }),
       Skeletons.Box.X({
         className: `${pfx}__summary-badges`,

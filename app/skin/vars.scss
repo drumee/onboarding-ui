@@ -1,8 +1,18 @@
-// Onboarding theme variables — light mode (from Figma g5V3PjhNMf5bHlsHMvV17w)
+// Onboarding theme variables — light mode.
+// Refreshed from Figma "Drumee 2.0" (3LDZYKjL7uHpXHdXKwAXxZ, node 155:47112),
+// which supersedes the earlier g5V3PjhNMf5bHlsHMvV17w screens.
 
 .onboarding-app__ui {
-  --ob-bg: rgb(242, 242, 247);
-  --ob-glow: rgba(89, 80, 255, 0.12);
+  // The 2.0 ground is white, not the old grey card surface. Its lavender cast
+  // comes entirely from the mesh glows below — the design ships this as a
+  // 1920x1080 PNG, reproduced here as gradients so nothing has to travel
+  // through the asset pipeline (css-loader runs with `url: false`).
+  // Alphas and radii were fitted to the exported PNG (#F0EFFF top-left,
+  // #EBEBFF bottom-right, #F7F6FF along the right edge, white through the
+  // middle) — see index.scss. Worst-case error is 3/255 per channel.
+  --ob-bg: rgb(255, 255, 255);
+  --ob-mesh-tl: rgba(89, 80, 255, 0.10);
+  --ob-mesh-br: rgba(89, 80, 255, 0.13);
   --ob-title: rgb(67, 60, 197);
   --ob-tips: rgb(52, 52, 58);
   --ob-option-text: rgb(101, 101, 108);
@@ -10,8 +20,10 @@
   --ob-option-bg-hover: rgba(89, 80, 255, 0.15);
   --ob-option-bg-active: rgba(89, 80, 255, 0.1);
   --ob-option-text-active: rgb(11, 10, 33);
-  --ob-section-label: rgb(177, 172, 255);
-  --ob-input-text: rgb(52, 52, 58);
+  // The question line above a group of options ("What tools are you using?").
+  // Body copy in black, not the small-caps lavender label it used to be.
+  --ob-question: rgb(0, 0, 0);
+  --ob-input-text: rgb(11, 10, 33);
   --ob-input-placeholder: rgb(101, 101, 108);
   --ob-input-bg: rgba(89, 80, 255, 0.1);
   --ob-freetext-bg: rgba(0, 0, 0, 0.05);
@@ -23,17 +35,101 @@
   --ob-secondary-text-hover: rgb(52, 52, 58);
   --ob-accent: rgb(89, 80, 255);
   --ob-accent-border: rgb(89, 80, 255);
-  --ob-logo-color: rgb(67, 60, 197);
-  --ob-logo-text-color: rgb(11, 10, 33);
   --ob-info-bg: rgba(89, 80, 255, 0.08);
   --ob-info-border: rgba(89, 80, 255, 0.2);
   --ob-info-text: rgb(101, 101, 108);
-  --ob-invited-bg: rgba(89, 80, 255, 0.05);
-  --ob-invited-text: rgb(101, 101, 108);
   --ob-remove-icon: rgb(101, 101, 108);
   --ob-badge-bg: rgba(89, 80, 255, 0.1);
   --ob-badge-text: rgb(101, 101, 108);
   --ob-done-icon-bg: rgba(84, 182, 132, 0.15);
-  --ob-goal-icon: rgb(89, 80, 255);
-  --ob-goal-icon-active: rgb(89, 80, 255);
+  // Failure states, used by the inline save-error banner.
+  --ob-error: rgb(215, 78, 73);
+  --ob-error-bg: rgba(215, 78, 73, 0.08);
+  --ob-error-border: rgba(215, 78, 73, 0.28);
+
+  // ---------------------------------------------------------------------
+  // Shape and rhythm (Figma 155:47112)
+  // ---------------------------------------------------------------------
+  // 2.0 rounds everything noticeably more than 1.0's flat 4px. The design
+  // pins two of these directly (button 12px, text field 8px); the rest follow
+  // the field radius so chips and option rows stay in step with the input they
+  // sit beside.
+  --ob-radius-btn: 12px;
+  --ob-radius-field: 8px;
+  --ob-radius-pill: 999px;
+
+  // Card padding, and the two vertical steps the layout is built from: 48px
+  // between the header block and the question, 32px between the question, the
+  // form and the primary action.
+  --ob-card-pad: 24px;
+  --ob-gap-lead: 48px;
+  --ob-gap-block: 32px;
+
+  // The tools/challenges steps carry their heading inside the form body and
+  // space their blocks 24px apart (Figma 155:47287), where the header-titled
+  // steps use 32px. --ob-gap-list is the 12px step between option rows.
+  --ob-gap-inline: 24px;
+  --ob-gap-list: 12px;
+
+  // Pill-shaped option rows on the challenges step, and its "Tell us more"
+  // box, which the design deliberately leaves at the old 4px while the pills
+  // above it go fully round.
+  --ob-pill-radius: 44px;
+  --ob-pill-pad-y: 8px;
+  // Goal rows are taller than challenge rows: 12px, because they carry a 21px
+  // icon (Figma 155:47422 vs 155:47317).
+  --ob-goal-pad-y: 12px;
+  --ob-freetext-radius: 4px;
+  --ob-freetext-h: 65px;
+
+  // Done screen (Figma 155:47483). The success badge is Signal/Success at 15%,
+  // and its column is 464px wide rather than the 472px the question screens use.
+  --ob-done-badge-size: 70px;
+  --ob-done-icon-size: 39px;
+  --ob-done-col: 464px;
+  --ob-gap-done: 40px;
+
+  // Distance from the top of the viewport to the top of the card. 110px at the
+  // design's 1024px-tall frame.
+  --ob-card-top: 110px;
+}
+
+// ---------------------------------------------------------------------------
+// Short viewports
+// ---------------------------------------------------------------------------
+// The design is drawn at 1024px tall and fits there with room to spare. The
+// challenges step (155:47287) is the tallest in the flow — seven option rows, a
+// free-text box and two stacked buttons — and on a laptop it used to run past
+// the fold and scroll silently, because __main hides its scrollbar.
+//
+// Rather than shrink type or drop content, the vertical rhythm steps down in
+// two stages. Everything here is a gap, a padding or the card's top offset; no
+// text size changes, so the step stays legible while it compresses. Below
+// ~640px tall the scroll is still there as a backstop.
+@media (max-height: 900px) {
+  .onboarding-app__ui {
+    --ob-card-top: 56px;
+    --ob-card-pad: 20px;
+    --ob-gap-lead: 32px;
+    --ob-gap-block: 24px;
+    --ob-gap-inline: 16px;
+    --ob-gap-list: 8px;
+    --ob-pill-pad-y: 7px;
+    --ob-goal-pad-y: 10px;
+    --ob-freetext-h: 56px;
+  }
+}
+
+@media (max-height: 720px) {
+  .onboarding-app__ui {
+    --ob-card-top: 32px;
+    --ob-card-pad: 16px;
+    --ob-gap-lead: 24px;
+    --ob-gap-block: 16px;
+    --ob-gap-inline: 12px;
+    --ob-gap-list: 6px;
+    --ob-pill-pad-y: 6px;
+    --ob-goal-pad-y: 8px;
+    --ob-freetext-h: 48px;
+  }
 }

@@ -268,39 +268,18 @@ function step2(ui, pfx) {
         }),
       ],
     }),
-    Skeletons.Box.X({
-      className: `${pfx}__tabs`,
-      kids: [
-        Skeletons.Box.X({
-          className: `${pfx}__tab ${pfx}__tab--on`,
-          active: 0,
-          kids: [
-            Skeletons.Image.Svg({ active: 0, ico: "ph-envelope-simple", className: `${pfx}__tab-svg` }),
-            Skeletons.Note({ active: 0, content: loc("VIA_EMAIL", "Via email") }),
-          ],
+    tabs(ui, pfx),
+    ui._tab === "link" ? null : label(pfx, loc("INVITE_MEMBER_VIA_EMAIL", "Invite member via email")),
+    ui._tab === "link"
+      ? null
+      : Skeletons.Entry({
+          className: `${pfx}__input`,
+          sys_pn: "emails",
+          partHandler: ui,
+          value: ui._emailsRaw || "",
+          placeholder: "name@company.com",
+          require: "any",
         }),
-        // Not yet: a public join link needs a membership token the server
-        // does not issue (v2). Drawn disabled rather than left out so the
-        // screen matches the design.
-        Skeletons.Box.X({
-          className: `${pfx}__tab ${pfx}__tab--off`,
-          tooltips: { content: loc("COMING_SOON", "Coming soon") },
-          kids: [
-            Skeletons.Image.Svg({ active: 0, ico: "apps-globe", className: `${pfx}__tab-svg` }),
-            Skeletons.Note({ active: 0, content: loc("PUBLIC_LINK", "Public link") }),
-          ],
-        }),
-      ],
-    }),
-    label(pfx, loc("INVITE_MEMBER_VIA_EMAIL", "Invite member via email")),
-    Skeletons.Entry({
-      className: `${pfx}__input`,
-      sys_pn: "emails",
-      partHandler: ui,
-      value: ui._emailsRaw || "",
-      placeholder: "name@company.com",
-      require: "any",
-    }),
     Skeletons.Box.X({
       className: `${pfx}__row-between`,
       kids: [
@@ -332,7 +311,8 @@ function step2(ui, pfx) {
       }),
     ),
   ];
-  if (ui._sent) {
+  if (ui._tab === "link") kids.push(...linkBlock(ui, pfx));
+  if (ui._sent && ui._tab !== "link") {
     kids.push(
       Skeletons.Note({
         className: `${pfx}__notice${ui._sent.failed ? ` ${pfx}__notice--warn` : ""}`,
@@ -344,6 +324,110 @@ function step2(ui, pfx) {
     );
   }
   return kids;
+}
+
+// "Via email" / "Public link" (Figma 900:150257 / 998:85923). The link tab
+// needs organization.join_link_create; without it it stays disabled.
+function tabs(ui, pfx) {
+  const hasLink = !!(SERVICE.organization && SERVICE.organization.join_link_create);
+  const tab = (key, ico, text, enabled) =>
+    Skeletons.Box.X({
+      className: `${pfx}__tab${ui._tab === key ? ` ${pfx}__tab--on` : ""}${enabled ? "" : ` ${pfx}__tab--off`}`,
+      ...(enabled ? { service: "org-setup-tab", tab: key, uiHandler: [ui] } : { tooltips: { content: loc("COMING_SOON", "Coming soon") } }),
+      kids: [
+        Skeletons.Image.Svg({ active: 0, ico, className: `${pfx}__tab-svg` }),
+        Skeletons.Note({ active: 0, content: text }),
+      ],
+    });
+  return Skeletons.Box.X({
+    className: `${pfx}__tabs`,
+    kids: [
+      tab("email", "ph-envelope-simple", loc("VIA_EMAIL", "Via email"), true),
+      tab("link", "apps-globe", loc("PUBLIC_LINK", "Public link"), hasLink),
+    ],
+  });
+}
+
+// Link Expiration (toggle + 1h / 24h / 7d / Custom), Get link, then the link
+// with copy and Revoke.
+function linkBlock(ui, pfx) {
+  const on = ui._expiry !== "none";
+  const choice = (value, text) =>
+    Skeletons.Box.X({
+      className: `${pfx}__seg${ui._expiry === value ? ` ${pfx}__seg--on` : ""}`,
+      service: "org-setup-expiry",
+      value,
+      uiHandler: [ui],
+      kids: [Skeletons.Note({ active: 0, content: text })],
+    });
+  const out = [
+    Skeletons.Box.X({
+      className: `${pfx}__row-between`,
+      kids: [
+        label(pfx, loc("LINK_EXPIRATION", "Link Expiration")),
+        Skeletons.Box.X({
+          className: `${pfx}__toggle${on ? ` ${pfx}__toggle--on ${pfx}__toggle--live` : ""}`,
+          service: "org-setup-expiry-toggle",
+          uiHandler: [ui],
+          kids: [Skeletons.Box.X({ active: 0, className: `${pfx}__toggle-knob` })],
+        }),
+      ],
+    }),
+  ];
+  if (on) {
+    out.push(Skeletons.Box.X({
+      className: `${pfx}__segs`,
+      kids: [choice("1h", "1h"), choice("24h", "24h"), choice("7d", "7d"), choice("custom", loc("CUSTOM", "Custom"))],
+    }));
+    if (ui._expiry === "custom") {
+      out.push(Skeletons.Entry({
+        className: `${pfx}__input ${pfx}__input--small`,
+        sys_pn: "custom-days",
+        partHandler: ui,
+        value: String(ui._customDays || 30),
+        placeholder: loc("DAYS", "Days"),
+        require: "any",
+      }));
+    }
+  }
+  out.push(Skeletons.Box.X({
+    className: `${pfx}__primary ${pfx}__primary--inline`,
+    service: "org-setup-get-link",
+    uiHandler: [ui],
+    kids: [
+      Skeletons.Image.Svg({ active: 0, ico: "apps-link-simple", className: `${pfx}__btn-svg` }),
+      Skeletons.Note({ active: 0, content: loc("GET_LINK", "Get link") }),
+    ],
+  }));
+  if (ui._link) {
+    out.push(Skeletons.Box.X({
+      className: `${pfx}__link-row`,
+      kids: [
+        Skeletons.Box.X({
+          className: `${pfx}__link-box`,
+          kids: [
+            Skeletons.Image.Svg({ active: 0, ico: "apps-link-simple", className: `${pfx}__link-svg` }),
+            Skeletons.Note({ className: `${pfx}__link-url`, content: ui._link.url }),
+            Skeletons.Box.X({
+              className: `${pfx}__copy`,
+              service: "org-setup-copy-link",
+              uiHandler: [ui],
+              tooltips: { content: ui._copied ? loc("COPIED", "Copied") : loc("COPY_LINK", "Copy link") },
+              kids: [Skeletons.Image.Svg({ active: 0, ico: "copylink", className: `${pfx}__link-svg` })],
+            }),
+          ],
+        }),
+        Skeletons.Box.X({
+          className: `${pfx}__revoke`,
+          service: "org-setup-revoke-link",
+          uiHandler: [ui],
+          kids: [Skeletons.Note({ active: 0, content: loc("REVOKE", "Revoke") })],
+        }),
+      ],
+    }));
+    if (ui._copied) out.push(Skeletons.Note({ className: `${pfx}__hint`, content: loc("COPIED", "Copied") }));
+  }
+  return out;
 }
 
 // ── Frame ─────────────────────────────────────────────────────────────────
@@ -358,7 +442,9 @@ function progress(pfx, step) {
 function footer(ui, pfx) {
   const step = ui._step;
   const primary =
-    step === 2
+    step === 2 && ui._tab === "link"
+      ? { label: loc("FINISH", "Finish"), service: "org-setup-skip" }
+      : step === 2
       ? ui._sent
         ? { label: loc("FINISH", "Finish"), service: "org-setup-skip" }
         : { label: loc("SEND_INVITATION", "Send Invitation"), service: "org-setup-send" }
@@ -411,7 +497,7 @@ module.exports = function (ui) {
           progress(pfx, step),
           Skeletons.Note({ className: `${pfx}__title`, content: title }),
           Skeletons.Note({ className: `${pfx}__sub`, content: sub }),
-          Skeletons.Box.Y({ className: `${pfx}__body`, kids: body }),
+          Skeletons.Box.Y({ className: `${pfx}__body`, kids: body.filter(Boolean) }),
           ui._error ? Skeletons.Note({ className: `${pfx}__error`, content: ui._error }) : null,
           footer(ui, pfx),
         ].filter(Boolean),

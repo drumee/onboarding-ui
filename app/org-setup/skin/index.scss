@@ -430,4 +430,86 @@
     cursor: pointer;
     &:hover { color: var(--os-accent); }
   }
+
+  &__tab:not(.org-setup__tab--off) { cursor: pointer; }
+
+  &__toggle--live { opacity: 1; cursor: pointer; }
+
+  &__toggle:not(.org-setup__toggle--readonly) { cursor: pointer; }
+
+  &__segs {
+    gap: 4px;
+    padding: 4px;
+    border-radius: 10px;
+    background: var(--os-field);
+  }
+
+  &__seg {
+    flex: 1;
+    justify-content: center;
+    padding: 6px 0;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    color: var(--os-ink);
+  }
+
+  &__seg--on {
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    font-weight: 600;
+  }
+
+  &__primary--inline {
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  &__btn-svg,
+  &__link-svg {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 auto;
+  }
+
+  &__link-row {
+    gap: 8px;
+    align-items: stretch;
+  }
+
+  &__link-box {
+    flex: 1;
+    min-width: 0;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: var(--os-wash);
+    color: var(--os-ink);
+  }
+
+  &__link-url {
+    flex: 1;
+    min-width: 0;
+    font-size: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__copy {
+    cursor: pointer;
+    color: var(--os-accent);
+  }
+
+  &__revoke {
+    align-items: center;
+    padding: 0 14px;
+    border-radius: 8px;
+    background: var(--os-error);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
 }

@@ -54,6 +54,12 @@ class org_setup extends LetcBox {
     // Step 2
     this._selected = new Set(); // department ids to invite to
     this._sent = null; // { ok, failed } after a send
+    // Public link (Figma 998:85923): which tab, the expiry choice and the
+    // minted link { token, url, expires_at }.
+    this._tab = "email";
+    this._expiry = "7d";
+    this._customDays = 30;
+    this._link = null;
   }
 
   /**
@@ -319,6 +325,71 @@ class org_setup extends LetcBox {
     this._render();
   }
 
+  // ── Public link ────────────────────────────────────────────────────────
+
+  /** Seconds for the chosen expiry; 0 = no expiry (toggle off). */
+  _expirySeconds() {
+    if (this._expiry === "none") return 0;
+    if (this._expiry === "1h") return 3600;
+    if (this._expiry === "24h") return 86400;
+    if (this._expiry === "7d") return 7 * 86400;
+    return Math.max(1, ~~this._customDays) * 86400;
+  }
+
+  /**
+   * The link people open: this endpoint's address with ?join=<token>. The
+   * desk accepts it once they are signed in (ui-team desk _maybeAcceptJoinLink).
+   */
+  _linkUrl(token) {
+    const base = `${location.origin}${location.pathname}`;
+    return `${base}?join=${encodeURIComponent(token)}`;
+  }
+
+  async _getLink() {
+    const departments = [...this._selected];
+    if (!departments.length) {
+      this._error = loc("CHOOSE_DEPARTMENT", "Choose at least one department.");
+      return this._render();
+    }
+    if (this._expiry === "custom") {
+      const v = parseInt(this._value("custom-days"), 10);
+      if (v > 0) this._customDays = v;
+    }
+    this._busy = true;
+    this._error = "";
+    this._render();
+    const r = await this._call(SERVICE.organization.join_link_create, {
+      departments, expires_in: this._expirySeconds(),
+    });
+    this._busy = false;
+    if (!r.ok) return this._fail(r.status);
+    const token = r.data && r.data.token;
+    this._link = token ? { token, url: this._linkUrl(token), expires_at: r.data.expires_at } : null;
+    this._render();
+  }
+
+  async _revokeLink() {
+    if (!this._link) return;
+    const r = await this._call(SERVICE.organization.join_link_revoke, { token: this._link.token });
+    if (!r.ok) return this._fail(r.status);
+    this._link = null;
+    this._render();
+  }
+
+  _copyLink() {
+    if (!this._link) return;
+    const done = () => {
+      this._copied = true;
+      this._render();
+      setTimeout(() => { this._copied = false; this._render(); }, 1500);
+    };
+    try {
+      navigator.clipboard.writeText(this._link.url).then(done, done);
+    } catch (e) {
+      done();
+    }
+  }
+
   // ── Finish ─────────────────────────────────────────────────────────────
 
   /**
@@ -420,6 +491,26 @@ class org_setup extends LetcBox {
       }
       case "org-setup-send":
         return this._sendInvites();
+
+      case "org-setup-tab":
+        if (cmd.mget("tab") === "link" && !(SERVICE.organization && SERVICE.organization.join_link_create)) return;
+        this._tab = cmd.mget("tab");
+        this._error = "";
+        return this._render();
+      case "org-setup-expiry":
+        this._expiry = cmd.mget("value");
+        this._link = null;
+        return this._render();
+      case "org-setup-expiry-toggle":
+        this._expiry = this._expiry === "none" ? "7d" : "none";
+        this._link = null;
+        return this._render();
+      case "org-setup-get-link":
+        return this._getLink();
+      case "org-setup-copy-link":
+        return this._copyLink();
+      case "org-setup-revoke-link":
+        return this._revokeLink();
 
       default:
         if (super.onUiEvent) super.onUiEvent(cmd, args);

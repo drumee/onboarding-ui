@@ -13,9 +13,13 @@
  * only records that it was finished (organization.setup_done) so the desk
  * stops offering it.
  *
- * v1 scope: the custom domain is shown, not edited (no service changes an
- * organisation's address yet), and the invite step offers email only — the
- * Public link tab needs a membership token that does not exist server-side.
+ * Custom domain (Figma: "northbeam.drumee.com") is the organisation's
+ * address label, <ident>.<main domain>. Step 0 only CHECKS the label
+ * (organization.ident_check); the move itself (organization.change_ident)
+ * waits for Finish, because the page is served from the current address and
+ * stops resolving the moment it changes: Finish moves, then reloads the desk
+ * on the new address. Bringing one's own domain (DNS / email verification)
+ * is the "later in Settings" part of the hint, not this wizard.
  * ==================================================================== */
 const { loc } = require("../lib/locale-text");
 
@@ -60,6 +64,18 @@ class org_setup extends LetcBox {
     this._expiry = "7d";
     this._customDays = 30;
     this._link = null;
+    // Custom domain: the current address split as <ident>.<suffix>, whether
+    // the field is switched on, what is typed, and a label checked free at
+    // step 0 that Finish will move to.
+    const host = String(
+      (Organization && Organization.host && Organization.host()) || location.hostname,
+    ).toLowerCase();
+    const dot = host.indexOf(".");
+    this._identNow = dot > 0 ? host.slice(0, dot) : host;
+    this._identSuffix = dot > 0 ? host.slice(dot + 1) : "";
+    this._identOn = true;
+    this._identDraft = this._identNow;
+    this._pendingIdent = null;
   }
 
   /**
@@ -138,6 +154,12 @@ class org_setup extends LetcBox {
    * name (DEPARTMENT_EXISTS, ...), else the generic one.
    */
   _message(status) {
+    const known = {
+      INVALID_IDENT: "Use 2 to 40 lowercase letters, numbers or dashes (not at the start or end).",
+      IDENT_RESERVED: "This address is reserved. Please pick another one.",
+      IDENT_NOT_AVAILABLE: "This address is already taken. Please pick another one.",
+    };
+    if (known[status]) return loc(status, known[status]);
     return loc(status, loc("SOMETHING_WENT_WRONG", "Something went wrong. Please try again."));
   }
 
@@ -187,8 +209,17 @@ class org_setup extends LetcBox {
       this._error = loc("ORG_NAME_REQUIRED", "Give your organization a name.");
       return this._render();
     }
+    this._name = name;
+    this._readIdent();
     this._busy = true;
     this._render();
+    // Check the address now, move it at Finish (see the header).
+    this._pendingIdent = null;
+    if (this._identOn && this._identDraft && this._identDraft !== this._identNow) {
+      const r = await this._call(SERVICE.organization.ident_check, { ident: this._identDraft });
+      if (!r.ok) return this._fail(r.status);
+      this._pendingIdent = this._identDraft;
+    }
     if (name !== ((Organization && Organization.name && Organization.name()) || "")) {
       const r = await this._call(SERVICE.organization.rename, { name });
       if (!r.ok) return this._fail(r.status);
@@ -212,6 +243,16 @@ class org_setup extends LetcBox {
     this._error = "";
     this._step = 1;
     this._render();
+  }
+
+  /**
+   * What is in the address field, normalised the way the server checks it.
+   */
+  _readIdent() {
+    if (!this._identOn) return;
+    const p = this.getPart && this.getPart("org-ident");
+    if (!p || !p.getValue) return;
+    this._identDraft = String(p.getValue() || "").trim().toLowerCase();
   }
 
   _addDeptNameSilently() {
@@ -399,6 +440,23 @@ class org_setup extends LetcBox {
     if (this._finishing) return;
     this._finishing = true;
     await this._call(SERVICE.organization.setup_done, {});
+    if (this._pendingIdent) {
+      this._busy = true;
+      this._render();
+      const r = await this._call(SERVICE.organization.change_ident, { ident: this._pendingIdent });
+      if (!r.ok) {
+        // Taken in the meantime, most likely: stay, say so, let them go back.
+        this._finishing = false;
+        this._pendingIdent = null;
+        return this._fail(r.status);
+      }
+      const link = r.data && r.data.link;
+      if (link && link !== location.hostname) {
+        // The old address no longer resolves: reload the desk on the new one.
+        location.href = `${location.protocol}//${link}${location.pathname}${location.hash}`;
+        return;
+      }
+    }
     RADIO_BROADCAST.trigger("org:refresh");
     RADIO_BROADCAST.trigger("department:changed");
     if (this.parent && _.isFunction(this.parent.clear)) return this.parent.clear();
@@ -445,6 +503,12 @@ class org_setup extends LetcBox {
         return this._render();
       case "org-setup-skip":
         return this._finish();
+      case "org-setup-ident-toggle":
+        this._readIdent();
+        this._identOn = !this._identOn;
+        if (!this._identOn) this._identDraft = this._identNow;
+        this._error = "";
+        return this._render();
 
       case "org-setup-open-picker": {
         const id = String(cmd.mget("deptId"));

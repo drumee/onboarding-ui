@@ -55,16 +55,31 @@ function step0(ui, pfx) {
       className: `${pfx}__row-between`,
       kids: [
         label(pfx, loc("CUSTOM_DOMAIN", "Custom domain")),
-        // Shown, not switchable: the address is set when the organisation is
-        // created and no service changes it yet (v1).
+        // On: pick the address label. Off: keep the current address.
         Skeletons.Box.X({
-          className: `${pfx}__toggle ${pfx}__toggle--on ${pfx}__toggle--readonly`,
-          active: 0,
+          className: `${pfx}__toggle ${ui._identOn ? `${pfx}__toggle--on ${pfx}__toggle--live` : ""}`,
+          service: "org-setup-ident-toggle",
+          uiHandler: [ui],
           kids: [Skeletons.Box.X({ active: 0, className: `${pfx}__toggle-knob` })],
         }),
       ],
     }),
-    Skeletons.Note({ className: `${pfx}__input ${pfx}__input--readonly`, content: host }),
+    ui._identOn && ui._identSuffix
+      ? Skeletons.Box.X({
+        className: `${pfx}__input ${pfx}__domain`,
+        kids: [
+          Skeletons.Entry({
+            className: `${pfx}__domain-entry`,
+            sys_pn: "org-ident",
+            partHandler: ui,
+            value: ui._identDraft || "",
+            placeholder: "northbeam",
+            require: "any",
+          }),
+          Skeletons.Note({ className: `${pfx}__domain-suffix`, active: 0, content: `.${ui._identSuffix}` }),
+        ],
+      })
+      : Skeletons.Note({ className: `${pfx}__input ${pfx}__input--readonly`, content: host }),
     Skeletons.Note({
       className: `${pfx}__hint`,
       content: loc("CUSTOM_DOMAIN_HINT", "Verify via DNS or email. It can be done later in Settings."),

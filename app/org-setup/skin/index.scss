@@ -512,4 +512,21 @@
     font-weight: 600;
     cursor: pointer;
   }
+
+  &__domain {
+    align-items: center;
+    gap: 0;
+  }
+
+  &__domain-entry {
+    flex: 1;
+    min-width: 0;
+    input { text-align: right; }
+  }
+
+  &__domain-suffix {
+    flex: 0 0 auto;
+    font-size: 14px;
+    color: var(--os-muted);
+  }
 }

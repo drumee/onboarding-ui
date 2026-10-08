@@ -67,7 +67,7 @@ function step0(ui, pfx) {
     Skeletons.Note({ className: `${pfx}__input ${pfx}__input--readonly`, content: host }),
     Skeletons.Note({
       className: `${pfx}__hint`,
-      content: loc("CUSTOM_DOMAIN_HINT", "Verify via DNS or email — can be done later in Settings."),
+      content: loc("CUSTOM_DOMAIN_HINT", "Verify via DNS or email. It can be done later in Settings."),
     }),
     label(pfx, loc("CREATE_DEPARTMENT", "Create department")),
     Skeletons.Box.Y({
@@ -189,7 +189,7 @@ function picker(ui, pfx, deptId) {
 function step1(ui, pfx) {
   const { departments, workspaces } = ui._overview;
   if (!departments.length) {
-    return [Skeletons.Note({ className: `${pfx}__hint`, content: loc("NO_DEPARTMENTS_GO_BACK", "No department yet — go back and add one.") })];
+    return [Skeletons.Note({ className: `${pfx}__hint`, content: loc("NO_DEPARTMENTS_GO_BACK", "No department yet. Go back and add one.") })];
   }
   return departments.map((d) => {
     const id = String(d.id);

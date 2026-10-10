@@ -290,7 +290,7 @@ class org_setup extends LetcBox {
       const cs = getComputedStyle(input);
       ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
       const text = input.value || input.placeholder || "";
-      input.style.width = `${Math.ceil(ctx.measureText(text).width) + 2}px`;
+      input.style.width = `${Math.ceil(ctx.measureText(text).width) + 1}px`;
     };
     input.addEventListener("input", fit);
     fit();

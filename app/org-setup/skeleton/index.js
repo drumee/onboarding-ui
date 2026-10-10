@@ -138,14 +138,16 @@ function step0(ui, pfx) {
 // ── Step 1: workspaces per department ─────────────────────────────────────
 
 /**
- * The picker's rows: workspaces NOT already in this department, filtered by
- * the search box. Exported so a keystroke repaints only the list.
+ * The picker's rows: the organisation's workspaces that belong to NO
+ * department yet (a workspace sits in one department; moving one between
+ * departments is the org view's job), filtered by the search box. Exported so
+ * a keystroke repaints only the list.
  */
 function pickerRows(ui, deptId) {
   const pfx = ui.fig.family;
   const q = String(ui._pickerQuery || "").toLowerCase();
   const rows = ui._overview.workspaces
-    .filter((w) => String(w.department_id || "") !== String(deptId))
+    .filter((w) => !w.department_id)
     .filter((w) => !q || String(w.filename || w.name || "").toLowerCase().includes(q));
   if (!rows.length) {
     return [Skeletons.Note({ className: `${pfx}__picker-empty`, content: loc("NO_WORKSPACE_FOUND", "No workspace found") })];

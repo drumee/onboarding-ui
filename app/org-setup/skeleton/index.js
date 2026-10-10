@@ -15,11 +15,18 @@ function cube(pfx) {
   });
 }
 
+// The filled folder of the design's "folder mini icon" -- the desk's folder
+// outline (media/grid/template/folder), coloured by the workspace's area.
+const FOLDER_SVG = '<svg viewBox="0 0 105 86" xmlns="http://www.w3.org/2000/svg">'
+  + '<path d="M33.5743 1.5H15C8.37258 1.5 3 6.87258 3 13.5V69C3 75.6274 8.37258 81 15 81H90C96.6274 81 '
+  + '102 75.6274 102 69L102 28.2C102 21.5726 96.6274 16.2 90 16.2H58.8349C55.8072 16.2 52.8913 15.0555 '
+  + '50.672 12.9959L41.7372 4.70411C39.5179 2.64453 36.6021 1.5 33.5743 1.5Z"/></svg>';
+
 function folder(pfx, area) {
-  return Skeletons.Image.Svg({
+  return Skeletons.Element({
     active: 0,
-    ico: "app-folder",
     className: `${pfx}__folder ${pfx}__folder--${area || "private"}`,
+    content: FOLDER_SVG,
   });
 }
 

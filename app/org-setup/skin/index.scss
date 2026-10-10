@@ -234,6 +234,7 @@
   &__dept { gap: 12px; }
 
   &__dept-body {
+    position: relative;
     gap: 12px;
     padding-left: 16px;
     margin-left: 16px;
@@ -261,13 +262,17 @@
     line-height: 1.2;
   }
 
+  // Filled folder, 20x16, coloured by area (internal red, external pink,
+  // restricted purple), as in the design's folder mini icons.
   &__folder {
     width: 20px;
-    height: 20px;
+    height: 16px;
     flex: 0 0 auto;
     color: #ff9ad2;
+    svg { width: 20px; height: 16px; display: block; fill: currentColor; }
     &--private { color: #e05a52; }
     &--share { color: #ff9ad2; }
+    &--public { color: #ff9ad2; }
     &--restricted { color: #8a5cff; }
   }
 
@@ -283,7 +288,14 @@
   }
 
   // The workspace picker — a 12px-radius card on a soft shadow.
+  // Floats over what follows, as drawn, rather than pushing it down.
   &__picker {
+    position: absolute;
+    top: 100%;
+    left: 16px;
+    right: -16px;
+    margin-top: 8px;
+    z-index: 5;
     gap: 12px;
     padding: 12px;
     border-radius: 12px;

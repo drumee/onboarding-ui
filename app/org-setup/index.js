@@ -14,11 +14,11 @@
  * stops offering it.
  *
  * Custom domain (Figma: "northbeam.drumee.com") is the organisation's
- * address label, <ident>.<main domain>. Step 0 only CHECKS the label
- * (organization.ident_check); the move itself (organization.change_ident)
- * waits for Finish, because the page is served from the current address and
- * stops resolving the moment it changes: Finish moves, then reloads the desk
- * on the new address. Bringing one's own domain (DNS / email verification)
+ * address label, <ident>.<main domain>. Step 1's Continue checks it first
+ * (organization.ident_check), saves the step, then moves it
+ * (organization.change_ident) and reloads on the new address with
+ * ?org_setup=1, where the wizard -- not finished yet, so it reopens -- carries
+ * on at step 2. Bringing one's own domain (DNS / email verification)
  * is the "later in Settings" part of the hint, not this wizard.
  * ==================================================================== */
 const { loc } = require("../lib/locale-text");
@@ -82,8 +82,25 @@ class org_setup extends LetcBox {
    *
    */
   onDomRefresh() {
+    // Arrived on a new address after step 1 changed it (?org_setup=1):
+    // carry on at step 2.
+    let resume = 0;
+    try {
+      const params = new URLSearchParams(location.search);
+      resume = ~~params.get("org_setup");
+      if (params.has("org_setup")) {
+        params.delete("org_setup");
+        const q = params.toString();
+        history.replaceState(null, "", `${location.pathname}${q ? `?${q}` : ""}${location.hash}`);
+      }
+    } catch (e) { /* no history API */ }
     this._load().then(() => {
       this._deptNames = this._overview.departments.map((d) => ({ id: d.id, name: d.name }));
+      if (resume === 1 && this._deptNames.length) {
+        this._step = 1;
+        this._suggestWorkspaces();
+        return this._render();
+      }
       // A new organisation starts from the suggested departments the owner
       // removes or adds to (Figma 900:149766: Marketing, Operation, then the
       // "Enter dept name..." field). Nothing is created until Continue.
@@ -231,7 +248,8 @@ class org_setup extends LetcBox {
     }
     this._busy = true;
     this._render();
-    // Check the address now, move it at Finish (see the header).
+    // Check the address first, so a taken one is said before anything is
+    // written; it moves once the rest of the step is saved (below).
     this._pendingIdent = null;
     if (this._identOn && this._identDraft && this._identDraft !== this._identNow) {
       const r = await this._call(SERVICE.organization.ident_check, { ident: this._identDraft });
@@ -254,6 +272,22 @@ class org_setup extends LetcBox {
       const r = await this._call(SERVICE.organization.department_add, { name: d.name });
       if (!r.ok && r.status !== "DEPARTMENT_EXISTS") return this._fail(r.status);
       if (r.ok && r.data) d.id = r.data.id;
+    }
+    // A new address: move now. This page is served from the old one, which
+    // stops resolving, so carry on at step 2 on the new one (?org_setup=1 --
+    // the wizard reopens there because it is not finished yet).
+    if (this._pendingIdent) {
+      const r = await this._call(SERVICE.organization.change_ident, { ident: this._pendingIdent });
+      if (!r.ok) {
+        this._pendingIdent = null;
+        return this._fail(r.status);
+      }
+      const link = r.data && r.data.link;
+      this._pendingIdent = null;
+      if (link && link !== location.hostname) {
+        location.href = `${location.protocol}//${link}${location.pathname}?org_setup=1`;
+        return;
+      }
     }
     await this._load();
     this._deptNames = this._overview.departments.map((x) => ({ id: x.id, name: x.name }));

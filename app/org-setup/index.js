@@ -84,7 +84,16 @@ class org_setup extends LetcBox {
   onDomRefresh() {
     this._load().then(() => {
       this._deptNames = this._overview.departments.map((d) => ({ id: d.id, name: d.name }));
-      if (!this._deptNames.length) this._deptNames = [];
+      // A new organisation starts from three suggested departments the owner
+      // renames or removes (Figma 900:149766 "auto display 3 dept for user to
+      // enter the name", 900:150729). Nothing is created until Continue.
+      if (!this._deptNames.length) {
+        this._deptNames = [
+          loc("DEPT_SUGGEST_MARKETING", "Marketing"),
+          loc("DEPT_SUGGEST_ENGINEERING", "Engineering"),
+          loc("DEPT_SUGGEST_DESIGN", "Design"),
+        ].map((name) => ({ id: null, name }));
+      }
       this._render();
     });
     this._render();
@@ -211,6 +220,10 @@ class org_setup extends LetcBox {
     }
     this._name = name;
     this._readIdent();
+    if (!this._deptNames.length) {
+      this._error = loc("ADD_ONE_DEPARTMENT", "Add at least one department.");
+      return this._render();
+    }
     this._busy = true;
     this._render();
     // Check the address now, move it at Finish (see the header).
@@ -252,7 +265,12 @@ class org_setup extends LetcBox {
     if (!this._identOn) return;
     const p = this.getPart && this.getPart("org-ident");
     if (!p || !p.getValue) return;
-    this._identDraft = String(p.getValue() || "").trim().toLowerCase();
+    // The field shows the whole address, as drawn (northbeam.drumee.com):
+    // keep the label in front of this platform's domain. Anything else
+    // stays as typed and the server refuses it (INVALID_IDENT).
+    const raw = String(p.getValue() || "").trim().toLowerCase();
+    const tail = `.${this._identSuffix}`;
+    this._identDraft = this._identSuffix && raw.endsWith(tail) ? raw.slice(0, -tail.length) : raw;
   }
 
   _addDeptNameSilently() {
@@ -539,6 +557,13 @@ class org_setup extends LetcBox {
       case "org-setup-create-ws":
         return this._createWorkspace(cmd.mget("deptId"));
 
+      case "org-setup-expand-dept": {
+        const id = String(cmd.mget("deptId"));
+        this._expanded = this._expanded || new Set();
+        if (this._expanded.has(id)) this._expanded.delete(id);
+        else this._expanded.add(id);
+        return this._render();
+      }
       case "org-setup-toggle-dept": {
         const id = String(cmd.mget("deptId"));
         if (this._selected.has(id)) this._selected.delete(id);

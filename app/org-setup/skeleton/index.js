@@ -27,6 +27,21 @@ function label(pfx, text) {
   return Skeletons.Note({ className: `${pfx}__label`, content: text });
 }
 
+// One labelled block of a step: Figma stacks label / field / hint 12px
+// apart, and the blocks themselves 24px apart.
+function group(pfx, kids, extra = "") {
+  return Skeletons.Box.Y({ className: `${pfx}__group${extra ? ` ${extra}` : ""}`, kids: kids.filter(Boolean) });
+}
+
+function toggle(pfx, ui, on, service) {
+  return Skeletons.Box.X({
+    className: `${pfx}__toggle${on ? ` ${pfx}__toggle--on` : ""}`,
+    service,
+    uiHandler: [ui],
+    kids: [Skeletons.Box.X({ active: 0, className: `${pfx}__toggle-knob` })],
+  });
+}
+
 function x(pfx, service, extra) {
   return Skeletons.Box.X({
     className: `${pfx}__x`,
@@ -36,81 +51,73 @@ function x(pfx, service, extra) {
   });
 }
 
-// ── Step 0: name + departments ────────────────────────────────────────────
+// ── Step 0: name + departments (Figma 900:149766 / 900:150729) ─────────────
 function step0(ui, pfx) {
   const host = (Organization && Organization.host && Organization.host())
     || (Organization && Organization.get && Organization.get("url"))
     || location.hostname;
+  const domainValue = ui._identSuffix ? `${ui._identDraft || ""}.${ui._identSuffix}` : host;
   return [
-    label(pfx, loc("ORGANIZATION_NAME", "Organization name")),
-    Skeletons.Entry({
-      className: `${pfx}__input`,
-      sys_pn: "org-name",
-      partHandler: ui,
-      value: ui._name || "",
-      placeholder: loc("ORGANIZATION_NAME", "Organization name"),
-      require: "any",
-    }),
-    Skeletons.Box.X({
-      className: `${pfx}__row-between`,
-      kids: [
-        label(pfx, loc("CUSTOM_DOMAIN", "Custom domain")),
-        // On: pick the address label. Off: keep the current address.
-        Skeletons.Box.X({
-          className: `${pfx}__toggle ${ui._identOn ? `${pfx}__toggle--on ${pfx}__toggle--live` : ""}`,
-          service: "org-setup-ident-toggle",
-          uiHandler: [ui],
-          kids: [Skeletons.Box.X({ active: 0, className: `${pfx}__toggle-knob` })],
-        }),
-      ],
-    }),
-    ui._identOn && ui._identSuffix
-      ? Skeletons.Box.X({
-        className: `${pfx}__input ${pfx}__domain`,
+    group(pfx, [
+      label(pfx, loc("ORGANIZATION_NAME", "Organization name")),
+      Skeletons.Entry({
+        className: `${pfx}__input`,
+        sys_pn: "org-name",
+        partHandler: ui,
+        value: ui._name || "",
+        placeholder: loc("ORGANIZATION_NAME", "Organization name"),
+        require: "any",
+      }),
+    ]),
+    group(pfx, [
+      Skeletons.Box.X({
+        className: `${pfx}__row-between`,
         kids: [
-          Skeletons.Entry({
-            className: `${pfx}__domain-entry`,
+          label(pfx, loc("CUSTOM_DOMAIN", "Custom domain")),
+          // On: the address can be edited. Off: the current one is kept.
+          toggle(pfx, ui, ui._identOn, "org-setup-ident-toggle"),
+        ],
+      }),
+      // One field holding the whole address, as drawn (northbeam.drumee.com).
+      ui._identOn && ui._identSuffix
+        ? Skeletons.Entry({
+            className: `${pfx}__input`,
             sys_pn: "org-ident",
             partHandler: ui,
-            value: ui._identDraft || "",
-            placeholder: "northbeam",
+            value: domainValue,
+            placeholder: `northbeam.${ui._identSuffix}`,
             require: "any",
-          }),
-          Skeletons.Note({ className: `${pfx}__domain-suffix`, active: 0, content: `.${ui._identSuffix}` }),
-        ],
-      })
-      : Skeletons.Note({ className: `${pfx}__input ${pfx}__input--readonly`, content: host }),
-    Skeletons.Note({
-      className: `${pfx}__hint`,
-      content: loc("CUSTOM_DOMAIN_HINT", "Verify via DNS or email. It can be done later in Settings."),
-    }),
-    label(pfx, loc("CREATE_DEPARTMENT", "Create department")),
-    Skeletons.Box.Y({
-      className: `${pfx}__chips-col`,
-      kids: [
-        ...ui._deptNames.map((d, index) =>
-          Skeletons.Box.X({
-            className: `${pfx}__dept-chip`,
-            kids: [
-              cube(pfx),
-              Skeletons.Note({ active: 0, className: `${pfx}__dept-chip-name`, content: d.name }),
-              x(pfx, "org-setup-remove-dept", { index, uiHandler: [ui] }),
-            ],
-          }),
-        ),
-        Skeletons.Entry({
-          className: `${pfx}__input ${pfx}__input--dept`,
-          sys_pn: "dept-entry",
-          partHandler: ui,
-          placeholder: loc("ENTER_DEPT_NAME", "Enter dept name..."),
-          mode: _a.commit,
-          require: "any",
-          service: "org-setup-add-dept",
-          uiHandler: [ui],
-          preselect: ui._deptNames.length ? 1 : 0,
+          })
+        : Skeletons.Note({ className: `${pfx}__input ${pfx}__input--readonly`, content: host }),
+      Skeletons.Note({
+        className: `${pfx}__hint`,
+        content: loc("CUSTOM_DOMAIN_HINT", "Verify via DNS or email. It can be done later in Settings."),
+      }),
+    ]),
+    group(pfx, [
+      label(pfx, loc("CREATE_DEPARTMENT", "Create department")),
+      ...ui._deptNames.map((d, index) =>
+        Skeletons.Box.X({
+          className: `${pfx}__dept-chip`,
+          kids: [
+            cube(pfx),
+            Skeletons.Note({ active: 0, className: `${pfx}__dept-chip-name`, content: d.name }),
+            x(pfx, "org-setup-remove-dept", { index, uiHandler: [ui] }),
+          ],
         }),
-      ],
-    }),
+      ),
+      Skeletons.Entry({
+        className: `${pfx}__input ${pfx}__input--dept`,
+        sys_pn: "dept-entry",
+        partHandler: ui,
+        placeholder: loc("ENTER_DEPT_NAME", "Enter dept name..."),
+        mode: _a.commit,
+        require: "any",
+        service: "org-setup-add-dept",
+        uiHandler: [ui],
+        preselect: ui._deptNames.length ? 1 : 0,
+      }),
+    ]),
   ];
 }
 
@@ -204,9 +211,9 @@ function picker(ui, pfx, deptId) {
 function step1(ui, pfx) {
   const { departments, workspaces } = ui._overview;
   if (!departments.length) {
-    return [Skeletons.Note({ className: `${pfx}__hint`, content: loc("NO_DEPARTMENTS_GO_BACK", "No department yet. Go back and add one.") })];
+    return [Skeletons.Note({ className: `${pfx}__hint`, content: loc("NO_DEPARTMENTS_YET", "No department yet.") })];
   }
-  return departments.map((d) => {
+  return [group(pfx, departments.map((d) => {
     const id = String(d.id);
     const inDept = workspaces.filter((w) => String(w.department_id || "") === id);
     return Skeletons.Box.Y({
@@ -249,7 +256,7 @@ function step1(ui, pfx) {
         }),
       ],
     });
-  });
+  }), `${pfx}__depts`)];
 }
 
 // ── Step 2: invite ────────────────────────────────────────────────────────
@@ -262,71 +269,136 @@ function checkbox(pfx, on) {
   });
 }
 
-function step2(ui, pfx) {
-  const { departments, workspaces, organisation } = ui._overview;
-  const count = (id) => workspaces.filter((w) => String(w.department_id || "") === String(id)).length;
-  const all = departments.length && departments.every((d) => ui._selected.has(String(d.id)));
+function orgCard(ui, pfx) {
+  const { departments, organisation } = ui._overview;
   const org = organisation || {};
-  const kids = [
-    Skeletons.Box.Y({
-      className: `${pfx}__org-card`,
-      kids: [
-        Skeletons.Note({ className: `${pfx}__org-card-name`, content: org.name || ui._name || "" }),
-        Skeletons.Box.X({
-          className: `${pfx}__org-card-meta`,
-          kids: [
-            Skeletons.Note({ className: `${pfx}__num`, content: String(departments.length) }),
-            Skeletons.Note({ className: `${pfx}__muted`, content: loc("DEPARTMENTS", "Departments") }),
-            Skeletons.Note({ className: `${pfx}__num`, content: String(~~org.member_count) }),
-            Skeletons.Image.Svg({ active: 0, ico: "ph-users", className: `${pfx}__people-svg` }),
-          ],
-        }),
-      ],
-    }),
-    tabs(ui, pfx),
-    ui._tab === "link" ? null : label(pfx, loc("INVITE_MEMBER_VIA_EMAIL", "Invite member via email")),
-    ui._tab === "link"
-      ? null
-      : Skeletons.Entry({
-          className: `${pfx}__input`,
-          sys_pn: "emails",
-          partHandler: ui,
-          value: ui._emailsRaw || "",
-          placeholder: "name@company.com",
-          require: "any",
-        }),
-    Skeletons.Box.X({
-      className: `${pfx}__row-between`,
-      kids: [
-        label(pfx, loc("INVITE_TO", "Invite to")),
-        Skeletons.Box.X({
-          className: `${pfx}__all`,
-          service: "org-setup-toggle-all",
-          uiHandler: [ui],
-          kids: [Skeletons.Note({ active: 0, content: loc("ALL", "All") }), checkbox(pfx, all)],
-        }),
-      ],
-    }),
-    ...departments.map((d) =>
+  return Skeletons.Box.Y({
+    className: `${pfx}__org-card`,
+    kids: [
+      Skeletons.Note({ className: `${pfx}__org-card-name`, content: org.name || ui._name || "" }),
       Skeletons.Box.X({
-        className: `${pfx}__invite-row`,
-        service: "org-setup-toggle-dept",
-        deptId: d.id,
-        uiHandler: [ui],
+        className: `${pfx}__org-card-meta`,
         kids: [
-          cube(pfx),
-          Skeletons.Note({ active: 0, className: `${pfx}__invite-name`, content: d.name }),
-          Skeletons.Note({
-            active: 0,
-            className: `${pfx}__pill`,
-            content: `${count(d.id)} ${loc("WORKSPACES", "Workspaces")}`,
+          Skeletons.Box.X({
+            className: `${pfx}__meta`,
+            kids: [
+              Skeletons.Note({ className: `${pfx}__num`, content: String(departments.length) }),
+              Skeletons.Note({ className: `${pfx}__muted`, content: loc("DEPARTMENTS", "Departments") }),
+            ],
           }),
-          checkbox(pfx, ui._selected.has(String(d.id))),
+          Skeletons.Box.X({
+            className: `${pfx}__meta`,
+            kids: [
+              Skeletons.Note({ className: `${pfx}__num`, content: String(~~org.member_count) }),
+              Skeletons.Image.Svg({ active: 0, ico: "ph-users", className: `${pfx}__people-svg` }),
+            ],
+          }),
         ],
       }),
-    ),
+    ],
+  });
+}
+
+function step2(ui, pfx) {
+  const { departments, workspaces } = ui._overview;
+  const inDept = (id) => workspaces.filter((w) => String(w.department_id || "") === String(id));
+  const all = departments.length && departments.every((d) => ui._selected.has(String(d.id)));
+  const expanded = ui._expanded || new Set();
+  const kids = [
+    tabs(ui, pfx),
+    ui._tab === "link"
+      ? null
+      : group(pfx, [
+          label(pfx, loc("INVITE_MEMBER_VIA_EMAIL", "Invite member via email")),
+          Skeletons.Entry({
+            className: `${pfx}__email`,
+            sys_pn: "emails",
+            partHandler: ui,
+            value: ui._emailsRaw || "",
+            placeholder: "name@company.com",
+            require: "any",
+          }),
+        ]),
+    group(pfx, [
+      Skeletons.Box.X({
+        className: `${pfx}__row-between ${pfx}__invite-head`,
+        kids: [
+          label(pfx, loc("INVITE_TO", "Invite to")),
+          Skeletons.Box.X({
+            className: `${pfx}__all`,
+            service: "org-setup-toggle-all",
+            uiHandler: [ui],
+            kids: [Skeletons.Note({ active: 0, className: `${pfx}__all-label`, content: loc("ALL", "All") }), checkbox(pfx, all)],
+          }),
+        ],
+      }),
+      ...departments.map((d) => {
+        const id = String(d.id);
+        const ws = inDept(id);
+        return Skeletons.Box.Y({
+          className: `${pfx}__invite-item`,
+          kids: [
+            Skeletons.Box.X({
+              className: `${pfx}__invite-line`,
+              kids: [
+                Skeletons.Box.X({
+                  className: `${pfx}__invite-row`,
+                  service: "org-setup-toggle-dept",
+                  deptId: d.id,
+                  uiHandler: [ui],
+                  kids: [
+                    cube(pfx),
+                    Skeletons.Note({ active: 0, className: `${pfx}__invite-name`, content: d.name }),
+                    Skeletons.Box.X({
+                      active: 0,
+                      className: `${pfx}__pill`,
+                      kids: [
+                        Skeletons.Note({ active: 0, className: `${pfx}__pill-num`, content: String(ws.length) }),
+                        Skeletons.Note({ active: 0, className: `${pfx}__pill-text`, content: loc("WORKSPACES", "Workspaces") }),
+                      ],
+                    }),
+                    // The caret opens the department's workspace list; it
+                    // takes its own click, the row's toggles the department.
+                    Skeletons.Box.X({
+                      className: `${pfx}__caret${expanded.has(id) ? ` ${pfx}__caret--open` : ""}`,
+                      service: "org-setup-expand-dept",
+                      deptId: d.id,
+                      uiHandler: [ui],
+                      kids: [Skeletons.Image.Svg({ active: 0, ico: "ph-caret-down", className: `${pfx}__caret-svg` })],
+                    }),
+                  ],
+                }),
+                Skeletons.Box.X({
+                  className: `${pfx}__check-hit`,
+                  service: "org-setup-toggle-dept",
+                  deptId: d.id,
+                  uiHandler: [ui],
+                  kids: [checkbox(pfx, ui._selected.has(id))],
+                }),
+              ],
+            }),
+            expanded.has(id)
+              ? Skeletons.Box.X({
+                  className: `${pfx}__ws-chips ${pfx}__ws-chips--invite`,
+                  kids: ws.length
+                    ? ws.map((w) =>
+                        Skeletons.Box.X({
+                          className: `${pfx}__ws-chip`,
+                          kids: [
+                            folder(pfx, w.area),
+                            Skeletons.Note({ active: 0, className: `${pfx}__ws-chip-name`, content: w.filename || w.name || "" }),
+                          ],
+                        }),
+                      )
+                    : [Skeletons.Note({ className: `${pfx}__hint`, content: loc("NO_WORKSPACE_FOUND", "No workspace found") })],
+                })
+              : null,
+          ].filter(Boolean),
+        });
+      }),
+    ]),
   ];
-  if (ui._tab === "link") kids.push(...linkBlock(ui, pfx));
+  if (ui._tab === "link") kids.push(group(pfx, linkBlock(ui, pfx)));
   if (ui._sent && ui._tab !== "link") {
     kids.push(
       Skeletons.Note({
@@ -367,32 +439,30 @@ function tabs(ui, pfx) {
 // with copy and Revoke.
 function linkBlock(ui, pfx) {
   const on = ui._expiry !== "none";
-  const choice = (value, text) =>
+  const choice = (value, text, ico) =>
     Skeletons.Box.X({
       className: `${pfx}__seg${ui._expiry === value ? ` ${pfx}__seg--on` : ""}`,
       service: "org-setup-expiry",
       value,
       uiHandler: [ui],
-      kids: [Skeletons.Note({ active: 0, content: text })],
+      kids: [
+        Skeletons.Note({ active: 0, content: text }),
+        ico ? Skeletons.Image.Svg({ active: 0, ico, className: `${pfx}__seg-svg` }) : null,
+      ].filter(Boolean),
     });
   const out = [
     Skeletons.Box.X({
       className: `${pfx}__row-between`,
       kids: [
         label(pfx, loc("LINK_EXPIRATION", "Link Expiration")),
-        Skeletons.Box.X({
-          className: `${pfx}__toggle${on ? ` ${pfx}__toggle--on ${pfx}__toggle--live` : ""}`,
-          service: "org-setup-expiry-toggle",
-          uiHandler: [ui],
-          kids: [Skeletons.Box.X({ active: 0, className: `${pfx}__toggle-knob` })],
-        }),
+        toggle(pfx, ui, on, "org-setup-expiry-toggle"),
       ],
     }),
   ];
   if (on) {
     out.push(Skeletons.Box.X({
       className: `${pfx}__segs`,
-      kids: [choice("1h", "1h"), choice("24h", "24h"), choice("7d", "7d"), choice("custom", loc("CUSTOM", "Custom"))],
+      kids: [choice("1h", "1h"), choice("24h", "24h"), choice("7d", "7d"), choice("custom", loc("CUSTOM", "Custom"), "calendar")],
     }));
     if (ui._expiry === "custom") {
       out.push(Skeletons.Entry({
@@ -406,7 +476,7 @@ function linkBlock(ui, pfx) {
     }
   }
   out.push(Skeletons.Box.X({
-    className: `${pfx}__primary ${pfx}__primary--inline`,
+    className: `${pfx}__primary`,
     service: "org-setup-get-link",
     uiHandler: [ui],
     kids: [
@@ -436,7 +506,10 @@ function linkBlock(ui, pfx) {
           className: `${pfx}__revoke`,
           service: "org-setup-revoke-link",
           uiHandler: [ui],
-          kids: [Skeletons.Note({ active: 0, content: loc("REVOKE", "Revoke") })],
+          kids: [
+            Skeletons.Image.Svg({ active: 0, ico: "app-prohibit", className: `${pfx}__revoke-svg` }),
+            Skeletons.Note({ active: 0, content: loc("REVOKE", "Revoke") }),
+          ],
         }),
       ],
     }));
@@ -454,40 +527,37 @@ function progress(pfx, step) {
   return Skeletons.Box.X({ className: `${pfx}__progress`, kids });
 }
 
+// Steps 1-2 end on Continue alone (Figma 900:149766, 900:149870). Step 3
+// ends on Send Invitation + "Skip this step" (900:150257); on the Public link
+// tab Get link is the action, so only "Skip this step" closes (998:85923).
 function footer(ui, pfx) {
   const step = ui._step;
   const primary =
-    step === 2 && ui._tab === "link"
-      ? { label: loc("FINISH", "Finish"), service: "org-setup-skip" }
-      : step === 2
-      ? ui._sent
-        ? { label: loc("FINISH", "Finish"), service: "org-setup-skip" }
-        : { label: loc("SEND_INVITATION", "Send Invitation"), service: "org-setup-send" }
-      : { label: loc("CONTINUE", "Continue"), service: "org-setup-next" };
+    step < 2
+      ? { label: loc("CONTINUE", "Continue"), service: "org-setup-next" }
+      : ui._tab === "link"
+      ? null
+      : { label: loc("SEND_INVITATION", "Send Invitation"), service: "org-setup-send" };
   return Skeletons.Box.Y({
     className: `${pfx}__footer`,
     kids: [
-      Skeletons.Box.X({
-        className: `${pfx}__primary${ui._busy ? ` ${pfx}__primary--busy` : ""}`,
-        service: primary.service,
-        uiHandler: [ui],
-        kids: [Skeletons.Note({ active: 0, content: ui._busy ? loc("PLEASE_WAIT", "Please wait...") : primary.label })],
-      }),
-      Skeletons.Box.X({
-        className: `${pfx}__secondary-row`,
-        kids: [
-          step > 0
-            ? Skeletons.Note({ className: `${pfx}__secondary`, content: loc("BACK", "Back"), service: "org-setup-back", uiHandler: [ui] })
-            : null,
-          Skeletons.Note({
+      primary
+        ? Skeletons.Box.X({
+            className: `${pfx}__primary${ui._busy ? ` ${pfx}__primary--busy` : ""}`,
+            service: primary.service,
+            uiHandler: [ui],
+            kids: [Skeletons.Note({ active: 0, content: ui._busy ? loc("PLEASE_WAIT", "Please wait...") : primary.label })],
+          })
+        : null,
+      step === 2
+        ? Skeletons.Note({
             className: `${pfx}__secondary`,
-            content: step === 2 ? loc("SKIP_THIS_STEP", "Skip this step") : loc("SET_UP_LATER", "Set up later"),
+            content: loc("SKIP_THIS_STEP", "Skip this step"),
             service: "org-setup-skip",
             uiHandler: [ui],
-          }),
-        ].filter(Boolean),
-      }),
-    ],
+          })
+        : null,
+    ].filter(Boolean),
   });
 }
 
@@ -501,6 +571,9 @@ module.exports = function (ui) {
     loc("ORG_SETUP_SUB_2", "Invite members to department and workspace in organization."),
   ][step];
   const body = step === 0 ? step0(ui, pfx) : step === 1 ? step1(ui, pfx) : step2(ui, pfx);
+  // Figma: logo / progress / content / button 48px apart; inside content the
+  // heading (title, subtitle -- and on step 3 the org card) then the blocks
+  // 24px apart.
   return Skeletons.Box.Y({
     className: `${pfx}__main`,
     debug: __filename,
@@ -510,10 +583,21 @@ module.exports = function (ui) {
         kids: [
           Skeletons.Element({ className: `${pfx}__logo`, content: LOGO_SVG, active: 0 }),
           progress(pfx, step),
-          Skeletons.Note({ className: `${pfx}__title`, content: title }),
-          Skeletons.Note({ className: `${pfx}__sub`, content: sub }),
-          Skeletons.Box.Y({ className: `${pfx}__body`, kids: body.filter(Boolean) }),
-          ui._error ? Skeletons.Note({ className: `${pfx}__error`, content: ui._error }) : null,
+          Skeletons.Box.Y({
+            className: `${pfx}__content`,
+            kids: [
+              Skeletons.Box.Y({
+                className: `${pfx}__head`,
+                kids: [
+                  Skeletons.Note({ className: `${pfx}__title`, content: title }),
+                  Skeletons.Note({ className: `${pfx}__sub`, content: sub }),
+                  step === 2 ? orgCard(ui, pfx) : null,
+                ].filter(Boolean),
+              }),
+              ...body.filter(Boolean),
+              ui._error ? Skeletons.Note({ className: `${pfx}__error`, content: ui._error }) : null,
+            ].filter(Boolean),
+          }),
           footer(ui, pfx),
         ].filter(Boolean),
       }),

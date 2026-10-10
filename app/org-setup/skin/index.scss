@@ -1,18 +1,25 @@
 // org_setup — "Set up your organization" (Figma Drumee 2.0, 900:149766 /
-// 900:149870 / 900:150257). Same ground and type as the personal onboarding
-// (app/skin/vars.scss): white with the lavender mesh, Primary/50 title,
-// 8px fields, 12px button.
+// 900:150729 step 1, 900:149870 step 2, 900:150257 / 998:85923 step 3).
+//
+// Measurements are the frames': a 520px modal with 24px padding; logo,
+// progress, content and the primary button 48px apart; inside the content
+// the heading, then blocks 24px apart, each block's rows 12px apart.
+// Type is Geist, as everywhere in the design (the same stack the
+// invite-popup and trash widgets declare): H5 32/1.1 semibold, Body/Medium 16,
+// Buttons/Medium 16 semibold, Body/Small 14, Body/Mini 12/1.4.
 .org-setup {
   &__ui {
-    --os-title: rgb(67, 60, 197);
-    --os-ink: rgb(11, 10, 33);
-    --os-muted: rgb(101, 101, 108);
-    --os-accent: rgb(89, 80, 255);
-    --os-primary: rgb(67, 60, 197);
-    --os-wash: rgba(89, 80, 255, 0.1);
-    --os-field: rgba(0, 0, 0, 0.05);
-    --os-line: rgba(0, 0, 0, 0.05);
-    --os-error: rgb(215, 78, 73);
+    --os-title: #433cc5;      // Primary/50
+    --os-ink: #0b0a21;        // Primary/100
+    --os-accent: #5950ff;     // Primary/40
+    --os-accent-30: #847eff;  // Primary/30
+    --os-primary: #433cc5;    // Primary/50
+    --os-grey-80: #65656c;    // Grey/80
+    --os-grey-70: #84848c;    // Grey/70
+    --os-grey-20: #f2f2f7;    // Grey/20
+    --os-line: rgba(0, 0, 0, 0.05);       // Overlay/light mode
+    --os-brand: rgba(89, 80, 255, 0.1);   // Overlay/brand
+    --os-error: #d74e49;      // Signal/Error
 
     position: fixed;
     inset: 0;
@@ -20,25 +27,32 @@
     display: flex;
     justify-content: center;
     overflow-y: auto;
-    font-family: var(--font-main, "Geist", sans-serif);
+    font-family: "Geist", system-ui, -apple-system, "Segoe UI", sans-serif;
     color: var(--os-ink);
     background-color: #fff;
     background-image:
       radial-gradient(ellipse 40vw 130vh at 0% 0%, rgba(89, 80, 255, 0.1) 0%, transparent 80%),
       radial-gradient(ellipse 55vw 95vh at 100% 100%, rgba(89, 80, 255, 0.13) 0%, transparent 90%);
+
+    // Entry widgets render their own <input>; keep them on the same type.
+    input {
+      font-family: inherit;
+    }
   }
 
   &__main {
     width: 100%;
     align-items: center;
-    padding: 96px 16px 48px;
+    padding: 86px 16px 48px;
     box-sizing: border-box;
   }
 
   &__card {
-    width: 474px;
+    width: 520px;
     max-width: 100%;
-    gap: 16px;
+    box-sizing: border-box;
+    padding: 24px;
+    gap: 48px;
   }
 
   &__logo {
@@ -48,39 +62,47 @@
 
   &__progress {
     gap: 8px;
-    margin: 16px 0 8px;
   }
 
   &__progress-step {
     flex: 1;
     height: 6px;
-    border-radius: 999px;
-    background: rgba(0, 0, 0, 0.06);
+    border-radius: 12px;
+    background: var(--os-line);
     &.active { background: var(--os-accent); }
+  }
+
+  // ── Content ─────────────────────────────────────────────────────────────
+  &__content {
+    gap: 24px;
+  }
+
+  &__head {
+    gap: 12px;
   }
 
   &__title {
     font-size: 32px;
-    line-height: 1.2;
+    line-height: 1.1;
     font-weight: 600;
     color: var(--os-title);
   }
 
   &__sub {
-    margin-top: -8px;
-    font-size: 14px;
+    font-size: 16px;
+    line-height: 1.2;
     color: var(--os-ink);
   }
 
-  &__body {
+  &__group {
     gap: 12px;
   }
 
   &__label {
-    font-size: 14px;
+    font-size: 16px;
+    line-height: 1.2;
     font-weight: 600;
     color: var(--os-ink);
-    margin-top: 4px;
   }
 
   &__row-between {
@@ -88,15 +110,16 @@
     justify-content: space-between;
   }
 
+  // Text fields: 12px padding, 12px radius, hairline border, Body/Small.
   &__input {
     width: 100%;
     box-sizing: border-box;
-    min-height: 40px;
-    padding: 10px 12px;
-    border-radius: 8px;
+    padding: 12px;
+    border-radius: 12px;
     border: 1px solid var(--os-line);
     background: #fff;
     font-size: 14px;
+    line-height: 1.2;
     color: var(--os-ink);
 
     input {
@@ -106,8 +129,9 @@
       padding: 0;
       background: transparent;
       font-size: 14px;
+      line-height: 1.2;
       color: var(--os-ink);
-      &::placeholder { color: var(--os-muted); }
+      &::placeholder { color: var(--os-grey-80); }
     }
 
     &:focus-within { border-color: var(--os-accent); }
@@ -115,28 +139,41 @@
 
   &__input--readonly { color: var(--os-ink); }
 
-  &__input--small { min-height: 34px; padding: 6px 10px; }
+  // "Enter dept name..." — 8px 12px, 42px tall, Body/Medium placeholder.
+  &__input--dept {
+    min-height: 42px;
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
 
-  &__hint {
-    margin-top: -4px;
-    font-size: 12px;
-    color: var(--os-muted);
+    input,
+    input::placeholder { font-size: 16px; }
   }
 
+  &__input--small { padding: 8px 12px; }
+
+  &__hint {
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--os-grey-80);
+  }
+
+  // Toggle — 40x20, Primary/30 when on, 16px white knob.
   &__toggle {
-    width: 36px;
+    width: 40px;
     height: 20px;
-    border-radius: 999px;
+    flex: 0 0 40px;
+    border-radius: 12px;
     background: rgba(0, 0, 0, 0.15);
     align-items: center;
     padding: 2px;
     box-sizing: border-box;
+    cursor: pointer;
   }
 
   &__toggle--on {
-    background: var(--os-accent);
+    background: var(--os-accent-30);
     justify-content: flex-end;
-    opacity: 0.6;
   }
 
   &__toggle-knob {
@@ -146,22 +183,22 @@
     background: #fff;
   }
 
-  &__chips-col { gap: 12px; }
-
+  // Department chip — Grey/20, 12px padding and radius, cube + name + X.
   &__dept-chip,
   &__dept-head {
     align-items: center;
     gap: 8px;
-    min-height: 40px;
-    padding: 6px 12px 6px 8px;
+    padding: 12px;
     box-sizing: border-box;
-    border-radius: 8px;
-    background: var(--os-field);
+    border-radius: 12px;
+    background: var(--os-grey-20);
   }
 
   &__dept-chip-name {
     flex: 1;
-    font-size: 14px;
+    min-width: 0;
+    font-size: 16px;
+    line-height: 1.2;
     color: var(--os-ink);
   }
 
@@ -169,10 +206,12 @@
     flex: 0 0 auto;
     width: 24px;
     height: 24px;
+    box-sizing: border-box;
+    padding: 4px;
     align-items: center;
     justify-content: center;
     border-radius: 6px;
-    background: var(--os-wash);
+    background: var(--os-brand);
     color: var(--os-accent);
     svg { width: 16px; height: 16px; }
   }
@@ -184,18 +223,21 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    color: var(--os-muted);
-    svg { width: 14px; height: 14px; pointer-events: none; }
+    color: var(--os-grey-80);
+    svg { width: 16px; height: 16px; pointer-events: none; }
     &:hover { color: var(--os-ink); }
   }
 
-  &__dept { gap: 8px; }
+  // ── Step 2: workspaces per department ───────────────────────────────────
+  &__depts { gap: 12px; }
+
+  &__dept { gap: 12px; }
 
   &__dept-body {
-    gap: 8px;
+    gap: 12px;
     padding-left: 16px;
+    margin-left: 16px;
     border-left: 1px solid var(--os-line);
-    margin-left: 12px;
   }
 
   &__ws-chips {
@@ -203,20 +245,25 @@
     gap: 8px;
   }
 
+  &__ws-chips--invite { padding: 0 32px 0 12px; }
+
   &__ws-chip {
     align-items: center;
-    gap: 6px;
-    padding: 4px 8px;
+    gap: 8px;
+    padding: 6px 10px;
     border-radius: 8px;
     border: 1px solid var(--os-line);
     background: #fff;
   }
 
-  &__ws-chip-name { font-size: 12px; }
+  &__ws-chip-name {
+    font-size: 14px;
+    line-height: 1.2;
+  }
 
   &__folder {
-    width: 16px;
-    height: 16px;
+    width: 20px;
+    height: 20px;
     flex: 0 0 auto;
     color: #ff9ad2;
     &--private { color: #e05a52; }
@@ -226,38 +273,44 @@
 
   &__add {
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     cursor: pointer;
-    font-size: 13px;
+    font-size: 14px;
+    line-height: 1.2;
     color: var(--os-ink);
-    svg { width: 14px; height: 14px; }
+    svg { width: 16px; height: 16px; }
     &:hover { color: var(--os-accent); }
   }
 
+  // The workspace picker — a 12px-radius card on a soft shadow.
   &__picker {
-    gap: 8px;
-    padding: 10px;
+    gap: 12px;
+    padding: 12px;
     border-radius: 12px;
     background: #fff;
     box-shadow: 0 1px 11px rgba(0, 0, 0, 0.13);
   }
 
-  &__picker-title { font-size: 13px; font-weight: 600; }
+  &__picker-title {
+    font-size: 14px;
+    line-height: 1.2;
+    color: var(--os-ink);
+  }
 
   &__link {
-    font-size: 12px;
-    font-weight: 600;
+    font-size: 14px;
+    line-height: 1.2;
     color: var(--os-accent);
     cursor: pointer;
   }
 
   &__search {
     align-items: center;
-    gap: 6px;
-    padding: 6px 10px;
+    gap: 8px;
+    padding: 8px 12px;
     border-radius: 8px;
-    background: var(--os-field);
-    svg { width: 14px; height: 14px; color: var(--os-muted); }
+    background: var(--os-grey-20);
+    svg { width: 16px; height: 16px; color: var(--os-grey-80); }
   }
 
   &__search-input {
@@ -269,69 +322,98 @@
       padding: 0;
       background: transparent;
       font-size: 12px;
+      &::placeholder { color: var(--os-grey-80); }
     }
   }
 
   &__picker-list {
-    max-height: 180px;
+    max-height: 200px;
     overflow-y: auto;
-    gap: 2px;
+    gap: 0;
   }
 
   &__picker-row {
     align-items: center;
-    gap: 8px;
-    padding: 6px 8px;
-    border-radius: 6px;
+    gap: 12px;
+    padding: 8px;
+    border-radius: 8px;
     cursor: pointer;
-    font-size: 13px;
-    &:hover { background: var(--os-field); }
+    font-size: 14px;
+    line-height: 1.2;
+    &:hover { background: var(--os-grey-20); }
   }
 
   &__picker-empty {
-    padding: 6px 8px;
+    padding: 8px;
     font-size: 12px;
-    color: var(--os-muted);
+    color: var(--os-grey-80);
   }
 
+  // ── Step 3: invite ──────────────────────────────────────────────────────
+  // Org card — 8px 16px, 12px radius, hairline.
   &__org-card {
     gap: 4px;
-    padding: 10px 12px;
-    border-radius: 8px;
+    padding: 8px 16px;
+    border-radius: 12px;
     border: 1px solid var(--os-line);
     background: #fff;
   }
 
-  &__org-card-name { font-size: 14px; font-weight: 600; }
+  &__org-card-name {
+    font-size: 16px;
+    line-height: 1.2;
+    font-weight: 600;
+  }
 
   &__org-card-meta {
     align-items: center;
-    gap: 4px;
-    font-size: 12px;
-    svg { width: 14px; height: 14px; color: var(--os-muted); }
+    gap: 8px;
   }
 
-  &__num { color: var(--os-accent); font-weight: 600; }
-
-  &__muted { color: var(--os-muted); margin-right: 8px; }
-
-  &__tabs {
+  &__meta {
+    align-items: center;
     gap: 4px;
+  }
+
+  &__num {
+    font-size: 12px;
+    line-height: 1.2;
+    font-weight: 600;
+    color: var(--os-accent);
+  }
+
+  &__muted {
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--os-grey-80);
+  }
+
+  &__people-svg {
+    width: 16px;
+    height: 16px;
+    color: var(--os-grey-80);
+  }
+
+  // Via email / Public link — Grey/20 bar, 4px inset, 12px radius; the
+  // selected tab Primary/40 with white text.
+  &__tabs {
     padding: 4px;
-    border-radius: 10px;
-    background: var(--os-field);
+    border-radius: 12px;
+    background: var(--os-grey-20);
   }
 
   &__tab {
     flex: 1;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    padding: 6px 0;
-    border-radius: 8px;
-    font-size: 13px;
-    color: var(--os-muted);
-    svg { width: 14px; height: 14px; }
+    gap: 10px;
+    padding: 8px 24px;
+    border-radius: 12px;
+    font-size: 14px;
+    line-height: 1.2;
+    color: var(--os-grey-80);
+    cursor: pointer;
+    svg { width: 17px; height: 17px; }
   }
 
   &__tab--on {
@@ -341,40 +423,113 @@
 
   &__tab--off { opacity: 0.6; cursor: not-allowed; }
 
-  &__all {
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-    font-size: 14px;
+  // "Invite member via email" — an underlined field.
+  &__email {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 4px 0 8px;
+    border-bottom: 1px solid var(--os-grey-70);
+
+    input {
+      width: 100%;
+      border: 0;
+      outline: none;
+      padding: 0;
+      background: transparent;
+      font-size: 14px;
+      line-height: 1.2;
+      color: var(--os-ink);
+      &::placeholder { color: var(--os-grey-80); }
+    }
+
+    &:focus-within { border-bottom-color: var(--os-accent); }
   }
 
-  &__invite-row {
+  &__invite-head { padding-bottom: 8px; }
+
+  &__all {
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+  }
+
+  &__all-label {
+    font-size: 16px;
+    line-height: 1.2;
+  }
+
+  &__invite-item { gap: 8px; }
+
+  &__invite-line {
     align-items: center;
     gap: 8px;
-    min-height: 40px;
-    padding: 6px 8px;
-    border-radius: 8px;
+  }
+
+  // One department — 4px 12px, 12px radius, hairline; cube, name, pill, caret.
+  &__invite-row {
+    flex: 1;
+    min-width: 0;
+    align-items: center;
+    gap: 12px;
+    padding: 4px 12px;
+    min-height: 42px;
+    box-sizing: border-box;
+    border-radius: 12px;
     border: 1px solid var(--os-line);
     background: #fff;
     cursor: pointer;
   }
 
-  &__invite-name { flex: 1; font-size: 14px; }
+  &__invite-name {
+    flex: 1;
+    min-width: 0;
+    font-size: 14px;
+    line-height: 1.2;
+  }
 
   &__pill {
-    padding: 2px 8px;
-    border-radius: 999px;
-    background: var(--os-wash);
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: 46px;
+    background: var(--os-brand);
+  }
+
+  &__pill-num {
     font-size: 12px;
+    line-height: 1.2;
+    font-weight: 600;
     color: var(--os-accent);
   }
 
+  &__pill-text {
+    font-size: 12px;
+    line-height: 1.4;
+    color: #000;
+  }
+
+  &__caret {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 16px;
+    cursor: pointer;
+    color: var(--os-ink);
+    svg { width: 16px; height: 16px; transition: transform 0.15s; }
+    &--open svg { transform: rotate(180deg); }
+  }
+
+  &__check-hit {
+    flex: 0 0 auto;
+    cursor: pointer;
+  }
+
+  // Checkbox — 20px, 4px radius, Grey/70 hairline.
   &__check {
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
     box-sizing: border-box;
     border-radius: 4px;
-    border: 1.5px solid rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--os-grey-70);
     align-items: center;
     justify-content: center;
     svg { width: 12px; height: 12px; color: #fff; }
@@ -385,95 +540,37 @@
     }
   }
 
-  &__notice {
-    padding: 8px 12px;
-    border-radius: 8px;
-    background: rgba(84, 182, 132, 0.12);
-    font-size: 13px;
-    &--warn { background: rgba(229, 161, 58, 0.15); }
-  }
-
-  &__error {
-    font-size: 13px;
-    color: var(--os-error);
-  }
-
-  &__footer {
-    gap: 12px;
-    margin-top: 12px;
-  }
-
-  &__primary {
-    height: 44px;
-    align-items: center;
-    justify-content: center;
-    border-radius: 12px;
-    background: var(--os-primary);
-    color: #fff;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    &:hover { background: var(--os-accent); }
-  }
-
-  &__primary--busy { opacity: 0.6; cursor: progress; }
-
-  &__secondary-row {
-    justify-content: center;
-    gap: 24px;
-  }
-
-  &__secondary {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--os-ink);
-    cursor: pointer;
-    &:hover { color: var(--os-accent); }
-  }
-
-  &__tab:not(.org-setup__tab--off) { cursor: pointer; }
-
-  &__toggle--live { opacity: 1; cursor: pointer; }
-
-  &__toggle:not(.org-setup__toggle--readonly) { cursor: pointer; }
-
+  // Link Expiration — 1h / 24h / 7d / Custom on Grey/20, 8px radius; the
+  // chosen one white, 4px radius.
   &__segs {
-    gap: 4px;
     padding: 4px;
-    border-radius: 10px;
-    background: var(--os-field);
+    border-radius: 8px;
+    background: var(--os-grey-20);
   }
 
   &__seg {
     flex: 1;
+    align-items: center;
     justify-content: center;
-    padding: 6px 0;
-    border-radius: 8px;
-    font-size: 13px;
-    cursor: pointer;
+    gap: 10px;
+    padding: 4px 0;
+    border-radius: 4px;
+    font-size: 14px;
+    line-height: 1.2;
     color: var(--os-ink);
+    cursor: pointer;
   }
 
-  &__seg--on {
-    background: #fff;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-    font-weight: 600;
-  }
+  &__seg--on { background: #fff; }
 
-  &__primary--inline {
-    gap: 8px;
-    margin-top: 4px;
-  }
-
-  &__btn-svg,
-  &__link-svg {
-    width: 16px;
-    height: 16px;
-    flex: 0 0 auto;
+  &__seg-svg {
+    width: 12px;
+    height: 12px;
   }
 
   &__link-row {
     gap: 8px;
+    height: 40px;
     align-items: stretch;
   }
 
@@ -482,16 +579,24 @@
     min-width: 0;
     align-items: center;
     gap: 8px;
-    padding: 8px 10px;
+    padding: 8px 12px;
     border-radius: 8px;
-    background: var(--os-wash);
-    color: var(--os-ink);
+    background: var(--os-brand);
+  }
+
+  &__link-svg {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 auto;
+    color: var(--os-grey-70);
   }
 
   &__link-url {
     flex: 1;
     min-width: 0;
-    font-size: 12px;
+    font-size: 14px;
+    line-height: 1.2;
+    opacity: 0.6;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -499,34 +604,81 @@
 
   &__copy {
     cursor: pointer;
-    color: var(--os-accent);
+    .org-setup__link-svg { color: var(--os-accent-30); }
   }
 
   &__revoke {
     align-items: center;
-    padding: 0 14px;
+    gap: 8px;
+    padding: 8px 12px;
     border-radius: 8px;
     background: var(--os-error);
     color: #fff;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
     cursor: pointer;
   }
 
-  &__domain {
-    align-items: center;
-    gap: 0;
+  &__revoke-svg {
+    width: 20px;
+    height: 20px;
+    color: #fff;
   }
 
-  &__domain-entry {
-    flex: 1;
-    min-width: 0;
-    input { text-align: right; }
-  }
-
-  &__domain-suffix {
-    flex: 0 0 auto;
+  &__notice {
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: rgba(84, 182, 132, 0.12);
     font-size: 14px;
-    color: var(--os-muted);
+    &--warn { background: rgba(229, 161, 58, 0.15); }
+  }
+
+  &__error {
+    font-size: 14px;
+    color: var(--os-error);
+  }
+
+  // ── Buttons ─────────────────────────────────────────────────────────────
+  &__footer {
+    gap: 12px;
+  }
+
+  // Primary — Primary/50, 12px 24px, 12px radius, Buttons/Medium 16/24.
+  &__primary {
+    min-height: 48px;
+    box-sizing: border-box;
+    padding: 12px 24px;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    background: var(--os-primary);
+    color: #fff;
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 600;
+    cursor: pointer;
+    &:hover { background: var(--os-accent); }
+  }
+
+  &__primary--busy { opacity: 0.6; cursor: progress; }
+
+  &__btn-svg {
+    width: 24px;
+    height: 24px;
+    flex: 0 0 auto;
+  }
+
+  // "Skip this step" — the text-only button, 12px 24px.
+  &__secondary {
+    align-self: center;
+    padding: 12px 24px;
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 600;
+    color: var(--os-ink);
+    cursor: pointer;
+    text-align: center;
+    &:hover { color: var(--os-accent); }
   }
 }

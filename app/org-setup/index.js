@@ -84,14 +84,13 @@ class org_setup extends LetcBox {
   onDomRefresh() {
     this._load().then(() => {
       this._deptNames = this._overview.departments.map((d) => ({ id: d.id, name: d.name }));
-      // A new organisation starts from three suggested departments the owner
-      // renames or removes (Figma 900:149766 "auto display 3 dept for user to
-      // enter the name", 900:150729). Nothing is created until Continue.
+      // A new organisation starts from the suggested departments the owner
+      // removes or adds to (Figma 900:149766: Marketing, Operation, then the
+      // "Enter dept name..." field). Nothing is created until Continue.
       if (!this._deptNames.length) {
         this._deptNames = [
           loc("DEPT_SUGGEST_MARKETING", "Marketing"),
-          loc("DEPT_SUGGEST_ENGINEERING", "Engineering"),
-          loc("DEPT_SUGGEST_DESIGN", "Design"),
+          loc("DEPT_SUGGEST_OPERATION", "Operation"),
         ].map((name) => ({ id: null, name }));
       }
       this._render();

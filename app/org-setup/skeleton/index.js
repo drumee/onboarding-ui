@@ -129,7 +129,6 @@ function step0(ui, pfx) {
         require: "any",
         service: "org-setup-add-dept",
         uiHandler: [ui],
-        preselect: ui._deptNames.length ? 1 : 0,
       }),
     ]),
   ];

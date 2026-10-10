@@ -63,7 +63,6 @@ function step0(ui, pfx) {
   const host = (Organization && Organization.host && Organization.host())
     || (Organization && Organization.get && Organization.get("url"))
     || location.hostname;
-  const domainValue = ui._identSuffix ? `${ui._identDraft || ""}.${ui._identSuffix}` : host;
   return [
     group(pfx, [
       label(pfx, loc("ORGANIZATION_NAME", "Organization name")),
@@ -85,15 +84,23 @@ function step0(ui, pfx) {
           toggle(pfx, ui, ui._identOn, "org-setup-ident-toggle"),
         ],
       }),
-      // One field holding the whole address, as drawn (northbeam.drumee.com).
+      // Reads as one address, as drawn (northbeam.drumee.com), but only the
+      // label in front is editable: the entry sizes itself to its text
+      // (_fitIdent) and the platform's domain follows it, fixed.
       ui._identOn && ui._identSuffix
-        ? Skeletons.Entry({
-            className: `${pfx}__input`,
-            sys_pn: "org-ident",
-            partHandler: ui,
-            value: domainValue,
-            placeholder: `northbeam.${ui._identSuffix}`,
-            require: "any",
+        ? Skeletons.Box.X({
+            className: `${pfx}__input ${pfx}__domain`,
+            kids: [
+              Skeletons.Entry({
+                className: `${pfx}__domain-entry`,
+                sys_pn: "org-ident",
+                partHandler: ui,
+                value: ui._identDraft || "",
+                placeholder: "northbeam",
+                require: "any",
+              }),
+              Skeletons.Note({ active: 0, className: `${pfx}__domain-suffix`, content: `.${ui._identSuffix}` }),
+            ],
           })
         : Skeletons.Note({ className: `${pfx}__input ${pfx}__input--readonly`, content: host }),
       Skeletons.Note({

@@ -139,6 +139,25 @@
 
   &__input--readonly { color: var(--os-ink); }
 
+  // Custom domain: the label entry (sized to its text) and the fixed domain
+  // after it, one left-aligned string.
+  &__domain {
+    align-items: center;
+    cursor: text;
+  }
+
+  &__domain-entry {
+    flex: 0 0 auto;
+    input { width: auto; min-width: 1ch; }
+  }
+
+  &__domain-suffix {
+    font-size: 14px;
+    line-height: 1.2;
+    color: var(--os-ink);
+    white-space: nowrap;
+  }
+
   // "Enter dept name..." — 8px 12px, 42px tall, Body/Medium placeholder.
   &__input--dept {
     min-height: 42px;

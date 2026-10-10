@@ -265,12 +265,42 @@ class org_setup extends LetcBox {
     if (!this._identOn) return;
     const p = this.getPart && this.getPart("org-ident");
     if (!p || !p.getValue) return;
-    // The field shows the whole address, as drawn (northbeam.drumee.com):
-    // keep the label in front of this platform's domain. Anything else
-    // stays as typed and the server refuses it (INVALID_IDENT).
+    // Only the label is typed; a pasted full address is cut back to it.
     const raw = String(p.getValue() || "").trim().toLowerCase();
     const tail = `.${this._identSuffix}`;
     this._identDraft = this._identSuffix && raw.endsWith(tail) ? raw.slice(0, -tail.length) : raw;
+  }
+
+  /**
+   * The address label's entry is as wide as its text, so the fixed domain
+   * after it reads as one address (northbeam.drumee.com). Measured with the
+   * input's own font; a click anywhere in the field focuses it.
+   */
+  _fitIdent(part) {
+    const input = part && part.el && part.el.querySelector("input");
+    if (!input || input.dataset.fit) return;
+    input.dataset.fit = "1";
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    const fit = () => {
+      const cs = getComputedStyle(input);
+      ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+      const text = input.value || input.placeholder || "";
+      input.style.width = `${Math.ceil(ctx.measureText(text).width) + 2}px`;
+    };
+    input.addEventListener("input", fit);
+    fit();
+    const box = part.el.parentElement;
+    if (box) box.addEventListener("click", (e) => { if (e.target !== input) input.focus(); });
+  }
+
+  /**
+   * @param {View} child
+   * @param {String} pn
+   */
+  onPartReady(child, pn) {
+    if (pn === "org-ident") this._fitIdent(child);
+    if (super.onPartReady) super.onPartReady(child, pn);
   }
 
   _addDeptNameSilently() {

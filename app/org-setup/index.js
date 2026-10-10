@@ -125,6 +125,9 @@ class org_setup extends LetcBox {
     if (name) this._name = name;
     if (this.getPart && this.getPart("emails")) this._emailsRaw = this._value("emails");
     this.feed(require("./skeleton")(this));
+    // Entry widgets do not report through onPartReady here, so size the
+    // address label once the new tree is in the DOM.
+    requestAnimationFrame(() => this._fitIdent());
   }
 
   /**
@@ -276,8 +279,9 @@ class org_setup extends LetcBox {
    * after it reads as one address (northbeam.drumee.com). Measured with the
    * input's own font; a click anywhere in the field focuses it.
    */
-  _fitIdent(part) {
-    const input = part && part.el && part.el.querySelector("input");
+  _fitIdent() {
+    const box = this.el && this.el.querySelector(`.${this.fig.family}__domain`);
+    const input = box && box.querySelector("input");
     if (!input || input.dataset.fit) return;
     input.dataset.fit = "1";
     const canvas = document.createElement("canvas");
@@ -290,17 +294,7 @@ class org_setup extends LetcBox {
     };
     input.addEventListener("input", fit);
     fit();
-    const box = part.el.parentElement;
-    if (box) box.addEventListener("click", (e) => { if (e.target !== input) input.focus(); });
-  }
-
-  /**
-   * @param {View} child
-   * @param {String} pn
-   */
-  onPartReady(child, pn) {
-    if (pn === "org-ident") this._fitIdent(child);
-    if (super.onPartReady) super.onPartReady(child, pn);
+    box.addEventListener("click", (e) => { if (e.target !== input) input.focus(); });
   }
 
   _addDeptNameSilently() {

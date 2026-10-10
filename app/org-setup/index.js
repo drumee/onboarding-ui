@@ -380,10 +380,16 @@ class org_setup extends LetcBox {
    */
   _readIdent() {
     if (!this._identOn) return;
+    // The entry sits inside the domain box and does not register as a part
+    // here (no onPartReady either -- see _fitIdent), so read its input
+    // straight from the DOM, falling back to the part when there is one.
+    const box = this.el && this.el.querySelector(`.${this.fig.family}__domain`);
+    const input = box && box.querySelector("input");
     const p = this.getPart && this.getPart("org-ident");
-    if (!p || !p.getValue) return;
+    const value = input ? input.value : p && p.getValue ? p.getValue() : null;
+    if (value == null) return;
     // Only the label is typed; a pasted full address is cut back to it.
-    const raw = String(p.getValue() || "").trim().toLowerCase();
+    const raw = String(value || "").trim().toLowerCase();
     const tail = `.${this._identSuffix}`;
     this._identDraft = this._identSuffix && raw.endsWith(tail) ? raw.slice(0, -tail.length) : raw;
   }

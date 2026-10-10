@@ -230,6 +230,18 @@ function step1(ui, pfx) {
   return [group(pfx, departments.map((d) => {
     const id = String(d.id);
     const inDept = workspaces.filter((w) => String(w.department_id || "") === id);
+    // Suggested "<Dept> internal / external" (Figma 900:149870), created on
+    // Continue; drawn as the workspaces they will be.
+    const suggested = ((ui._wsSuggest || {})[id] || []).map((w, index) =>
+      Skeletons.Box.X({
+        className: `${pfx}__ws-chip`,
+        kids: [
+          folder(pfx, w.area),
+          Skeletons.Note({ active: 0, className: `${pfx}__ws-chip-name`, content: w.name }),
+          x(pfx, "org-setup-drop-suggest", { deptId: id, index, uiHandler: [ui] }),
+        ],
+      }),
+    );
     return Skeletons.Box.Y({
       className: `${pfx}__dept`,
       kids: [
@@ -240,10 +252,10 @@ function step1(ui, pfx) {
         Skeletons.Box.Y({
           className: `${pfx}__dept-body`,
           kids: [
-            inDept.length
+            inDept.length || suggested.length
               ? Skeletons.Box.X({
                   className: `${pfx}__ws-chips`,
-                  kids: inDept.map((w) =>
+                  kids: [...inDept.map((w) =>
                     Skeletons.Box.X({
                       className: `${pfx}__ws-chip`,
                       kids: [
@@ -252,7 +264,7 @@ function step1(ui, pfx) {
                         x(pfx, "org-setup-unassign", { hubId: w.hub_id, uiHandler: [ui] }),
                       ],
                     }),
-                  ),
+                  ), ...suggested],
                 })
               : null,
             Skeletons.Box.X({

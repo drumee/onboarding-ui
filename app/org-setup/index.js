@@ -257,7 +257,58 @@ class org_setup extends LetcBox {
     this._busy = false;
     this._error = "";
     this._step = 1;
+    this._suggestWorkspaces();
     this._render();
+  }
+
+  /**
+   * Figma 900:149870: a department starts with "<Dept> internal" and
+   * "<Dept> external" workspaces. Offered to every department that has no
+   * workspace yet, once per department (an X'd suggestion stays gone), and
+   * created only on Continue (_createSuggested).
+   */
+  _suggestWorkspaces() {
+    this._wsSuggest = this._wsSuggest || {};
+    this._wsSuggested = this._wsSuggested || new Set();
+    const { departments, workspaces } = this._overview;
+    for (const d of departments) {
+      const id = String(d.id);
+      if (this._wsSuggested.has(id)) continue;
+      this._wsSuggested.add(id);
+      if (workspaces.some((w) => String(w.department_id || "") === id)) continue;
+      this._wsSuggest[id] = [
+        { name: loc("WS_SUGGEST_INTERNAL", "{0} internal").replace("{0}", d.name), area: "private" },
+        { name: loc("WS_SUGGEST_EXTERNAL", "{0} external").replace("{0}", d.name), area: "share" },
+      ];
+    }
+  }
+
+  /**
+   * Create the suggested workspaces still standing and put each in its
+   * department. Stops at the first failure and says so; what was made stays.
+   */
+  async _createSuggested() {
+    const pending = Object.entries(this._wsSuggest || {});
+    if (!pending.some(([, list]) => list.length)) return true;
+    this._busy = true;
+    this._render();
+    for (const [deptId, list] of pending) {
+      while (list.length) {
+        const ws = list[0];
+        const r = await this._call(SERVICE.desk.create_hub, { filename: ws.name, area: ws.area });
+        if (!r.ok) { this._fail(r.status); return false; }
+        const hubId = r.data && (r.data.hub_id || r.data.id);
+        if (hubId) {
+          const a = await this._call(SERVICE.organization.department_assign, { nid: hubId, department_id: deptId });
+          if (!a.ok) { this._fail(a.status); return false; }
+        }
+        list.shift();
+      }
+    }
+    RADIO_BROADCAST.trigger("workspace:refresh");
+    await this._load();
+    this._busy = false;
+    return true;
   }
 
   /**
@@ -294,6 +345,19 @@ class org_setup extends LetcBox {
     input.addEventListener("input", fit);
     fit();
     box.addEventListener("click", (e) => { if (e.target !== input) input.focus(); });
+  }
+
+  _toStep2() {
+    this._step = 2;
+    this._pickerFor = null;
+    // Every department that has a workspace is ticked by default: the owner
+    // just built this structure to invite people into it.
+    this._selected = new Set(
+      this._overview.departments
+        .filter((d) => this._overview.workspaces.some((w) => String(w.department_id) === String(d.id)))
+        .map((d) => String(d.id)),
+    );
+    this._render();
   }
 
   _addDeptNameSilently() {
@@ -525,18 +589,17 @@ class org_setup extends LetcBox {
       case "org-setup-next":
         if (this._step === 0) return this._commitStep0();
         if (this._step === 1) {
-          this._step = 2;
-          this._pickerFor = null;
-          // Every department that has a workspace is ticked by default: the
-          // owner just built this structure to invite people into it.
-          this._selected = new Set(
-            this._overview.departments
-              .filter((d) => this._overview.workspaces.some((w) => String(w.department_id) === String(d.id)))
-              .map((d) => String(d.id)),
-          );
-          return this._render();
+          return this._createSuggested().then((ok) => {
+            if (!ok) return;
+            this._toStep2();
+          });
         }
         return this._finish();
+      case "org-setup-drop-suggest": {
+        const list = (this._wsSuggest || {})[String(cmd.mget("deptId"))] || [];
+        list.splice(~~cmd.mget("index"), 1);
+        return this._render();
+      }
       case "org-setup-back":
         if (this._step > 0) this._step--;
         this._error = "";

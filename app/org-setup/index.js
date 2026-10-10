@@ -47,6 +47,7 @@ class org_setup extends LetcBox {
     this.declareHandlers();
     // The workspace picker closes on a click outside it, or on Escape.
     this._onDocDown = (e) => {
+      this._lastDown = e.target;
       if (!this._pickerFor || !this.el) return;
       const t = e.target;
       const inside = t && t.closest && t.closest(`.${this.fig.family}__picker, .${this.fig.family}__add`);
@@ -187,7 +188,10 @@ class org_setup extends LetcBox {
     this.feed(require("./skeleton")(this));
     // Entry widgets do not report through onPartReady here, so size the
     // address label once the new tree is in the DOM.
-    requestAnimationFrame(() => this._fitIdent());
+    requestAnimationFrame(() => {
+      this._fitIdent();
+      this._bindDeptEntry();
+    });
   }
 
   /**
@@ -251,8 +255,8 @@ class org_setup extends LetcBox {
   /**
    * Add the typed department name as a chip and clear the field.
    */
-  _addDeptName() {
-    const name = this._value("dept-entry");
+  _addDeptName(typed) {
+    const name = String(typed != null ? typed : this._value("dept-entry")).trim();
     if (!name) return;
     const exists = this._deptNames.some((d) => d.name.toLowerCase() === name.toLowerCase());
     if (!exists) this._deptNames.push({ id: null, name });
@@ -434,6 +438,25 @@ class org_setup extends LetcBox {
         .map((d) => String(d.id)),
     );
     this._render();
+  }
+
+  /**
+   * A department name typed and left (click elsewhere, Tab) becomes a chip
+   * right away, as Enter does -- not only on Continue.
+   */
+  _bindDeptEntry() {
+    const input = this.el && this.el.querySelector(`.${this.fig.family}__input--dept input`);
+    if (!input || input.dataset.bound) return;
+    input.dataset.bound = "1";
+    input.addEventListener("blur", () => {
+      const v = String(input.value || "").trim();
+      if (!v) return;
+      // Left for a button (Continue, Skip...): repainting now would swallow
+      // that click; Continue adds a typed name itself (_addDeptNameSilently).
+      const t = this._lastDown;
+      if (t && t.closest && t.closest(`.${this.fig.family}__primary, .${this.fig.family}__secondary`)) return;
+      setTimeout(() => this._addDeptName(v), 0);
+    });
   }
 
   _addDeptNameSilently() {

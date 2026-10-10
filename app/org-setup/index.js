@@ -448,8 +448,15 @@ class org_setup extends LetcBox {
     const input = this.el && this.el.querySelector(`.${this.fig.family}__input--dept input`);
     if (!input || input.dataset.bound) return;
     input.dataset.bound = "1";
+    // Kept as it is typed: the Entry's own blur handling may clear the field
+    // before this listener reads it.
+    this._deptDraft = "";
+    const keep = () => { this._deptDraft = input.value; };
+    input.addEventListener("input", keep);
+    input.addEventListener("keyup", keep);
     input.addEventListener("blur", () => {
-      const v = String(input.value || "").trim();
+      const v = String(input.value || this._deptDraft || "").trim();
+      this._deptDraft = "";
       if (!v) return;
       // Left for a button (Continue, Skip...): repainting now would swallow
       // that click; Continue adds a typed name itself (_addDeptNameSilently).
@@ -690,8 +697,11 @@ class org_setup extends LetcBox {
     const service = args.service || (cmd.get && cmd.get(_a.service));
     if (this._busy && service !== "org-setup-skip") return;
     switch (service) {
-      case "org-setup-add-dept":
-        return this._addDeptName();
+      case "org-setup-add-dept": {
+        const v = (args && args.value) || this._value("dept-entry") || this._deptDraft;
+        this._deptDraft = "";
+        return this._addDeptName(v || "");
+      }
       case "org-setup-remove-dept":
         return this._removeDeptName(parseInt(cmd.mget("index"), 10));
       case "org-setup-next":

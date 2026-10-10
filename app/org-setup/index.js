@@ -41,6 +41,19 @@ class org_setup extends LetcBox {
     require("./skin");
     super.initialize(opt);
     this.declareHandlers();
+    // The workspace picker closes on a click outside it, or on Escape.
+    this._onDocDown = (e) => {
+      if (!this._pickerFor || !this.el) return;
+      const t = e.target;
+      const inside = t && t.closest && t.closest(`.${this.fig.family}__picker, .${this.fig.family}__add`);
+      if (inside) return;
+      this._closePicker();
+    };
+    this._onKey = (e) => {
+      if (e.key === "Escape" && this._pickerFor) this._closePicker();
+    };
+    document.addEventListener("mousedown", this._onDocDown, true);
+    document.addEventListener("keydown", this._onKey, true);
     this._step = 0;
     this._busy = false;
     this._error = "";
@@ -113,6 +126,19 @@ class org_setup extends LetcBox {
       this._render();
     });
     this._render();
+  }
+
+  _closePicker() {
+    this._pickerFor = null;
+    this._pickerQuery = "";
+    this._newWsFor = null;
+    this._render();
+  }
+
+  onBeforeDestroy() {
+    document.removeEventListener("mousedown", this._onDocDown, true);
+    document.removeEventListener("keydown", this._onKey, true);
+    if (super.onBeforeDestroy) super.onBeforeDestroy();
   }
 
   /**

@@ -14,16 +14,19 @@
  * stops offering it.
  *
  * Custom domain (Figma: "northbeam.drumee.com") is the organisation's
- * address label, <ident>.<main domain>. Step 1's Continue checks it first
- * (organization.ident_check), saves the step, then moves it
- * (organization.change_ident) and reloads on the new address with
- * ?org_setup=1, where the wizard -- not finished yet, so it reopens -- carries
- * on at step 2. Bringing one's own domain (DNS / email verification)
+ * address label, <ident>.<main domain>. Step 1's Continue only CHECKS it
+ * (organization.ident_check) and remembers it; Finish (or "Skip this step")
+ * moves it (organization.change_ident) and reloads the desk on the new
+ * address, because this page is served from the old one, which stops
+ * resolving the moment it changes. Bringing one's own domain (DNS / email verification)
  * is the "later in Settings" part of the hint, not this wizard.
  * ==================================================================== */
 const { loc } = require("../lib/locale-text");
 
 const STEPS = 3;
+// The address label chosen at step 1, applied at Finish (per origin: it is
+// this address that changes).
+const PENDING_IDENT_KEY = "drumee_org_setup_ident";
 
 class org_setup extends LetcBox {
 
@@ -89,6 +92,13 @@ class org_setup extends LetcBox {
     this._identOn = true;
     this._identDraft = this._identNow;
     this._pendingIdent = null;
+    try {
+      const kept = localStorage.getItem(PENDING_IDENT_KEY);
+      if (kept && kept !== this._identNow) {
+        this._pendingIdent = kept;
+        this._identDraft = kept;
+      }
+    } catch (e) { /* private mode */ }
   }
 
   /**
@@ -126,6 +136,13 @@ class org_setup extends LetcBox {
       this._render();
     });
     this._render();
+  }
+
+  _rememberIdent(ident) {
+    try {
+      if (ident) localStorage.setItem(PENDING_IDENT_KEY, ident);
+      else localStorage.removeItem(PENDING_IDENT_KEY);
+    } catch (e) { /* private mode: kept in memory only */ }
   }
 
   _closePicker() {
@@ -274,8 +291,8 @@ class org_setup extends LetcBox {
     }
     this._busy = true;
     this._render();
-    // Check the address first, so a taken one is said before anything is
-    // written; it moves once the rest of the step is saved (below).
+    // Check the address now, so a taken one is said at once; it moves at
+    // Finish.
     this._pendingIdent = null;
     if (this._identOn && this._identDraft && this._identDraft !== this._identNow) {
       const r = await this._call(SERVICE.organization.ident_check, { ident: this._identDraft });
@@ -299,22 +316,9 @@ class org_setup extends LetcBox {
       if (!r.ok && r.status !== "DEPARTMENT_EXISTS") return this._fail(r.status);
       if (r.ok && r.data) d.id = r.data.id;
     }
-    // A new address: move now. This page is served from the old one, which
-    // stops resolving, so carry on at step 2 on the new one (?org_setup=1 --
-    // the wizard reopens there because it is not finished yet).
-    if (this._pendingIdent) {
-      const r = await this._call(SERVICE.organization.change_ident, { ident: this._pendingIdent });
-      if (!r.ok) {
-        this._pendingIdent = null;
-        return this._fail(r.status);
-      }
-      const link = r.data && r.data.link;
-      this._pendingIdent = null;
-      if (link && link !== location.hostname) {
-        location.href = `${location.protocol}//${link}${location.pathname}?org_setup=1`;
-        return;
-      }
-    }
+    // The new address is kept for Finish (see the header); remembered on
+    // this origin so a reload half-way through does not drop it.
+    this._rememberIdent(this._pendingIdent);
     await this._load();
     this._deptNames = this._overview.departments.map((x) => ({ id: x.id, name: x.name }));
     this._busy = false;
@@ -619,8 +623,9 @@ class org_setup extends LetcBox {
       this._busy = true;
       this._render();
       const r = await this._call(SERVICE.organization.change_ident, { ident: this._pendingIdent });
+      this._rememberIdent(null);
       if (!r.ok) {
-        // Taken in the meantime, most likely: stay, say so, let them go back.
+        // Taken in the meantime, most likely: say so.
         this._finishing = false;
         this._pendingIdent = null;
         return this._fail(r.status);

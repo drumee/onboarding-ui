@@ -89,7 +89,7 @@ function step0(ui, pfx) {
       // (_fitIdent) and the platform's domain follows it, fixed.
       ui._identOn && ui._identSuffix
         ? Skeletons.Box.X({
-            className: `${pfx}__input ${pfx}__domain`,
+            className: `${pfx}__input ${pfx}__domain${ui._identError ? ` ${pfx}__input--error` : ""}`,
             kids: [
               Skeletons.Entry({
                 className: `${pfx}__domain-entry`,
@@ -103,10 +103,13 @@ function step0(ui, pfx) {
             ],
           })
         : Skeletons.Note({ className: `${pfx}__input ${pfx}__input--readonly`, content: host }),
-      Skeletons.Note({
-        className: `${pfx}__hint`,
-        content: loc("CUSTOM_DOMAIN_HINT", "Verify via DNS or email. It can be done later in Settings."),
-      }),
+      // A refused address is said here, in place of the hint.
+      ui._identError
+        ? Skeletons.Note({ className: `${pfx}__field-error`, content: ui._identError })
+        : Skeletons.Note({
+            className: `${pfx}__hint`,
+            content: loc("CUSTOM_DOMAIN_HINT", "Verify via DNS or email. It can be done later in Settings."),
+          }),
     ]),
     group(pfx, [
       label(pfx, loc("CREATE_DEPARTMENT", "Create department")),

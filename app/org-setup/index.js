@@ -27,6 +27,7 @@ const STEPS = 3;
 // The address label chosen at step 1, applied at Finish (per origin: it is
 // this address that changes).
 const PENDING_IDENT_KEY = "drumee_org_setup_ident";
+const IDENT_ERRORS = new Set(["INVALID_IDENT", "IDENT_RESERVED", "IDENT_NOT_AVAILABLE"]);
 
 class org_setup extends LetcBox {
 
@@ -285,6 +286,7 @@ class org_setup extends LetcBox {
     }
     this._name = name;
     this._readIdent();
+    this._identError = "";
     if (!this._deptNames.length) {
       this._error = loc("ADD_ONE_DEPARTMENT", "Add at least one department.");
       return this._render();
@@ -645,6 +647,14 @@ class org_setup extends LetcBox {
 
   _fail(status) {
     this._busy = false;
+    // An address refusal belongs under the Custom domain field, on step 1,
+    // where it can be fixed -- not at the foot of whichever step it arose on.
+    if (IDENT_ERRORS.has(status)) {
+      this._identError = this._message(status);
+      this._error = "";
+      this._step = 0;
+      return this._render();
+    }
     this._error = this._message(status);
     this._render();
   }
@@ -687,6 +697,7 @@ class org_setup extends LetcBox {
         this._identOn = !this._identOn;
         if (!this._identOn) this._identDraft = this._identNow;
         this._error = "";
+        this._identError = "";
         return this._render();
 
       case "org-setup-open-picker": {

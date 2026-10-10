@@ -154,8 +154,11 @@ class org_setup extends LetcBox {
     if (this._complaint || data === undefined || data === null) {
       return { ok: false, status: (data && data.status) || "FAILED" };
     }
-    if (data && data.status && data.status !== "OK") {
-      return { ok: false, status: String(data.status), data };
+    // A refusal is an error CODE (IDENT_NOT_AVAILABLE, CREATION_FAILED...).
+    // Rows the server hands back carry a status of their own -- a created
+    // workspace comes back with status "active" -- which is not one.
+    if (data && typeof data.status === "string" && /^[A-Z][A-Z0-9_]+$/.test(data.status) && data.status !== "OK") {
+      return { ok: false, status: data.status, data };
     }
     return { ok: true, data };
   }

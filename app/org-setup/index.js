@@ -262,24 +262,25 @@ class org_setup extends LetcBox {
   }
 
   /**
-   * Figma 900:149870: a department starts with "<Dept> internal" and
-   * "<Dept> external" workspaces. Offered to every department that has no
-   * workspace yet, once per department (an X'd suggestion stays gone), and
-   * created only on Continue (_createSuggested).
+   * Figma 900:149870: every department comes with "<Dept> internal" and
+   * "<Dept> external" workspaces. Offered for each department, beside what it
+   * already holds, except a name the organisation already has (a reopened
+   * wizard does not offer them twice). Once per department per session (an
+   * X'd suggestion stays gone); created only on Continue (_createSuggested).
    */
   _suggestWorkspaces() {
     this._wsSuggest = this._wsSuggest || {};
     this._wsSuggested = this._wsSuggested || new Set();
     const { departments, workspaces } = this._overview;
+    const taken = new Set(workspaces.map((w) => String(w.filename || w.name || "").trim().toLowerCase()));
     for (const d of departments) {
       const id = String(d.id);
       if (this._wsSuggested.has(id)) continue;
       this._wsSuggested.add(id);
-      if (workspaces.some((w) => String(w.department_id || "") === id)) continue;
       this._wsSuggest[id] = [
         { name: loc("WS_SUGGEST_INTERNAL", "{0} internal").replace("{0}", d.name), area: "private" },
         { name: loc("WS_SUGGEST_EXTERNAL", "{0} external").replace("{0}", d.name), area: "share" },
-      ];
+      ].filter((w) => !taken.has(w.name.toLowerCase()));
     }
   }
 

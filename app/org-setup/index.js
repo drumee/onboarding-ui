@@ -101,6 +101,17 @@ class org_setup extends LetcBox {
         this._identDraft = kept;
       }
     } catch (e) { /* private mode */ }
+    // "New organization" from the org dropdown (Business): the same first
+    // screen, empty, and Continue creates the organisation (create_org), then
+    // carries on at its own address -- departments and workspaces belong to
+    // the organisation whose address the desk is on.
+    this._create = this.mget("mode") === "create";
+    if (this._create) {
+      this._name = "";
+      this._identNow = "";
+      this._identDraft = "";
+      this._pendingIdent = null;
+    }
   }
 
   /**
@@ -110,17 +121,48 @@ class org_setup extends LetcBox {
     // Arrived on a new address after step 1 changed it (?org_setup=1):
     // carry on at step 2.
     let resume = 0;
+    let carried = [];
     try {
       const params = new URLSearchParams(location.search);
       resume = ~~params.get("org_setup");
-      if (params.has("org_setup")) {
+      try { carried = JSON.parse(params.get("org_depts") || "[]"); } catch (e) { carried = []; }
+      if (params.has("org_setup") || params.has("org_depts")) {
         params.delete("org_setup");
+        params.delete("org_depts");
         const q = params.toString();
         history.replaceState(null, "", `${location.pathname}${q ? `?${q}` : ""}${location.hash}`);
       }
     } catch (e) { /* no history API */ }
-    this._load().then(() => {
+    if (this._create) {
+      this._deptNames = [
+        loc("DEPT_SUGGEST_MARKETING", "Marketing"),
+        loc("DEPT_SUGGEST_OPERATION", "Operation"),
+      ].map((name) => ({ id: null, name }));
+      return this._render();
+    }
+    this._load().then(async () => {
       this._deptNames = this._overview.departments.map((d) => ({ id: d.id, name: d.name }));
+      // Arrived from "New organization" (?org_setup=2): the departments typed
+      // there are created here, in the new organisation, then step 2.
+      if (resume === 2 && Array.isArray(carried) && carried.length) {
+        for (const name of carried) {
+          const n = String(name || "").trim();
+          if (!n || this._deptNames.some((d) => d.name.toLowerCase() === n.toLowerCase())) continue;
+          this._deptNames.push({ id: null, name: n });
+        }
+        this._busy = true;
+        this._render();
+        for (const d of this._deptNames) {
+          if (d.id) continue;
+          const r = await this._call(SERVICE.organization.department_add, { name: d.name });
+          if (!r.ok && r.status !== "DEPARTMENT_EXISTS") return this._fail(r.status);
+          if (r.ok && r.data) d.id = r.data.id;
+        }
+        await this._load();
+        this._deptNames = this._overview.departments.map((d) => ({ id: d.id, name: d.name }));
+        this._busy = false;
+        resume = 1;
+      }
       if (resume === 1 && this._deptNames.length) {
         this._step = 1;
         this._suggestWorkspaces();
@@ -297,6 +339,7 @@ class org_setup extends LetcBox {
       this._error = loc("ADD_ONE_DEPARTMENT", "Add at least one department.");
       return this._render();
     }
+    if (this._create) return this._createOrg(name);
     this._busy = true;
     this._render();
     // Check the address now, so a taken one is said at once; it moves at
@@ -644,6 +687,32 @@ class org_setup extends LetcBox {
     }
   }
 
+  /**
+   * Continue on "New organization": create it under the address typed, then
+   * go there; the wizard opens again on arrival (owner, setup not done) and
+   * creates the departments carried in the URL (?org_setup=2).
+   */
+  async _createOrg(name) {
+    const ident = String(this._identDraft || "").trim().toLowerCase();
+    if (!/^[a-z0-9][a-z0-9-]{0,38}[a-z0-9]$/.test(ident)) return this._fail("INVALID_IDENT");
+    this._busy = true;
+    this._render();
+    const r = await this._call(SERVICE.organization.create_org, { name, ident });
+    if (!r.ok) return this._fail(r.status);
+    const link = r.data && r.data.link;
+    if (!link) return this._fail("SOMETHING_WENT_WRONG");
+    const depts = encodeURIComponent(JSON.stringify(this._deptNames.map((d) => d.name)));
+    location.href = `${location.protocol}//${link}${location.pathname}?org_setup=2&org_depts=${depts}`;
+  }
+
+  /**
+   * Leave "New organization" without creating anything.
+   */
+  _cancelCreate() {
+    if (this.parent && _.isFunction(this.parent.clear)) return this.parent.clear();
+    return this.goodbye();
+  }
+
   // ── Finish ─────────────────────────────────────────────────────────────
 
   /**
@@ -727,7 +796,11 @@ class org_setup extends LetcBox {
         return this._render();
       case "org-setup-skip":
         return this._finish();
+      case "org-setup-cancel-create":
+        return this._cancelCreate();
       case "org-setup-ident-toggle":
+        // A new organisation needs an address of its own: always on.
+        if (this._create) return;
         this._readIdent();
         this._identOn = !this._identOn;
         if (!this._identOn) this._identDraft = this._identNow;

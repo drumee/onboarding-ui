@@ -587,6 +587,15 @@ function footer(ui, pfx) {
             uiHandler: [ui],
           })
         : null,
+      // "New organization": nothing exists yet, so it can still be left.
+      ui._create && step === 0
+        ? Skeletons.Note({
+            className: `${pfx}__secondary`,
+            content: loc("CANCEL", "Cancel"),
+            service: "org-setup-cancel-create",
+            uiHandler: [ui],
+          })
+        : null,
     ].filter(Boolean),
   });
 }

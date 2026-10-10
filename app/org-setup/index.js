@@ -184,6 +184,8 @@ class org_setup extends LetcBox {
     // value lives only in the DOM (the org name, the email list).
     const name = this._value("org-name");
     if (name) this._name = name;
+    // And the address label being edited (step 1), or it snaps back.
+    if (this._step === 0) this._readIdent();
     if (this.getPart && this.getPart("emails")) this._emailsRaw = this._value("emails");
     this.feed(require("./skeleton")(this));
     // Entry widgets do not report through onPartReady here, so size the

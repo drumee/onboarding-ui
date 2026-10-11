@@ -588,7 +588,7 @@ function footer(ui, pfx) {
           })
         : null,
       // "New organization": nothing exists yet, so it can still be left.
-      ui._create && step === 0
+      ui._create && !ui._orgDom && step === 0
         ? Skeletons.Note({
             className: `${pfx}__secondary`,
             content: loc("CANCEL", "Cancel"),

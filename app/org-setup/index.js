@@ -102,9 +102,9 @@ class org_setup extends LetcBox {
       }
     } catch (e) { /* private mode */ }
     // "New organization" from the org dropdown (Business): the same first
-    // screen, empty, and Continue creates the organisation (create_org), then
-    // carries on at its own address -- departments and workspaces belong to
-    // the organisation whose address the desk is on.
+    // screen, empty; its first Continue creates the organisation
+    // (create_org) and every later call names it (org_domain_id), so steps
+    // 2 and 3 set it up from here. The desk moves to its address at the end.
     this._create = this.mget("mode") === "create";
     if (this._create) {
       this._name = "";
@@ -121,14 +121,11 @@ class org_setup extends LetcBox {
     // Arrived on a new address after step 1 changed it (?org_setup=1):
     // carry on at step 2.
     let resume = 0;
-    let carried = [];
     try {
       const params = new URLSearchParams(location.search);
       resume = ~~params.get("org_setup");
-      try { carried = JSON.parse(params.get("org_depts") || "[]"); } catch (e) { carried = []; }
-      if (params.has("org_setup") || params.has("org_depts")) {
+      if (params.has("org_setup")) {
         params.delete("org_setup");
-        params.delete("org_depts");
         const q = params.toString();
         history.replaceState(null, "", `${location.pathname}${q ? `?${q}` : ""}${location.hash}`);
       }
@@ -140,29 +137,8 @@ class org_setup extends LetcBox {
       ].map((name) => ({ id: null, name }));
       return this._render();
     }
-    this._load().then(async () => {
+    this._load().then(() => {
       this._deptNames = this._overview.departments.map((d) => ({ id: d.id, name: d.name }));
-      // Arrived from "New organization" (?org_setup=2): the departments typed
-      // there are created here, in the new organisation, then step 2.
-      if (resume === 2 && Array.isArray(carried) && carried.length) {
-        for (const name of carried) {
-          const n = String(name || "").trim();
-          if (!n || this._deptNames.some((d) => d.name.toLowerCase() === n.toLowerCase())) continue;
-          this._deptNames.push({ id: null, name: n });
-        }
-        this._busy = true;
-        this._render();
-        for (const d of this._deptNames) {
-          if (d.id) continue;
-          const r = await this._call(SERVICE.organization.department_add, { name: d.name });
-          if (!r.ok && r.status !== "DEPARTMENT_EXISTS") return this._fail(r.status);
-          if (r.ok && r.data) d.id = r.data.id;
-        }
-        await this._load();
-        this._deptNames = this._overview.departments.map((d) => ({ id: d.id, name: d.name }));
-        this._busy = false;
-        resume = 1;
-      }
       if (resume === 1 && this._deptNames.length) {
         this._step = 1;
         this._suggestWorkspaces();
@@ -256,7 +232,8 @@ class org_setup extends LetcBox {
     this._complaint = null;
     let data;
     try {
-      data = await this.postService(service, { hub_id: Visitor.id, ...args });
+      const org = this._orgDom ? { org_domain_id: this._orgDom } : {};
+      data = await this.postService(service, { hub_id: Visitor.id, ...org, ...args });
     } catch (e) {
       return { ok: false, status: "FAILED" };
     }
@@ -339,7 +316,9 @@ class org_setup extends LetcBox {
       this._error = loc("ADD_ONE_DEPARTMENT", "Add at least one department.");
       return this._render();
     }
-    if (this._create) return this._createOrg(name);
+    if (this._create && !this._orgDom) {
+      if (!(await this._createOrg(name))) return;
+    }
     this._busy = true;
     this._render();
     // Check the address now, so a taken one is said at once; it moves at
@@ -350,7 +329,7 @@ class org_setup extends LetcBox {
       if (!r.ok) return this._fail(r.status);
       this._pendingIdent = this._identDraft;
     }
-    if (name !== ((Organization && Organization.name && Organization.name()) || "")) {
+    if (!this._create && name !== ((Organization && Organization.name && Organization.name()) || "")) {
       const r = await this._call(SERVICE.organization.rename, { name });
       if (!r.ok) return this._fail(r.status);
       if (Organization && Organization.set) Organization.set(_a.name, name);
@@ -688,21 +667,30 @@ class org_setup extends LetcBox {
   }
 
   /**
-   * Continue on "New organization": create it under the address typed, then
-   * go there; the wizard opens again on arrival (owner, setup not done) and
-   * creates the departments carried in the URL (?org_setup=2).
+   * First Continue on "New organization": create it under the address typed.
+   * From here every call names it (_call: org_domain_id); the desk moves to
+   * its address at the end (_finish).
+   * @returns {Promise<Boolean>} created
    */
   async _createOrg(name) {
     const ident = String(this._identDraft || "").trim().toLowerCase();
-    if (!/^[a-z0-9][a-z0-9-]{0,38}[a-z0-9]$/.test(ident)) return this._fail("INVALID_IDENT");
+    if (!/^[a-z0-9][a-z0-9-]{0,38}[a-z0-9]$/.test(ident)) {
+      this._fail("INVALID_IDENT");
+      return false;
+    }
     this._busy = true;
     this._render();
     const r = await this._call(SERVICE.organization.create_org, { name, ident });
-    if (!r.ok) return this._fail(r.status);
-    const link = r.data && r.data.link;
-    if (!link) return this._fail("SOMETHING_WENT_WRONG");
-    const depts = encodeURIComponent(JSON.stringify(this._deptNames.map((d) => d.name)));
-    location.href = `${location.protocol}//${link}${location.pathname}?org_setup=2&org_depts=${depts}`;
+    const dom = r.ok && r.data && ~~r.data.domain_id;
+    if (!dom || !r.data.link) {
+      this._fail(r.ok ? "SOMETHING_WENT_WRONG" : r.status);
+      return false;
+    }
+    this._orgDom = dom;
+    this._orgLink = r.data.link;
+    this._identNow = ident;
+    this._identDraft = ident;
+    return true;
   }
 
   /**
@@ -739,6 +727,10 @@ class org_setup extends LetcBox {
         location.href = `${location.protocol}//${link}${location.pathname}${location.hash}`;
         return;
       }
+    }
+    if (this._orgLink && this._orgLink !== location.hostname) {
+      location.href = `${location.protocol}//${this._orgLink}${location.pathname}`;
+      return;
     }
     RADIO_BROADCAST.trigger("org:refresh");
     RADIO_BROADCAST.trigger("department:changed");

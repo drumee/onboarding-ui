@@ -773,14 +773,6 @@ class org_setup extends LetcBox {
       case "org-setup-next":
         if (this._step === 0) return this._commitStep0();
         if (this._step === 1) {
-          // Every workspace of the organisation goes in a department before
-          // going on: one left outside is outside every department's access.
-          const loose = this._overview.workspaces.filter((w) => !w.department_id);
-          if (loose.length) {
-            this._error = loc("WORKSPACES_NEED_DEPARTMENT", "Put every workspace in a department first: {0}.")
-              .replace("{0}", loose.map((w) => w.filename || w.name || "").join(", "));
-            return this._render();
-          }
           this._error = "";
           return this._createSuggested().then((ok) => {
             if (!ok) return;

@@ -770,6 +770,20 @@ class org_setup extends LetcBox {
       case "org-setup-next":
         if (this._step === 0) return this._commitStep0();
         if (this._step === 1) {
+          // Every department needs a workspace before going on: a department
+          // with none has nothing to invite anyone into.
+          const empty = this._overview.departments.filter((d) => {
+            const id = String(d.id);
+            const held = this._overview.workspaces.some((w) => String(w.department_id) === id);
+            const coming = ((this._wsSuggest || {})[id] || []).length > 0;
+            return !held && !coming;
+          });
+          if (empty.length) {
+            this._error = loc("DEPT_NEEDS_WORKSPACE", "Each department needs at least one workspace: {0}.")
+              .replace("{0}", empty.map((d) => d.name).join(", "));
+            return this._render();
+          }
+          this._error = "";
           return this._createSuggested().then((ok) => {
             if (!ok) return;
             this._toStep2();

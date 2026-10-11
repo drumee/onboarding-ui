@@ -339,6 +339,41 @@
     color: var(--os-ink);
   }
 
+  &__new-ws {
+    gap: 8px;
+  }
+
+  &__new-ws-row {
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__new-ws-area {
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--os-border, #e5e5ea);
+    font-size: 13px;
+    cursor: pointer;
+
+    &.active {
+      border-color: var(--os-accent);
+      color: var(--os-accent);
+    }
+  }
+
+  &__new-ws-create {
+    margin-left: auto;
+    padding: 6px 14px;
+    border-radius: 8px;
+    background: var(--os-accent);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
   &__link {
     font-size: 14px;
     line-height: 1.2;

@@ -515,18 +515,35 @@ class org_setup extends LetcBox {
     this._render();
   }
 
+  /** Put the cursor in the new-workspace name field once it is drawn. */
+  _focusNewWs() {
+    requestAnimationFrame(() => {
+      const input = this.el && this.el.querySelector(`.${this.fig.family}__new-ws input`);
+      if (input) input.focus();
+    });
+  }
+
   /**
    * "+ New workspace" in a department's picker: create it, then put it in.
    */
-  async _createWorkspace(deptId) {
-    const name = this._value("new-ws-entry");
-    if (!name) return;
+  async _createWorkspace(deptId, typed) {
+    // The entry sits inside the picker box and does not register as a part
+    // (as with the address field), so the part read alone always came back
+    // empty and Enter did nothing: read the input itself.
+    const input = this.el && this.el.querySelector(`.${this.fig.family}__new-ws input`);
+    const name = String(typed || (input && input.value) || this._value("new-ws-entry") || "").trim();
+    if (!name) {
+      if (input) input.focus();
+      return;
+    }
     this._busy = true;
     this._render();
-    const r = await this._call(SERVICE.desk.create_hub, { filename: name, area: "private" });
+    const area = this._newWsArea === "share" ? "share" : "private";
+    const r = await this._call(SERVICE.desk.create_hub, { filename: name, area });
     if (!r.ok) return this._fail(r.status);
     const hubId = r.data && (r.data.hub_id || r.data.id);
     this._newWsFor = null;
+    this._newWsDraft = "";
     this._pickerFor = null;
     if (hubId) {
       RADIO_BROADCAST.trigger("workspace:refresh");
@@ -829,9 +846,20 @@ class org_setup extends LetcBox {
         return this._assign(cmd.mget("hubId"), "");
       case "org-setup-new-ws":
         this._newWsFor = String(cmd.mget("deptId"));
-        return this._render();
+        this._newWsArea = "private";
+        this._newWsDraft = "";
+        this._render();
+        return this._focusNewWs();
+      case "org-setup-new-ws-area": {
+        // Keep what was typed across the repaint.
+        const input = this.el && this.el.querySelector(`.${this.fig.family}__new-ws input`);
+        this._newWsDraft = input ? input.value : this._newWsDraft;
+        this._newWsArea = cmd.mget("area") === "share" ? "share" : "private";
+        this._render();
+        return this._focusNewWs();
+      }
       case "org-setup-create-ws":
-        return this._createWorkspace(cmd.mget("deptId"));
+        return this._createWorkspace(cmd.mget("deptId"), args && args.value);
 
       case "org-setup-expand-dept": {
         const id = String(cmd.mget("deptId"));

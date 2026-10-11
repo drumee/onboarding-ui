@@ -186,18 +186,45 @@ function picker(ui, pfx, deptId) {
           }),
         ],
       }),
+      // "+ New workspace": its name, Internal or External (as the desk's
+      // "Create new workspace" asks), and Create -- Enter works too.
       ui._newWsFor === String(deptId)
-        ? Skeletons.Entry({
-            className: `${pfx}__input ${pfx}__input--small`,
-            sys_pn: "new-ws-entry",
-            partHandler: ui,
-            placeholder: loc("WORKSPACE_NAME", "Workspace name"),
-            mode: _a.commit,
-            require: "any",
-            service: "org-setup-create-ws",
-            deptId,
-            uiHandler: [ui],
-            preselect: 1,
+        ? Skeletons.Box.Y({
+            className: `${pfx}__new-ws`,
+            kids: [
+              Skeletons.Entry({
+                className: `${pfx}__input ${pfx}__input--small`,
+                sys_pn: "new-ws-entry",
+                partHandler: ui,
+                value: ui._newWsDraft || "",
+                placeholder: loc("WORKSPACE_NAME", "Workspace name"),
+                mode: _a.commit,
+                require: "any",
+                service: "org-setup-create-ws",
+                deptId,
+                uiHandler: [ui],
+              }),
+              Skeletons.Box.X({
+                className: `${pfx}__new-ws-row`,
+                kids: [
+                  ...[["private", loc("INTERNAL", "Internal")], ["share", loc("EXTERNAL", "External")]].map(([area, label]) =>
+                    Skeletons.Box.X({
+                      className: `${pfx}__new-ws-area${(ui._newWsArea || "private") === area ? " active" : ""}`,
+                      service: "org-setup-new-ws-area",
+                      area,
+                      uiHandler: [ui],
+                      kids: [folder(pfx, area), Skeletons.Note({ active: 0, content: label })],
+                    })),
+                  Skeletons.Note({
+                    className: `${pfx}__new-ws-create`,
+                    content: loc("CREATE", "Create"),
+                    service: "org-setup-create-ws",
+                    deptId,
+                    uiHandler: [ui],
+                  }),
+                ],
+              }),
+            ],
           })
         : null,
       Skeletons.Box.X({

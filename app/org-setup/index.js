@@ -724,16 +724,19 @@ class org_setup extends LetcBox {
       const link = r.data && r.data.link;
       if (link && link !== location.hostname) {
         // The old address no longer resolves: reload the desk on the new one.
-        location.href = `${location.protocol}//${link}${location.pathname}${location.hash}`;
+        location.href = `${location.protocol}//${link}${location.pathname}?org_view=1`;
         return;
       }
     }
     if (this._orgLink && this._orgLink !== location.hostname) {
-      location.href = `${location.protocol}//${this._orgLink}${location.pathname}`;
+      location.href = `${location.protocol}//${this._orgLink}${location.pathname}?org_view=1`;
       return;
     }
     RADIO_BROADCAST.trigger("org:refresh");
     RADIO_BROADCAST.trigger("department:changed");
+    // Done: land on the organisation's view (Figma 900:151138, its
+    // departments and their workspaces).
+    RADIO_BROADCAST.trigger("desk:open-org-view");
     if (this.parent && _.isFunction(this.parent.clear)) return this.parent.clear();
     return this.goodbye();
   }

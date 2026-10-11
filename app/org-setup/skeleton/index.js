@@ -253,6 +253,36 @@ function picker(ui, pfx, deptId) {
   });
 }
 
+/**
+ * A workspace chip's name: click to rename it in place (Figma 900:149870,
+ * "click vào tên là đổi được").
+ */
+function chipName(ui, pfx, name, ref) {
+  const r = ui._renaming;
+  const editing = r && (ref.hubId
+    ? r.hubId === String(ref.hubId)
+    : r.deptId === String(ref.deptId) && r.index === ref.index);
+  if (editing) {
+    return Skeletons.Entry({
+      className: `${pfx}__ws-chip-entry`,
+      sys_pn: "ws-rename",
+      partHandler: ui,
+      value: name,
+      mode: _a.commit,
+      require: "any",
+      service: "org-setup-rename-commit",
+      uiHandler: [ui],
+    });
+  }
+  return Skeletons.Note({
+    className: `${pfx}__ws-chip-name ${pfx}__ws-chip-name--edit`,
+    content: name,
+    service: "org-setup-rename-ws",
+    uiHandler: [ui],
+    ...(ref.hubId ? { hubId: ref.hubId } : { deptId: ref.deptId, index: ref.index }),
+  });
+}
+
 function step1(ui, pfx) {
   const { departments, workspaces } = ui._overview;
   if (!departments.length) {
@@ -268,7 +298,7 @@ function step1(ui, pfx) {
         className: `${pfx}__ws-chip`,
         kids: [
           folder(pfx, w.area),
-          Skeletons.Note({ active: 0, className: `${pfx}__ws-chip-name`, content: w.name }),
+          chipName(ui, pfx, w.name, { deptId: id, index }),
           x(pfx, "org-setup-drop-suggest", { deptId: id, index, uiHandler: [ui] }),
         ],
       }),
@@ -291,7 +321,7 @@ function step1(ui, pfx) {
                       className: `${pfx}__ws-chip`,
                       kids: [
                         folder(pfx, w.area),
-                        Skeletons.Note({ active: 0, className: `${pfx}__ws-chip-name`, content: w.filename || w.name || "" }),
+                        chipName(ui, pfx, w.filename || w.name || "", { hubId: w.hub_id }),
                         x(pfx, "org-setup-unassign", { hubId: w.hub_id, uiHandler: [ui] }),
                       ],
                     }),
@@ -353,6 +383,62 @@ function orgCard(ui, pfx) {
         ],
       }),
     ],
+  });
+}
+
+const ROLES = [
+  { id: "view", key: "ROLE_VIEW", label: "View" },
+  { id: "chat", key: "ROLE_CHAT", label: "Chat" },
+  { id: "edit", key: "ROLE_EDIT", label: "Edit" },
+  { id: "admin", key: "ROLE_ADMIN", label: "Admin" },
+];
+
+/**
+ * One workspace of a picked department (Figma 900:150257): its role for an
+ * email invitation, as the Admin Console invite draws it. A public link
+ * gives the department's access rules instead, so no role there.
+ */
+function wsInviteRow(ui, pfx, w) {
+  const hub = String(w.hub_id);
+  const role = (ui._wsRoles || {})[hub] || "edit";
+  const cur = ROLES.find((r) => r.id === role) || ROLES[2];
+  const open = ui._roleFor === hub;
+  return Skeletons.Box.X({
+    className: `${pfx}__ws-row`,
+    kids: [
+      folder(pfx, w.area),
+      Skeletons.Note({ active: 0, className: `${pfx}__ws-row-name`, content: w.filename || w.name || "" }),
+      ui._tab === "link"
+        ? null
+        : Skeletons.Box.Y({
+            className: `${pfx}__role-wrap`,
+            kids: [
+              Skeletons.Box.X({
+                className: `${pfx}__role${open ? ` ${pfx}__role--open` : ""}`,
+                service: "org-setup-role-open",
+                hubId: hub,
+                uiHandler: [ui],
+                kids: [
+                  Skeletons.Note({ active: 0, className: `${pfx}__role-label`, content: loc(cur.key, cur.label) }),
+                  Skeletons.Image.Svg({ active: 0, ico: "ph-caret-down", className: `${pfx}__role-caret` }),
+                ],
+              }),
+              open
+                ? Skeletons.Box.Y({
+                    className: `${pfx}__role-menu`,
+                    kids: ROLES.map((r) => Skeletons.Box.X({
+                      className: `${pfx}__role-option${r.id === role ? ` ${pfx}__role-option--on` : ""}`,
+                      service: "org-setup-role-pick",
+                      hubId: hub,
+                      role: r.id,
+                      uiHandler: [ui],
+                      kids: [Skeletons.Note({ active: 0, content: loc(r.key, r.label) })],
+                    })),
+                  })
+                : null,
+            ].filter(Boolean),
+          }),
+    ].filter(Boolean),
   });
 }
 
@@ -435,18 +521,10 @@ function step2(ui, pfx) {
               ],
             }),
             expanded.has(id)
-              ? Skeletons.Box.X({
-                  className: `${pfx}__ws-chips ${pfx}__ws-chips--invite`,
+              ? Skeletons.Box.Y({
+                  className: `${pfx}__ws-rows`,
                   kids: ws.length
-                    ? ws.map((w) =>
-                        Skeletons.Box.X({
-                          className: `${pfx}__ws-chip`,
-                          kids: [
-                            folder(pfx, w.area),
-                            Skeletons.Note({ active: 0, className: `${pfx}__ws-chip-name`, content: w.filename || w.name || "" }),
-                          ],
-                        }),
-                      )
+                    ? ws.map((w) => wsInviteRow(ui, pfx, w))
                     : [Skeletons.Note({ className: `${pfx}__hint`, content: loc("NO_WORKSPACE_FOUND", "No workspace found") })],
                 })
               : null,

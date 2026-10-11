@@ -48,6 +48,13 @@ class org_setup extends LetcBox {
     // The workspace picker closes on a click outside it, or on Escape.
     this._onDocDown = (e) => {
       this._lastDown = e.target;
+      if (this._roleFor && this.el) {
+        const r = e.target && e.target.closest && e.target.closest(`.${this.fig.family}__role-wrap`);
+        if (!r) {
+          this._roleFor = null;
+          this._render();
+        }
+      }
       if (!this._pickerFor || !this.el) return;
       const t = e.target;
       const inside = t && t.closest && t.closest(`.${this.fig.family}__picker, .${this.fig.family}__add`);
@@ -75,6 +82,11 @@ class org_setup extends LetcBox {
     this._newWsFor = null;
     // Step 2
     this._selected = new Set(); // department ids to invite to
+    // Per workspace, the role an email invitation gives (Figma 900:150257:
+    // "show workspace and permission inside", as the Admin Console invite).
+    this._wsRoles = {};
+    this._roleFor = null; // the workspace whose role menu is open
+    this._renaming = null; // step 2: { hubId } or { deptId, index } being renamed
     this._sent = null; // { ok, failed } after a send
     // Public link (Figma 998:85923): which tab, the expiry choice and the
     // minted link { token, url, expires_at }.
@@ -451,6 +463,57 @@ class org_setup extends LetcBox {
     box.addEventListener("click", (e) => { if (e.target !== input) input.focus(); });
   }
 
+  /** Put the cursor at the end of the workspace name being renamed. */
+  _focusRename() {
+    requestAnimationFrame(() => {
+      const input = this.el && this.el.querySelector(`.${this.fig.family}__ws-chip-entry input`);
+      if (!input) return;
+      input.focus();
+      input.setSelectionRange(input.value.length, input.value.length);
+      if (input.dataset.bound) return;
+      input.dataset.bound = "1";
+      input.addEventListener("blur", () => this._commitRename(input.value));
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          this._renaming = null;
+          this._render();
+        }
+      });
+    });
+  }
+
+  /**
+   * Step 2, click on a workspace's name (900:149870: "click vào tên là đổi
+   * được"): a suggested one is renamed before it is created; an existing one
+   * through hub.update_name.
+   */
+  async _commitRename(typed) {
+    const r = this._renaming;
+    if (!r || this._renamingBusy) return;
+    const input = this.el && this.el.querySelector(`.${this.fig.family}__ws-chip-entry input`);
+    const name = String(typed != null ? typed : (input && input.value) || "").trim();
+    if (r.hubId) {
+      const w = this._overview.workspaces.find((x) => String(x.hub_id) === r.hubId);
+      const was = w ? (w.filename || w.name || "") : "";
+      if (!name || name === was) {
+        this._renaming = null;
+        return this._render();
+      }
+      this._renamingBusy = true;
+      const res = await this._call(SERVICE.hub.update_name, { hub_id: r.hubId, name });
+      this._renamingBusy = false;
+      this._renaming = null;
+      if (!res.ok) return this._fail(res.status);
+      await this._load();
+      RADIO_BROADCAST.trigger("workspace:refresh");
+      return this._render();
+    }
+    const list = (this._wsSuggest || {})[r.deptId] || [];
+    if (name && list[r.index]) list[r.index].name = name;
+    this._renaming = null;
+    return this._render();
+  }
+
   _toStep2() {
     this._step = 2;
     this._pickerFor = null;
@@ -575,6 +638,11 @@ class org_setup extends LetcBox {
    * hub.invite is per workspace, so a department invite is one call per
    * workspace in it.
    */
+  /** Role ids to privilege bits (ui-team toolkit/permission roleItems). */
+  _rolePrivilege(role) {
+    return ({ view: 3, chat: 7, edit: 15, admin: 31 })[role] || 15;
+  }
+
   _targetHubs() {
     const ids = new Set();
     for (const w of this._overview.workspaces) {
@@ -606,7 +674,15 @@ class org_setup extends LetcBox {
       this._complaint = null;
       let res;
       try {
-        res = await this.postService(SERVICE.hub.invite, { hub_id, invitees });
+        // The workspace's role (default Edit), and -- creating a new
+        // organisation from elsewhere -- the organisation it belongs to, so
+        // the seat check counts there (_call's org_domain_id).
+        res = await this.postService(SERVICE.hub.invite, {
+          hub_id,
+          invitees,
+          privilege: this._rolePrivilege(this._wsRoles[hub_id] || "edit"),
+          ...(this._orgDom ? { org_domain_id: this._orgDom } : {}),
+        });
       } catch (e) {
         res = null;
       }
@@ -741,12 +817,12 @@ class org_setup extends LetcBox {
       const link = r.data && r.data.link;
       if (link && link !== location.hostname) {
         // The old address no longer resolves: reload the desk on the new one.
-        location.href = `${location.protocol}//${link}${location.pathname}?org_view=1`;
+        location.href = `${location.protocol}//${link}${location.pathname}?org_view=1&org_setup_done=1`;
         return;
       }
     }
     if (this._orgLink && this._orgLink !== location.hostname) {
-      location.href = `${location.protocol}//${this._orgLink}${location.pathname}?org_view=1`;
+      location.href = `${location.protocol}//${this._orgLink}${location.pathname}?org_view=1&org_setup_done=1`;
       return;
     }
     RADIO_BROADCAST.trigger("org:refresh");
@@ -754,6 +830,9 @@ class org_setup extends LetcBox {
     // Done: land on the organisation's view (Figma 900:151138, its
     // departments and their workspaces).
     RADIO_BROADCAST.trigger("desk:open-org-view");
+    // Then the fireworks and the org chart CTA (Figma 900:150473), once this
+    // wizard has left the modal they share.
+    setTimeout(() => RADIO_BROADCAST.trigger("desk:org-setup-done"), 300);
     if (this.parent && _.isFunction(this.parent.clear)) return this.parent.clear();
     return this.goodbye();
   }
@@ -870,15 +949,44 @@ class org_setup extends LetcBox {
       }
       case "org-setup-toggle-dept": {
         const id = String(cmd.mget("deptId"));
-        if (this._selected.has(id)) this._selected.delete(id);
-        else this._selected.add(id);
+        this._expanded = this._expanded || new Set();
+        // Picking a department drops its workspaces open, with their roles
+        // (Figma 900:150257); unpicking folds it back.
+        if (this._selected.has(id)) {
+          this._selected.delete(id);
+          this._expanded.delete(id);
+        } else {
+          this._selected.add(id);
+          this._expanded.add(id);
+        }
         this._sent = null;
         return this._render();
       }
+      case "org-setup-role-open": {
+        const hub = String(cmd.mget("hubId"));
+        this._roleFor = this._roleFor === hub ? null : hub;
+        return this._render();
+      }
+      case "org-setup-role-pick": {
+        this._wsRoles[String(cmd.mget("hubId"))] = String(cmd.mget("role"));
+        this._roleFor = null;
+        return this._render();
+      }
+      case "org-setup-rename-ws": {
+        const hubId = cmd.mget("hubId");
+        this._renaming = hubId
+          ? { hubId: String(hubId) }
+          : { deptId: String(cmd.mget("deptId")), index: ~~cmd.mget("index") };
+        this._render();
+        return this._focusRename();
+      }
+      case "org-setup-rename-commit":
+        return this._commitRename(args && args.value);
       case "org-setup-toggle-all": {
         const all = this._overview.departments.map((d) => String(d.id));
         const every = all.length && all.every((id) => this._selected.has(id));
         this._selected = every ? new Set() : new Set(all);
+        this._expanded = every ? new Set() : new Set(all);
         this._sent = null;
         return this._render();
       }

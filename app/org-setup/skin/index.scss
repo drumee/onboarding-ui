@@ -292,6 +292,112 @@
     line-height: 1.2;
   }
 
+  // Step 2: a workspace's name is clicked to rename it (900:149870).
+  &__ws-chip-name--edit {
+    cursor: text;
+    border-radius: 4px;
+
+    &:hover { background: var(--os-brand); }
+  }
+
+  &__ws-chip-entry {
+    min-width: 120px;
+
+    input {
+      width: 100%;
+      border: 0;
+      outline: none;
+      padding: 0;
+      background: transparent;
+      font-size: 14px;
+      line-height: 1.2;
+      color: var(--os-ink);
+    }
+  }
+
+  // Step 3: a picked department's workspaces with their role (900:150257).
+  &__ws-rows {
+    gap: 8px;
+    padding: 0 32px 0 12px;
+  }
+
+  &__ws-row {
+    align-items: center;
+    gap: 8px;
+    min-height: 40px;
+    padding: 6px 6px 6px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--os-line);
+    background: #fff;
+  }
+
+  &__ws-row-name {
+    flex: 1;
+    min-width: 0;
+    font-size: 14px;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__role-wrap {
+    position: relative;
+    flex: 0 0 auto;
+  }
+
+  &__role {
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    background: rgba(0, 0, 0, 0.04);
+    color: var(--os-ink);
+  }
+
+  &__role-label {
+    font-size: 13px;
+    line-height: 1.2;
+  }
+
+  &__role-caret {
+    width: 14px;
+    height: 14px;
+    svg { width: 14px; height: 14px; transition: transform 0.15s; }
+  }
+
+  &__role--open &__role-caret svg { transform: rotate(180deg); }
+
+  &__role-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    z-index: 20;
+    min-width: 140px;
+    padding: 4px;
+    gap: 2px;
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0px 1px 11px 0px rgba(0, 0, 0, 0.13);
+  }
+
+  &__role-option {
+    padding: 8px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    line-height: 1.2;
+    color: var(--os-ink);
+
+    &:hover { background: var(--os-brand); }
+
+    &--on {
+      color: var(--os-accent);
+      font-weight: 600;
+    }
+  }
+
   // Filled folder, 20x16, coloured by area (internal red, external pink,
   // restricted purple), as in the design's folder mini icons.
   &__folder {

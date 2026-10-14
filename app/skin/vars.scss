@@ -146,8 +146,18 @@
 // both narrow and under 900 tall, and must get the phone values, so phone
 // comes last.
 
-// Tablet: 600px – 1023px wide. Type stays at desktop size; the columns
-// widen to use the screen. The tablet tier is filled in by Task 4.
+// Tablet: 600px – 1023px wide (this query also matches phones; the phone
+// tier at the bottom overrides it). Type stays at desktop size; the columns
+// widen to use the screen, and the wide industry step no longer needs extra
+// room because it drops to 2 columns (form.scss).
+@media (max-width: 1023px) {
+  .onboarding-app__ui {
+    --ob-main-max: 600px;
+    --ob-card-max: 560px;
+    --ob-wide-max: 600px;
+    --ob-card-top: 64px;
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Short viewports
@@ -186,4 +196,32 @@
   }
 }
 
-// Phone: up to 599px wide. Filled in by Task 4.
+// Phone: up to 599px wide. Full-bleed (no card frame, 16px gutters), larger
+// body type than desktop for reading at arm's length, 16px inputs (iOS Safari
+// zooms the page on focus below 16px), and 44px touch targets. The sticky
+// footer is in index.scss; the 1-column grids are in form.scss.
+@media (max-width: 599px) {
+  .onboarding-app__ui {
+    --ob-gutter: 16px;
+    --ob-main-max: none;
+    --ob-card-max: none;
+    --ob-wide-max: none;
+    --ob-card-top: 24px;
+    --ob-card-pad: 0px;
+    --ob-gap-lead: 24px;
+    --ob-gap-block: 20px;
+    --ob-gap-inline: 16px;
+    --ob-fs-title: 22px;
+    --ob-fs-heading: 17px;
+    --ob-fs-btn: 15px;
+    --ob-fs-body: 14px;
+    --ob-fs-input: 16px;
+    --ob-ctl-h: 44px;
+    --ob-chip-h: 44px;
+    --ob-tap-min: 44px;
+    --ob-logo-w: 136px;
+    --ob-logo-h: 27px;
+    --ob-logo-box-w: 136.3px;
+    --ob-logo-box-h: 28.7px;
+  }
+}

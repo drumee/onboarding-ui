@@ -28,6 +28,18 @@
 .onboarding-app__option-grid[data-cols="2"] { --ob-cols: 2; }
 .onboarding-app__option-grid[data-cols="3"] { --ob-cols: 3; }
 
+// Tablet: the 3-up industry grid drops to 2. Same specificity as the rule
+// above, so source order decides: these must stay below it.
+@media (max-width: 1023px) {
+  .onboarding-app__option-grid[data-cols="3"] { --ob-cols: 2; }
+}
+
+// Phone: one column, except team size, whose labels are a few characters.
+@media (max-width: 599px) {
+  .onboarding-app__option-grid[data-cols] { --ob-cols: 1; }
+  .onboarding-app__option-grid[data-grid="team_size"] { --ob-cols: 2; }
+}
+
 /* The selected-state check glyph: accent circle, white tick. Used inline —
    as a flex item inside a tool pill, which is how the design draws it. */
 %onboarding-checked-mark {
@@ -59,7 +71,7 @@
   min-width: 0;
   cursor: pointer;
   position: relative;
-  padding: var(--ob-chip-pad-y) var(--ob-chip-pad-x);
+  padding: var(--ob-chip-pad-y) 30px var(--ob-chip-pad-y) var(--ob-chip-pad-x);
   background: var(--ob-option-bg);
   border: 1px solid transparent;
   border-radius: var(--ob-radius-field);
@@ -67,7 +79,10 @@
   font-family: var(--font-main);
   color: var(--ob-option-text);
   transition: all 0.2s ease;
-  white-space: nowrap;
+  // Wrap, at every width: a long translated label grows the row instead of
+  // running out of a grid cell. The right padding clears the check badge.
+  white-space: normal;
+  overflow-wrap: anywhere;
   min-height: var(--ob-chip-h);
   display: flex;
   align-items: center;
@@ -493,5 +508,25 @@
   font-family: var(--font-main);
   font-size: var(--ob-fs-body);
   line-height: 1.4;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/* ============================================
+   Phone-only adjustments (≤ 599px)
+   ============================================ */
+@media (max-width: 599px) {
+  // One column: the industry chips read left-aligned like every other list,
+  // not centred in a cell the width of the screen.
+  .onboarding-app__option-grid[data-cols="3"] .onboarding-app__option-chip {
+    text-align: left;
+    padding: var(--ob-chip-pad-y) 30px var(--ob-chip-pad-y) var(--ob-chip-pad-x);
+  }
+
+  // A truncated goal label hides the answer on a narrow screen; let it wrap.
+  .onboarding-app__goal-label {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
 }

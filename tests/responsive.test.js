@@ -91,6 +91,23 @@ async function check(browser, html, vp, tag, extra) {
       await p.close();
     }
 
+    // The height tiers still apply on top of the phone tier (spec §2): a
+    // short phone gets the 720 tier's compressed rhythm, a tall one keeps the
+    // phone rhythm. And the save-error text is phone body size, not 12px.
+    {
+      const tok = (p, name) => p.evaluate((n) =>
+        getComputedStyle(document.querySelector('.onboarding-app__ui')).getPropertyValue(n).trim(), name);
+      let p = await show(browser, page(renderStep(1)), { width: 568, height: 320 });
+      assert.strictEqual(await tok(p, '--ob-gap-lead'), '20px', 'short phone: 720-tier lead gap');
+      assert.strictEqual(await tok(p, '--ob-gap-block'), '14px', 'short phone: 720-tier block gap');
+      assert.strictEqual(await tok(p, '--ob-card-pad'), '0px', 'short phone: still full-bleed');
+      await p.close();
+      p = await show(browser, page(renderStep(1, { saveError: 'Could not save.' })), PHONE);
+      assert.strictEqual(await tok(p, '--ob-gap-lead'), '24px', 'tall phone: phone lead gap');
+      assert.strictEqual(await fontSize(p, '.onboarding-app__save-error'), 14, 'PHONE save error 14px');
+      await p.close();
+    }
+
     // Review Focus 1: a long, translated-length label wraps instead of
     // overflowing, and the grid keeps every chip one column wide.
     const LONG = { ONBOARDING_ROLE_FREELANCER: 'Freelancer / Independent Consultant & Strategic Advisor' };

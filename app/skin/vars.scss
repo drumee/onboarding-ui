@@ -215,6 +215,8 @@
     --ob-fs-heading: 17px;
     --ob-fs-btn: 15px;
     --ob-fs-body: 14px;
+    // The save-error banner is the one message the user must read.
+    --ob-fs-small: 14px;
     --ob-fs-input: 16px;
     --ob-ctl-h: 44px;
     --ob-chip-h: 44px;
@@ -223,5 +225,17 @@
     --ob-logo-h: 27px;
     --ob-logo-box-w: 136.3px;
     --ob-logo-box-h: 28.7px;
+  }
+}
+
+// Short phones (e.g. 568x320 landscape, 375x667 portrait): the phone tier
+// above re-sets the rhythm after the height tiers ran, which would cancel
+// their compression. Re-apply the 720 tier's gaps here — but not its card
+// padding or top offset, which the phone tier keeps at full-bleed values.
+@media (max-width: 599px) and (max-height: 720px) {
+  .onboarding-app__ui {
+    --ob-gap-lead: 20px;
+    --ob-gap-block: 14px;
+    --ob-gap-inline: 10px;
   }
 }

@@ -48,88 +48,194 @@
   --ob-error-border: rgba(215, 78, 73, 0.28);
 
   // ---------------------------------------------------------------------
-  // Shape and rhythm (Figma 155:47112)
+  // Sizes — Figma 155:47112 × 0.85
   // ---------------------------------------------------------------------
-  // 2.0 rounds everything noticeably more than 1.0's flat 4px. The design
-  // pins two of these directly (button 12px, text field 8px); the rest follow
-  // the field radius so chips and option rows stay in step with the input they
-  // sit beside.
-  --ob-radius-btn: 12px;
-  --ob-radius-field: 8px;
+  // Desktop draws the whole wizard at 85% of the Figma size (spec
+  // docs/superpowers/specs/2026-10-13-onboarding-responsive-design.md).
+  // EVERY size lives here, so tablet and phone re-tune them in one place —
+  // see the width tiers below. Grid column counts are in form.scss, next to
+  // the grid rule they feed.
+  --ob-radius-btn: 10px;
+  --ob-radius-field: 7px;
   --ob-radius-pill: 999px;
 
-  // Card padding, and the two vertical steps the layout is built from: 48px
-  // between the header block and the question, 32px between the question, the
-  // form and the primary action.
-  --ob-card-pad: 24px;
-  --ob-gap-lead: 48px;
-  --ob-gap-block: 32px;
+  // Type
+  --ob-fs-title: 27px;
+  --ob-fs-heading: 17px;
+  --ob-fs-btn: 14px;
+  --ob-lh-btn: 20px;
+  --ob-fs-body: 12px;
+  --ob-fs-small: 12px;
+  --ob-fs-input: 12px;
+
+  // Controls
+  --ob-ctl-h: 40px;
+  --ob-btn-pad-y: 10px;
+  --ob-btn-pad-x: 20px;
+  --ob-back-min: 82px;
+  --ob-chip-h: 38px;
+  --ob-chip-pad-y: 7px;
+  --ob-chip-pad-x: 10px;
+  --ob-tool-pad-x: 17px;
+  --ob-input-pad: 10px;
+  --ob-grid-gap: 14px;
+  // Floor for the rows that have no height of their own (tool pills,
+  // challenge and goal rows). Only the phone tier raises it, to 44px.
+  --ob-tap-min: 0px;
+
+  // Icons and marks
+  --ob-icon: 17px;
+  --ob-check: 14px;
+  --ob-check-sm: 10px;
+  --ob-goal-icon: 18px;
+  // Goal glyphs keep their intrinsic width/height (see __goal-icon), so they
+  // are scaled rather than resized.
+  --ob-icon-scale: 0.85;
+  --ob-logo-w: 162px;
+  --ob-logo-h: 32.2px;
+  --ob-logo-box-w: 162.3px;
+  --ob-logo-box-h: 34.2px;
+  --ob-progress-h: 5px;
+
+  // Containers. __main is the scroll column (gutter inside it), __card the
+  // content column; is-wide (industry) uses --ob-wide-max for both.
+  --ob-gutter: 20px;
+  --ob-main-max: 527px;
+  --ob-card-max: 442px;
+  --ob-wide-max: 680px;
+
+  // Card padding, and the two vertical steps the layout is built from: lead
+  // (header block to question) and block (question / form / primary action).
+  --ob-card-pad: 20px;
+  --ob-gap-lead: 40px;
+  --ob-gap-block: 28px;
 
   // The tools/challenges steps carry their heading inside the form body and
-  // space their blocks 24px apart (Figma 155:47287), where the header-titled
-  // steps use 32px. --ob-gap-list is the 12px step between option rows.
-  --ob-gap-inline: 24px;
-  --ob-gap-list: 12px;
+  // space their blocks tighter (Figma 155:47287). --ob-gap-list is the step
+  // between option rows.
+  --ob-gap-inline: 20px;
+  --ob-gap-list: 10px;
 
   // Pill-shaped option rows on the challenges step, and its "Tell us more"
-  // box, which the design deliberately leaves at the old 4px while the pills
-  // above it go fully round.
+  // box, which the design deliberately leaves square-ish while the pills above
+  // it go fully round.
   --ob-pill-radius: 44px;
-  --ob-pill-pad-y: 8px;
-  // Goal rows are taller than challenge rows: 12px, because they carry a 21px
-  // icon (Figma 155:47422 vs 155:47317).
-  --ob-goal-pad-y: 12px;
+  --ob-pill-pad-y: 7px;
+  // Goal rows are taller than challenge rows because they carry an icon
+  // (Figma 155:47422 vs 155:47317).
+  --ob-goal-pad-y: 10px;
   --ob-freetext-radius: 4px;
-  --ob-freetext-h: 65px;
+  --ob-freetext-h: 55px;
 
-  // Done screen (Figma 155:47483). The success badge is Signal/Success at 15%,
-  // and its column is 464px wide rather than the 472px the question screens use.
-  --ob-done-badge-size: 70px;
-  --ob-done-icon-size: 39px;
-  --ob-done-col: 464px;
-  --ob-gap-done: 40px;
+  // Done screen (Figma 155:47483).
+  --ob-done-badge-size: 60px;
+  --ob-done-icon-size: 33px;
+  --ob-done-col: 394px;
+  --ob-gap-done: 34px;
 
-  // Distance from the top of the viewport to the top of the card. 110px at the
-  // design's 1024px-tall frame.
-  --ob-card-top: 110px;
+  // Distance from the top of the viewport to the top of the card.
+  --ob-card-top: 94px;
+}
+
+// ---------------------------------------------------------------------------
+// Tiers — ORDER MATTERS
+// ---------------------------------------------------------------------------
+// base → tablet (width) → short (900) → shorter (720) → phone (width).
+// A landscape phone (812x375) is tablet-wide AND short, and must get the
+// height tiers' compression, so they come after tablet. A portrait phone is
+// both narrow and under 900 tall, and must get the phone values, so phone
+// comes last.
+
+// Tablet: 600px – 1023px wide (this query also matches phones; the phone
+// tier at the bottom overrides it). Type stays at desktop size; the columns
+// widen to use the screen, and the wide industry step no longer needs extra
+// room because it drops to 2 columns (form.scss).
+@media (max-width: 1023px) {
+  .onboarding-app__ui {
+    --ob-main-max: 600px;
+    --ob-card-max: 560px;
+    --ob-wide-max: 600px;
+    --ob-card-top: 64px;
+  }
 }
 
 // ---------------------------------------------------------------------------
 // Short viewports
 // ---------------------------------------------------------------------------
-// The design is drawn at 1024px tall and fits there with room to spare. The
-// challenges step (155:47287) is the tallest in the flow — seven option rows, a
-// free-text box and two stacked buttons — and on a laptop it used to run past
-// the fold and scroll silently, because __main hides its scrollbar.
-//
-// Rather than shrink type or drop content, the vertical rhythm steps down in
-// two stages. Everything here is a gap, a padding or the card's top offset; no
-// text size changes, so the step stays legible while it compresses. Below
-// ~640px tall the scroll is still there as a backstop.
+// The challenges step (155:47287) is the tallest in the flow, and on a
+// laptop it used to run past the fold and scroll silently, because __main
+// hides its scrollbar. The vertical rhythm steps down in two stages. Only
+// gaps, paddings and the card's top offset change here; text sizes do not.
+// Values are the pre-downsize tiers × 0.85, so each tier is still a step
+// down from the new desktop default.
 @media (max-height: 900px) {
   .onboarding-app__ui {
-    --ob-card-top: 56px;
-    --ob-card-pad: 20px;
-    --ob-gap-lead: 32px;
-    --ob-gap-block: 24px;
-    --ob-gap-inline: 16px;
-    --ob-gap-list: 8px;
-    --ob-pill-pad-y: 7px;
-    --ob-goal-pad-y: 10px;
-    --ob-freetext-h: 56px;
+    --ob-card-top: 48px;
+    --ob-card-pad: 17px;
+    --ob-gap-lead: 27px;
+    --ob-gap-block: 20px;
+    --ob-gap-inline: 14px;
+    --ob-gap-list: 7px;
+    --ob-pill-pad-y: 6px;
+    --ob-goal-pad-y: 9px;
+    --ob-freetext-h: 48px;
   }
 }
 
 @media (max-height: 720px) {
   .onboarding-app__ui {
-    --ob-card-top: 32px;
-    --ob-card-pad: 16px;
+    --ob-card-top: 27px;
+    --ob-card-pad: 14px;
+    --ob-gap-lead: 20px;
+    --ob-gap-block: 14px;
+    --ob-gap-inline: 10px;
+    --ob-gap-list: 5px;
+    --ob-pill-pad-y: 5px;
+    --ob-goal-pad-y: 7px;
+    --ob-freetext-h: 41px;
+  }
+}
+
+// Phone: up to 599px wide. Full-bleed (no card frame, 16px gutters), larger
+// body type than desktop for reading at arm's length, 16px inputs (iOS Safari
+// zooms the page on focus below 16px), and 44px touch targets. The sticky
+// footer is in index.scss; the 1-column grids are in form.scss.
+@media (max-width: 599px) {
+  .onboarding-app__ui {
+    --ob-gutter: 16px;
+    --ob-main-max: none;
+    --ob-card-max: none;
+    --ob-wide-max: none;
+    --ob-card-top: 24px;
+    --ob-card-pad: 0px;
     --ob-gap-lead: 24px;
-    --ob-gap-block: 16px;
-    --ob-gap-inline: 12px;
-    --ob-gap-list: 6px;
-    --ob-pill-pad-y: 6px;
-    --ob-goal-pad-y: 8px;
-    --ob-freetext-h: 48px;
+    --ob-gap-block: 20px;
+    --ob-gap-inline: 16px;
+    --ob-fs-title: 22px;
+    --ob-fs-heading: 17px;
+    --ob-fs-btn: 15px;
+    --ob-fs-body: 14px;
+    // The save-error banner is the one message the user must read.
+    --ob-fs-small: 14px;
+    --ob-fs-input: 16px;
+    --ob-ctl-h: 44px;
+    --ob-chip-h: 44px;
+    --ob-tap-min: 44px;
+    --ob-logo-w: 136px;
+    --ob-logo-h: 27px;
+    --ob-logo-box-w: 136.3px;
+    --ob-logo-box-h: 28.7px;
+  }
+}
+
+// Short phones (e.g. 568x320 landscape, 375x667 portrait): the phone tier
+// above re-sets the rhythm after the height tiers ran, which would cancel
+// their compression. Re-apply the 720 tier's gaps here — but not its card
+// padding or top offset, which the phone tier keeps at full-bleed values.
+@media (max-width: 599px) and (max-height: 720px) {
+  .onboarding-app__ui {
+    --ob-gap-lead: 20px;
+    --ob-gap-block: 14px;
+    --ob-gap-inline: 10px;
   }
 }

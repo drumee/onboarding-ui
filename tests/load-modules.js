@@ -2,22 +2,10 @@
 // it accepts a const read before its initializer, which is how a temporal-dead-
 // zone bug (require placed below the table that uses it) reached the browser
 // once already. Running the module body is the only thing that catches it.
-const babel = require('@babel/core');
-const fs = require('fs');
 const path = require('path');
-const Module = require('module');
+require('./babel-register');
 
 const root = path.resolve(__dirname, '..');
-const orig = Module._extensions['.js'];
-Module._extensions['.js'] = function (mod, filename) {
-  if (filename.includes('node_modules')) return orig(mod, filename);
-  const out = babel.transformSync(fs.readFileSync(filename, 'utf8'), {
-    filename,
-    presets: [[require.resolve('@babel/preset-env'), { targets: { node: 'current' } }]],
-    babelrc: false, configFile: false,
-  });
-  mod._compile(out.code, filename);
-};
 
 // Framework globals. Throwing proxies, so a module-load-time read fails loudly
 // instead of silently returning undefined.

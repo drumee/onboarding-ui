@@ -44,6 +44,7 @@ ${sel(FLEX_COL)}{display:flex;flex-direction:column}
 ${sel(FLEX_ROW)}{display:flex;flex-direction:row}
 .drumee-widget[data-flow=x]{display:flex;flex-direction:row}
 .drumee-widget[data-flow=y]{display:flex;flex-direction:column}
+.drumee-widget[data-flow=wrap]{display:flex;flex-direction:row}
 ${css()}
 </style></head><body>${bodyHtml}</body></html>`;
 }

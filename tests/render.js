@@ -30,7 +30,10 @@ function toHtml(node) {
 const content = (o) => (o.content == null ? '' : o.content);
 const box = (flow) => (o) => ({ __html: `<div${attrs(o, flow)}>${toHtml(o.kids || [])}</div>` });
 const element = (o) => ({ __html: `<div${attrs(o, 'x')}>${content(o)}</div>` });
-const note = (o) => ({ __html: `<div${attrs(o)}><div class="note-content">${content(o)}</div></div>` });
+// ui-core's Note (letc/widgets/text) defaults to flow "wrap", which ui-styles
+// renders as a row flexbox: its .note-content is a flex item, so text-align on
+// the Note itself does not move the text.
+const note = (o) => ({ __html: `<div${attrs(o, 'wrap')}><div class="note-content">${content(o)}</div></div>` });
 const entry = (o) => ({
   __html: `<div${attrs(o)}><input name="${esc(o.name || '')}" value="${esc(o.value || '')}" placeholder="${esc(o.placeholder || '')}"></div>`,
 });

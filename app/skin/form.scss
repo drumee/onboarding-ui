@@ -490,6 +490,15 @@
   line-height: 1.1;
   color: var(--ob-title);
   text-align: center;
+  // A Note is a row flexbox in ui-core (flow "wrap"), and its text lives in
+  // the .note-content flex item — text-align alone leaves that item hugging
+  // the left edge. Centre the item, and the text inside it once a long name
+  // wraps onto a second line.
+  justify-content: center;
+
+  .note-content {
+    text-align: center;
+  }
 }
 
 /* Answer summary. Wraps, centred, 12px apart (Figma 155:47499). */

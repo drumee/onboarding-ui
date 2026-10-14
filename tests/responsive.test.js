@@ -74,6 +74,23 @@ async function check(browser, html, vp, tag, extra) {
       await p.close();
     }
 
+    // Where the action row is pinned (phone, and short screens such as a
+    // landscape phone) the mesh glow is dropped: the footer's white backing
+    // would otherwise read as a white band laid over the lavender ground,
+    // even on steps where nothing scrolls behind it.
+    for (const [vp, tag] of [[PHONE, 'PHONE'], [LANDSCAPE, 'LANDSCAPE']]) {
+      const p = await show(browser, page(renderStep(5)), vp);
+      const bg = await p.evaluate(() => getComputedStyle(document.querySelector('.onboarding-app__ui')).backgroundImage);
+      assert.strictEqual(bg, 'none', `${tag}: plain ground behind the sticky footer`);
+      await p.close();
+    }
+    {
+      const p = await show(browser, page(renderStep(5)), DESKTOP);
+      const bg = await p.evaluate(() => getComputedStyle(document.querySelector('.onboarding-app__ui')).backgroundImage);
+      assert.ok(bg.includes('radial-gradient'), 'DESKTOP keeps the mesh glow');
+      await p.close();
+    }
+
     // Review Focus 1: a long, translated-length label wraps instead of
     // overflowing, and the grid keeps every chip one column wide.
     const LONG = { ONBOARDING_ROLE_FREELANCER: 'Freelancer / Independent Consultant & Strategic Advisor' };

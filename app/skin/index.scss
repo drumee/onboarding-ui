@@ -345,6 +345,12 @@
 // scroll up from behind it instead of pushing it out of reach. __main's bottom
 // padding goes to 0 so the sticky edge is the screen edge.
 @media (max-width: 599px), (max-height: 500px) {
+  // Plain white ground: the footer's white backing laid over the mesh glow
+  // reads as a white band, even on steps where nothing scrolls behind it.
+  .onboarding-app__ui {
+    background-image: none;
+  }
+
   .onboarding-app__main {
     padding-bottom: 0;
   }

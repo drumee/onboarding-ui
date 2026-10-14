@@ -13,13 +13,20 @@
 
 .onboarding-app__option-grid {
   width: 100%;
+}
+
+// A real grid, so the column count can change per breakpoint (see the width
+// tiers further down). (0,3,0) on purpose: Box.Y renders as
+// `.drumee-widget[data-flow=y] { display: flex }` at (0,2,0), which beats a
+// single-class display: grid.
+.onboarding-app__form-section > .onboarding-app__option-grid[data-flow] {
+  display: grid;
+  grid-template-columns: repeat(var(--ob-cols, 2), minmax(0, 1fr));
   gap: 16px;
 }
 
-.onboarding-app__option-row {
-  width: 100%;
-  gap: 16px;
-}
+.onboarding-app__option-grid[data-cols="2"] { --ob-cols: 2; }
+.onboarding-app__option-grid[data-cols="3"] { --ob-cols: 3; }
 
 /* The selected-state check glyph: accent circle, white tick. Used inline —
    as a flex item inside a tool pill, which is how the design draws it. */
@@ -49,10 +56,6 @@
 }
 
 .onboarding-app__option-chip {
-  // Fixed one-column width (row gap is 16px, 2 per row) so every chip is the
-  // same size regardless of how many sit in its row — a lone trailing chip
-  // (e.g. Role's "Other") stays one column wide, left-aligned.
-  flex: 0 0 calc((100% - 16px) / 2);
   min-width: 0;
   cursor: pointer;
   position: relative;
@@ -84,9 +87,7 @@
 
 /* 3-up option grid (industry): narrower slots, so let long labels wrap
    instead of overflowing, and keep clear of the selected-state checkmark. */
-.onboarding-app__option-grid.cols-3 .onboarding-app__option-chip {
-  // 3 per row: two 16px gaps → fixed third-column width.
-  flex-basis: calc((100% - 32px) / 3);
+.onboarding-app__option-grid[data-cols="3"] .onboarding-app__option-chip {
   white-space: normal;
   text-align: center;
   padding: 8px 28px 8px 8px;

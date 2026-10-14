@@ -20,7 +20,7 @@ const FLEX_COL = [
 ];
 const FLEX_ROW = [
   'header-top', 'progress-bar', 'tools-title', 'challenge-freetext', 'btn-row',
-  'input-row', 'option-row', 'tool-chips-wrap', 'summary-badges',
+  'input-row', 'tool-chips-wrap', 'summary-badges',
 ];
 const sel = (names) => names.map((n) => `.onboarding-app__${n}`).join(',');
 

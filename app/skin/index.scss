@@ -48,13 +48,13 @@
     align-items: center;
     height: 100%;
     width: 100%;
-    max-width: 620px;
+    max-width: var(--ob-main-max);
     // Top-anchored, per the design (card top = 110px in a 1024px-tall frame).
     // Centring made the card jump vertically between steps as the content grew;
     // anchoring it keeps the logo and progress bar still while the user moves
     // through the flow. Tall steps scroll inside this box, as before.
     justify-content: flex-start;
-    padding: var(--ob-card-top) var(--spacer-7) var(--spacer-7);
+    padding: var(--ob-card-top) var(--ob-gutter) var(--ob-gutter);
     overflow-y: auto;
     gap: 0;
     position: relative;
@@ -67,21 +67,21 @@
     }
 
     &.is-wide {
-      max-width: 800px;
+      max-width: var(--ob-wide-max);
     }
   }
 
   &__card {
     width: 100%;
-    max-width: 520px;
-    // 32px between the header block, the form and the primary action.
+    max-width: var(--ob-card-max);
+    // --ob-gap-block between the header block, the form and the primary action.
     gap: var(--ob-gap-block);
     padding: var(--ob-card-pad);
     margin: 0 auto;
     flex: 0 0 auto;
 
     &.is-wide {
-      max-width: 800px;
+      max-width: var(--ob-wide-max);
     }
 
     // Steps whose design spaces its blocks 24px apart rather than 32px: tools
@@ -110,15 +110,15 @@
     gap: var(--ob-gap-lead);
   }
 
-  // Title + tip line. Their own box so the header's 48px gap separates the
+  // Title + tip line. Their own box so the header's --ob-gap-lead gap separates the
   // question from the logo/progress lead without also prising the tip off its
   // title — see header.js.
   &__header-copy {
     width: 100%;
-    gap: 8px;
+    gap: 7px;
   }
 
-  // Logo + progress bar, grouped so the header's 48px gap separates them from
+  // Logo + progress bar, grouped so the header's --ob-gap-lead gap separates them from
   // the question as one unit. They span the full card width: 2.0 aligns the
   // wordmark with the left edge of the content, so the old 472px cap left the
   // logo floating inboard of the options on the wider steps.
@@ -148,13 +148,13 @@
     // container to the ROTATED bounding box (40.181px tall), which is what
     // pushes the progress bar to its place in the design — so the box carries
     // that height and the mark is centred inside it.
-    width: 190.917px;
-    height: 40.181px;
+    width: var(--ob-logo-box-w);
+    height: var(--ob-logo-box-h);
 
     svg {
       display: block;
-      width: 190.471px;
-      height: 37.866px;
+      width: var(--ob-logo-w);
+      height: var(--ob-logo-h);
       transform: rotate(0.7deg);
     }
   }
@@ -162,7 +162,7 @@
   &__progress-bar {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 7px;
     width: 100%;
     justify-content: flex-start;
   }
@@ -172,7 +172,7 @@
     // to fill the row, so the old 61px cap left dead space at the right.
     flex: 1 1 0;
     min-width: 0;
-    height: 6px;
+    height: var(--ob-progress-h);
     border-radius: 12px;
     background: var(--ob-option-bg);
     transition: background 0.3s ease;
@@ -184,7 +184,7 @@
 
   &__title {
     font-family: var(--font-bold);
-    font-size: 32px;
+    font-size: var(--ob-fs-title);
     line-height: 1.1;
     font-weight: 600;
     color: var(--ob-title);
@@ -208,18 +208,18 @@
     align-items: center;
     justify-content: center;
     width: 100%;
-    min-height: 48px;
-    padding: 12px 24px;
+    min-height: var(--ob-ctl-h);
+    padding: var(--ob-btn-pad-y) var(--ob-btn-pad-x);
     border-radius: var(--ob-radius-btn);
-    font-size: 16px;
-    line-height: 24px;
+    font-size: var(--ob-fs-btn);
+    line-height: var(--ob-lh-btn);
     font-weight: 600;
     font-family: var(--font-medium);
     background: var(--ob-primary-inactive-bg);
     color: var(--ob-primary-inactive-text);
     transition: all 0.2s ease;
     white-space: nowrap;
-    gap: 8px;
+    gap: 7px;
 
     &:hover {
       background: rgba(89, 80, 255, 0.15);
@@ -242,7 +242,7 @@
     }
 
     // Loading state while a submit is in flight: keep the active look, block
-    // clicks, and append a spinner next to the label (the button's gap:8px
+    // clicks, and append a spinner next to the label (the button's 7px gap
     // spaces it). Placed after the data-state rules so it wins on source order.
     &.is-loading {
       background: var(--ob-primary-bg);
@@ -253,8 +253,8 @@
 
       &::after {
         content: "";
-        width: 16px;
-        height: 16px;
+        width: 14px;
+        height: 14px;
         border: 2px solid currentColor;
         border-top-color: transparent;
         border-radius: 50%;
@@ -270,11 +270,11 @@
     align-items: center;
     justify-content: center;
     width: 100%;
-    min-height: 48px;
-    padding: 12px 24px;
+    min-height: var(--ob-ctl-h);
+    padding: var(--ob-btn-pad-y) var(--ob-btn-pad-x);
     border-radius: var(--ob-radius-btn);
-    font-size: 16px;
-    line-height: 24px;
+    font-size: var(--ob-fs-btn);
+    line-height: var(--ob-lh-btn);
     font-weight: 600;
     font-family: var(--font-medium);
     background: transparent;
@@ -291,7 +291,7 @@
     width: 100%;
     display: flex;
     align-items: stretch;
-    gap: 12px;
+    gap: 10px;
 
     // Continue grows to fill the row; Back stays compact on the left so the
     // primary action reads as the larger, dominant button.
@@ -303,7 +303,7 @@
     .onboarding-app__back-btn {
       flex: 0 0 auto;
       width: auto;
-      min-width: 96px;
+      min-width: var(--ob-back-min);
     }
   }
 
@@ -313,10 +313,14 @@
     align-items: center;
     justify-content: center;
     width: 100%;
-    min-height: 48px;
-    padding: 12px 20px;
+    min-height: var(--ob-ctl-h);
+    // Its 1px border comes out of the vertical padding, and it takes the
+    // button line-height: otherwise its content box is a pixel or two taller
+    // than the primary button's, and the row stretches Continue to match.
+    padding: calc(var(--ob-btn-pad-y) - 1px) var(--ob-tool-pad-x);
+    line-height: var(--ob-lh-btn);
     border-radius: var(--ob-radius-btn);
-    font-size: 16px;
+    font-size: var(--ob-fs-btn);
     font-weight: 600;
     font-family: var(--font-medium);
     background: transparent;

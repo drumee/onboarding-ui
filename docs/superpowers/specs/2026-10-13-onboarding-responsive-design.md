@@ -45,6 +45,9 @@ default (desktop) values are the old values × 0.85, rounded:
 | `--ob-fs-btn` (primary/secondary/back) | 16px / lh 24px | 14px / lh 20px |
 | `--ob-fs-body` (chips, inputs, labels, pills, goals, badges) | 14px | 12px |
 | `--ob-fs-small` (save-error banner) | 13px | 12px |
+| `--ob-fs-input` (text inputs) | 14px | 12px (phone: 16px) |
+| `--ob-tap-min` (min-height of tool pills, challenge and goal rows) | — | 0 (phone: 44px) |
+| `--ob-icon-scale` (goal glyph scale) | — | 0.85 |
 | `--ob-ctl-h` (button min-height) | 48px | 40px |
 | `--ob-btn-pad-x` / `--ob-btn-pad-y` | 24 / 12px | 20 / 10px |
 | `--ob-back-min` (Back min-width) | 96px | 82px |
@@ -100,9 +103,9 @@ Breakpoints are width media queries on the viewport (the wizard is a
 - **Desktop** `≥ 1024px` — the token defaults above. Centred card. Industry
   3 columns, role/team size 2.
 - **Tablet** `600px – 1023px` — same type sizes as desktop. `--ob-main-max`
-  and `--ob-card-max` 560px, `--ob-wide-max` 560px (the wide industry step no
-  longer needs extra room because it drops to 2 columns), `--ob-card-top`
-  64px.
+  600px and `--ob-card-max` 560px (the card is 560px once the gutters come
+  off), `--ob-wide-max` 600px (the wide industry step no longer needs extra
+  room because it drops to 2 columns), `--ob-card-top` 64px.
 - **Phone** `≤ 599px`:
   - Full-bleed: `__main` loses its max-width and gets 16px side gutters;
     `--ob-card-pad` 0; `--ob-card-top` 24px.
@@ -116,7 +119,8 @@ Breakpoints are width media queries on the viewport (the wizard is a
     Single-column chips are left-aligned and keep the right-hand check reserve.
   - Goal labels may wrap (`white-space: normal`) instead of truncating.
   - Footer: `position: sticky; bottom: 0` inside `__main` (the scroll
-    container), background `rgba(255,255,255,0.92)` with
+    container; its bottom padding drops to 0 so the sticky edge is the
+    viewport edge), background `rgba(255,255,255,0.92)` with
     `backdrop-filter: blur(8px)`, padding-bottom
     `calc(12px + env(safe-area-inset-bottom))`. The last option row therefore
     scrolls up from behind the buttons instead of the buttons being pushed
@@ -125,12 +129,20 @@ Breakpoints are width media queries on the viewport (the wizard is a
     the browser chrome on mobile cannot hide the sticky footer.
   - The max-height tiers still apply on top (a landscape phone is both narrow
     and short).
+  - The sticky footer rules apply under `(max-width: 599px), (max-height:
+    500px)`, not under the phone width alone: a landscape phone (812×375) is
+    tablet-wide but has the least height of all.
+- **All widths:** option-grid chips and summary badges wrap
+  (`white-space: normal; overflow-wrap: anywhere`) instead of `nowrap`, so a
+  long translated label grows the row instead of overflowing it.
 
 ### 3. Markup change (`buildOptionGrid`)
 
 The only JavaScript change. `buildOptionGrid` stops chunking into
 `__option-row` boxes and returns one `__option-grid` box whose direct kids are
-the chips, stamped `dataset: { cols: perRow, field }`.
+the chips, stamped `dataset: { cols: perRow, grid: field }`. The attribute is
+`data-grid`, not `data-field`: `_selectOption` stamps `data-state` on every
+`[data-field=…]` element, and the grid box must not be one of them.
 
 CSS turns that box into a grid:
 
@@ -147,10 +159,10 @@ CSS turns that box into a grid:
 Specificity is (0,3,0) on purpose: Box.Y renders as
 `.drumee-widget[data-flow=y] { display: flex }` (0,2,0), which beats a
 single-class `display: grid`. Dataset keys are lower-case single words
-(`cols`, `field`) because ui-core writes them with `setAttribute` verbatim.
+(`cols`, `grid`) because ui-core writes them with `setAttribute` verbatim.
 
 Tablet: `[data-cols="3"]` → `--ob-cols: 2`. Phone: every grid → 1, then
-`[data-field="team_size"]` → 2.
+`[data-grid="team_size"]` → 2.
 
 Behaviour is unaffected: `toggle-option` and `_selectOption` locate chips by
 `[data-field][data-value]` on the chip itself, not by row. The chip's
@@ -168,10 +180,11 @@ sizes the cells); the `.cols-3` wrap/centre/padding treatment moves to
 
 ## Risks
 
-- **Viewport meta in production.** `onboarding-ui/index.html` sets
-  `width=device-width`, but in production the wizard runs inside the desk's
-  document. If the desk page lacks the meta, phones render at 980px and no
-  phone rule fires. Verify on a real or emulated device before calling it done.
+- **Viewport meta in production.** In production the wizard runs inside the
+  desk's document, not `onboarding-ui/index.html`. Checked 2026-10-13:
+  `https://drumee.in/` serves `width=device-width, initial-scale=1,
+  maximum-scale=5`, so phone rules fire there. Re-check any other endpoint
+  before calling it done there.
 - **Deployed locale rows.** Unaffected — no copy changes.
 - **Short landscape phones** (e.g. 812×375): sticky footer + 720px tier must
   leave room for at least one option row; covered by a test viewport.

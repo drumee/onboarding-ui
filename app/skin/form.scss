@@ -181,7 +181,7 @@
 
 .onboarding-app__tools-title-text {
   font-size: var(--ob-fs-heading);
-  font-family: var(--font-bold);
+  font-family: var(--font-main);
   color: var(--ob-title);
   line-height: 1.1;
 }
@@ -429,7 +429,7 @@
   border: 1px solid var(--ob-error-border);
   color: var(--ob-error);
   font-size: var(--ob-fs-small);
-  font-family: var(--font-medium);
+  font-family: var(--font-main);
   line-height: 1.45;
 }
 
@@ -484,7 +484,7 @@
 
 .onboarding-app__done-title {
   width: 100%;
-  font-family: var(--font-bold);
+  font-family: var(--font-main);
   font-size: var(--ob-fs-title);
   font-weight: 600;
   line-height: 1.1;

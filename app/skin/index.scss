@@ -186,7 +186,7 @@
   }
 
   &__title {
-    font-family: var(--font-bold);
+    font-family: var(--font-main);
     font-size: var(--ob-fs-title);
     line-height: 1.1;
     font-weight: 600;
@@ -217,7 +217,7 @@
     font-size: var(--ob-fs-btn);
     line-height: var(--ob-lh-btn);
     font-weight: 600;
-    font-family: var(--font-medium);
+    font-family: var(--font-main);
     background: var(--ob-primary-inactive-bg);
     color: var(--ob-primary-inactive-text);
     transition: all 0.2s ease;
@@ -279,7 +279,7 @@
     font-size: var(--ob-fs-btn);
     line-height: var(--ob-lh-btn);
     font-weight: 600;
-    font-family: var(--font-medium);
+    font-family: var(--font-main);
     background: transparent;
     color: var(--ob-secondary-text);
     transition: color 0.2s ease;
@@ -325,7 +325,7 @@
     border-radius: var(--ob-radius-btn);
     font-size: var(--ob-fs-btn);
     font-weight: 600;
-    font-family: var(--font-medium);
+    font-family: var(--font-main);
     background: transparent;
     color: var(--ob-secondary-text);
     border: 1px solid var(--ob-option-bg);

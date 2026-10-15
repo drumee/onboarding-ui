@@ -7,7 +7,8 @@
     "dev": "drumee-ui-devel",
     "stage": "drumee-ui-devel stage",
     "add-widget": "drumee-make-widget",
-    "deploy": "drumee-ui-deploy"
+    "deploy": "drumee-ui-deploy",
+    "test": "node tests/load-modules.js && node tests/resume.test.js && node tests/render.test.js && node tests/grid.test.js && node tests/desktop-size.test.js && node tests/responsive.test.js && node tests/done-align.test.js"
   },
   "repository": {
     "type": "git",

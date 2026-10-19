@@ -166,38 +166,36 @@ export function error_region(ui) {
 function buildOptionGrid(ui, opts, field, perRow = 2) {
   const pfx = ui.fig.family;
   let selected = ui._data[field] || '';
-  let kids = [];
-  let row = [];
-  for (let i = 0; i < opts.length; i++) {
-    let [key, localeKey] = opts[i];
+  let kids = opts.map(([key, localeKey], i) => {
     let label = LOCALE[localeKey] || key;
     let isOn = selected === key;
-    row.push(
-      Skeletons.Note({
-        className: `${pfx}__option-chip`,
-        name: label,
-        sys_pn: `${field}-${i}`,
-        partHandler: [ui],
-        // Toggling single-select: click to choose, click the chosen one again to
-        // clear it. Shared by industry, role and team size (and the goals step,
-        // which builds its rows separately).
-        service: 'toggle-option',
-        uiHandler: [ui],
-        state: isOn ? 1 : 0,
-        dataset: { state: isOn ? 1 : 0, value: key, field },
-        content: label,
-      })
-    );
-    if (row.length === perRow || i === opts.length - 1) {
-      kids.push(Skeletons.Box.X({ className: `${pfx}__option-row`, kids: [...row] }));
-      row = [];
-    }
-  }
-  let gridClass = `${pfx}__option-grid${perRow !== 2 ? ` cols-${perRow}` : ''}`;
+    return Skeletons.Note({
+      className: `${pfx}__option-chip`,
+      name: label,
+      sys_pn: `${field}-${i}`,
+      partHandler: [ui],
+      // Toggling single-select: click to choose, click the chosen one again to
+      // clear it. Shared by industry, role and team size (and the goals step,
+      // which builds its rows separately).
+      service: 'toggle-option',
+      uiHandler: [ui],
+      state: isOn ? 1 : 0,
+      dataset: { state: isOn ? 1 : 0, value: key, field },
+      content: label,
+    });
+  });
   return Skeletons.Box.Y({
     className: `${pfx}__form-section`,
     kids: [
-      Skeletons.Box.Y({ className: gridClass, kids }),
+      // One grid, not rows chunked here: the column count belongs to CSS
+      // (data-cols is the desktop count; tablet and phone override it in
+      // skin/form.scss). `grid`, not `field`: _selectOption stamps data-state
+      // on every [data-field] element, and this box is not an option.
+      Skeletons.Box.Y({
+        className: `${pfx}__option-grid`,
+        dataset: { cols: perRow, grid: field },
+        kids,
+      }),
       Skeletons.Box.Y({
         className: `${pfx}__other-region`,
         sys_pn: `${field}-other`,
